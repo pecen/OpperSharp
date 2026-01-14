@@ -2,8 +2,21 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Models\OpperSharp.Models.Chat\OpperSharp.Models.Chat.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Common\OpperSharp.Models.Common.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Functions\OpperSharp.Models.Functions.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Indexes\OpperSharp.Models.Indexes.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Spans\OpperSharp.Models.Spans.csproj" />
+    <ProjectReference Include="..\OpperSharp.Exceptions\OpperSharp.Exceptions.csproj" />
+  </ItemGroup>
 
 </Project>

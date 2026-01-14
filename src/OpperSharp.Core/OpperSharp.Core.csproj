@@ -2,8 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Models\OpperSharp.Models.Common\OpperSharp.Models.Common.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Functions\OpperSharp.Models.Functions.csproj" />
+    <ProjectReference Include="..\OpperSharp.Clients\OpperSharp.Clients.csproj" />
+    <ProjectReference Include="..\OpperSharp.Utilities\OpperSharp.Utilities.csproj" />
+  </ItemGroup>
 
 </Project>
