@@ -10,4 +10,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\OpperSharp.Core\OpperSharp.Core.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Functions\OpperSharp.Models.Functions.csproj" />
+  </ItemGroup>
+
 </Project>
