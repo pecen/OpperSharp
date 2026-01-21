@@ -11,4 +11,5 @@
   <Project Path="OpperSharp.Core/OpperSharp.Core.csproj" Id="274eca71-b211-4cb3-a0f0-4d1b9de6e694" />
   <Project Path="OpperSharp.Exceptions/OpperSharp.Exceptions.csproj" Id="4864d006-c70b-4bdb-a69f-e1ff39d5e533" />
   <Project Path="OpperSharp.Utilities/OpperSharp.Utilities.csproj" Id="adc4fded-fbbd-4c78-96e6-951f8939af95" />
+  <Project Path="UI/OpperSharp.UI.TestConsole/OpperSharp.UI.TestConsole.csproj" Id="0f67f6d5-b35c-444f-86a7-62d79e2e3f31" />
 </Solution>
