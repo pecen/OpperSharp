@@ -13,10 +13,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Models\OpperSharp.Models.Analytics\OpperSharp.Models.Analytics.csproj" />
     <ProjectReference Include="..\Models\OpperSharp.Models.Chat\OpperSharp.Models.Chat.csproj" />
     <ProjectReference Include="..\Models\OpperSharp.Models.Common\OpperSharp.Models.Common.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Datasets\OpperSharp.Models.Datasets.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Embeddings\OpperSharp.Models.Embeddings.csproj" />
     <ProjectReference Include="..\Models\OpperSharp.Models.Functions\OpperSharp.Models.Functions.csproj" />
     <ProjectReference Include="..\Models\OpperSharp.Models.Indexes\OpperSharp.Models.Indexes.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Knowledge\OpperSharp.Models.Knowledge.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Models\OpperSharp.Models.Models.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Ocr\OpperSharp.Models.Ocr.csproj" />
+    <ProjectReference Include="..\Models\OpperSharp.Models.Rerank\OpperSharp.Models.Rerank.csproj" />
     <ProjectReference Include="..\Models\OpperSharp.Models.Spans\OpperSharp.Models.Spans.csproj" />
     <ProjectReference Include="..\OpperSharp.Exceptions\OpperSharp.Exceptions.csproj" />
     <ProjectReference Include="..\OpperSharp.Utilities\OpperSharp.Utilities.csproj" />

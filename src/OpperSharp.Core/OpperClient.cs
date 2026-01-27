@@ -98,9 +98,18 @@ namespace OpperSharp.Core
 		private void InitializeClients()
 		{
 			Functions = new FunctionsClient(_httpClient);
-			Indexes = new IndexesClient(_httpClient);
+			Knowledge = new KnowledgeClient(_httpClient);
 			Chat = new ChatClient(_httpClient);
 			Spans = new SpansClient(_httpClient);
+			Datasets = new DatasetsClient(_httpClient);
+			Embeddings = new EmbeddingsClient(_httpClient);
+			Models = new ModelsClient(_httpClient);
+			Ocr = new OcrClient(_httpClient);
+			Rerank = new RerankClient(_httpClient);
+			Analytics = new AnalyticsClient(_httpClient);
+
+			// Keep Indexes for backwards compatibility (deprecated)
+			Indexes = new IndexesClient(_httpClient);
 		}
 
 		/// <summary>
@@ -109,8 +118,14 @@ namespace OpperSharp.Core
 		public FunctionsClient Functions { get; private set; } = null!;
 
 		/// <summary>
-		/// Client for index operations.
+		/// Client for knowledge base operations (v2 API - file-based RAG).
 		/// </summary>
+		public KnowledgeClient Knowledge { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for index operations (DEPRECATED - use Knowledge for v2 API).
+		/// </summary>
+		[Obsolete("Use Knowledge property instead. Indexes is deprecated in v2 API.")]
 		public IndexesClient Indexes { get; private set; } = null!;
 
 		/// <summary>
@@ -122,6 +137,36 @@ namespace OpperSharp.Core
 		/// Client for span/tracing operations.
 		/// </summary>
 		public SpansClient Spans { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for dataset operations (v2 API).
+		/// </summary>
+		public DatasetsClient Datasets { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for embeddings operations (v2 API).
+		/// </summary>
+		public EmbeddingsClient Embeddings { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for model and alias operations (v2 API).
+		/// </summary>
+		public ModelsClient Models { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for OCR operations (v2 API).
+		/// </summary>
+		public OcrClient Ocr { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for document reranking operations (v2 API).
+		/// </summary>
+		public RerankClient Rerank { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for analytics operations (v2 API).
+		/// </summary>
+		public AnalyticsClient Analytics { get; private set; } = null!;
 
 		/// <summary>
 		/// Shorthand for calling a function with automatic retries.

@@ -10,11 +10,23 @@ namespace OpperSharp.Utilities.Enums
 		Functions,
 		[Description("/call")]
 		Calls,
-		[Description("/indexes")]
-		Indexes,
+		[Description("/knowledge")]
+		Knowledge,
+		[Description("/datasets")]
+		Datasets,
 		[Description("/spans")]
 		Spans,
 		[Description("/traces")]
-		Traces
+		Traces,
+		[Description("/embeddings")]
+		Embeddings,
+		[Description("/models")]
+		Models,
+		[Description("/ocr")]
+		Ocr,
+		[Description("/rerank")]
+		Rerank,
+		[Description("/analytics/usage")]
+		AnalyticsUsage
 	}
 }
