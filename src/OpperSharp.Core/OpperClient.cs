@@ -1,7 +1,7 @@
-﻿using OpperSharp.Clients;
+﻿using OpperSharp.Utilities;
 using OpperSharp.Models.Common;
 using OpperSharp.Models.Functions;
-using OpperSharp.Utilities;
+using OpperSharp.Clients;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -23,7 +23,7 @@ namespace OpperSharp.Core
 		/// <summary>
 		/// Default base URL for Opper AI API.
 		/// </summary>
-		public const string DefaultBaseUrl = "https://api.opper.ai";
+		public const string DefaultBaseUrl = "https://api.opper.ai/v2";
 
 		/// <summary>
 		/// Creates a new instance of OpperClient with an API key.

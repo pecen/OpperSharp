@@ -2,6 +2,8 @@
 using OpperSharp.Exceptions;
 using OpperSharp.Models.Common;
 using OpperSharp.Models.Functions;
+using OpperSharp.Utilities.Enums;
+using OpperSharp.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,10 +22,15 @@ namespace OpperSharp.Clients
 	public class FunctionsClient
 	{
 		private readonly HttpClient _httpClient;
+		private readonly string _callEndpoint;
+		private readonly string _functionsEndpoint;
 
 		public FunctionsClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
+
+			_callEndpoint = _httpClient.BaseAddress + EndPoints.Calls.GetDescription();
+			_functionsEndpoint = _httpClient.BaseAddress + EndPoints.Functions.GetDescription();
 		}
 
 		/// <summary>
@@ -70,7 +77,7 @@ namespace OpperSharp.Clients
 			);
 
 			var response = await _httpClient.PostAsync(
-				$"/v1/call/{path}",
+				$"{_callEndpoint}/{path}",
 				content,
 				cancellationToken
 			);
@@ -83,7 +90,7 @@ namespace OpperSharp.Clients
 					$"Function call failed: {response.StatusCode}",
 					responseString,
 					(int)response.StatusCode,
-					$"/v1/call/{path}"
+					$"{_callEndpoint}/{path}"
 				);
 			}
 
@@ -123,7 +130,7 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var request = new HttpRequestMessage(HttpMethod.Post, $"/v1/call/{path}")
+			var request = new HttpRequestMessage(HttpMethod.Post, $"{_callEndpoint}/{path}")
 			{
 				Content = content
 			};
@@ -198,7 +205,7 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var response = await _httpClient.PostAsync("/v1/functions", content, cancellationToken);
+			var response = await _httpClient.PostAsync(_functionsEndpoint, content, cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -207,7 +214,7 @@ namespace OpperSharp.Clients
 					$"Failed to create function: {response.StatusCode}",
 					responseString,
 					(int)response.StatusCode,
-					"/v1/functions"
+					_functionsEndpoint
 				);
 			}
 
@@ -233,7 +240,7 @@ namespace OpperSharp.Clients
 			);
 
 			var response = await _httpClient.PutAsync(
-				$"/v1/functions/{path}",
+				$"{_functionsEndpoint}/{path}",
 				content,
 				cancellationToken
 			);
@@ -260,7 +267,7 @@ namespace OpperSharp.Clients
 			string path,
 			CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.GetAsync($"/v1/functions/{path}", cancellationToken);
+			var response = await _httpClient.GetAsync($"{_functionsEndpoint}/{path}", cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -281,7 +288,7 @@ namespace OpperSharp.Clients
 		/// </summary>
 		public async Task<List<OpperFunction>> ListAsync(CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.GetAsync("/v1/functions", cancellationToken);
+			var response = await _httpClient.GetAsync(_functionsEndpoint, cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -302,7 +309,7 @@ namespace OpperSharp.Clients
 		/// </summary>
 		public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.DeleteAsync($"/v1/functions/{path}", cancellationToken);
+			var response = await _httpClient.DeleteAsync($"{_functionsEndpoint}/{path}", cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
 			{

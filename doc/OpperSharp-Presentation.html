@@ -101,7 +101,7 @@ var content = new StringContent(
     Encoding.UTF8, "application/json"
 );
 
-var response = await httpClient.PostAsync("/v1/call/func", content);
+var response = await httpClient.PostAsync("/v2/call/func", content);
 var responseString = await response.Content.ReadAsStringAsync();
 
 if (!response.IsSuccessStatusCode) {

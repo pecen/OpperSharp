@@ -1,0 +1,50 @@
+OpperSharp/
+|── OpperSharp.Core/
+|   └-- OpperClient.cs                     # Main entry point, orchestrator
+|
+|── OpperSharp.Clients/
+|   ├-- FunctionsClient.cs                 # Function operations
+|   ├-- IndexesClient.cs                   # Vector/semantic search
+|   ├-- ChatClient.cs                      # Chat completions
+|   └-- SpansClient.cs                     # Distributed tracing
+|
+|── OpperSharp.Agents/
+|   ├-- Agent.cs                           # Agent orchestrator
+|   ├-- AgentTool.cs                       # Tool abstraction & discovery
+|   ├-- AgentOptions.cs                    # Configuration model
+|   ├-- AgentResponse.cs                   # Result model
+|   ├-- ToolAttribute.cs                   # [Tool] decorator
+|   └-- ToolCall.cs                        # Tool execution record
+|
+|── OpperSharp.Models.Functions/
+|   ├-- OpperFunction.cs                   # Function metadata
+|   ├-- OpperFunctionDefinition.cs         # Function create/update
+|   ├-- OpperFunctionResponse.cs           # Function call result
+|   └-- OpperCallOptions.cs                # Call configuration
+|
+|── OpperSharp.Models.Indexes/
+|   ├-- OpperIndex.cs                      # Index metadata
+|   ├-- OpperDocument.cs                   # Document input
+|   ├-- OpperIndexedDocument.cs            # Document with ID
+|   └-- OpperSearchResponse.cs             # Search results
+|
+|── OpperSharp.Models.Chat/
+|   ├-- OpperChatResponse.cs               # Chat result
+|   ├-- OpperChatStreamChunk.cs            # Streaming chunk
+|   ├-- OpperMessage.cs                    # Message model
+|   ├-- OpperChatChoice.cs                 # Response choice
+|   └-- OpperUsage.cs                      # Token usage
+|
+|── OpperSharp.Models.Spans/
+|   └-- OpperSpan.cs                       # Tracing span
+|
+|── OpperSharp.Models.Common/
+|   ├-- OpperStreamChunk.cs                # Generic stream chunk
+|   └-- OpperListResponse.cs               # Paginated response
+|
+|── OpperSharp.Utilities/
+|   ├-- OpperClientOptions.cs              # Client configuration
+|   └-- RetryHandler.cs                    # Retry logic
+|
+└-- OpperSharp.Exceptions/
+    └── OpperAPIException.cs               # Typed API exception

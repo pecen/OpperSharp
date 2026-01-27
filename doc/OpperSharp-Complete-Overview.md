@@ -95,10 +95,10 @@ OpperSharp/
 
 #### 1. **Separation of Concerns**
 Each client handles a single API domain:
-- `FunctionsClient` → `/v1/functions` and `/v1/call`
-- `IndexesClient` → `/v1/indexes`
-- `ChatClient` → `/v1/chat`
-- `SpansClient` → `/v1/spans` and `/v1/traces`
+- `FunctionsClient` → `/v2/functions` and `/v2/call`
+- `IndexesClient` → `/v2/indexes`
+- `ChatClient` → `/v2/chat`
+- `SpansClient` → `/v2/spans` and `/v2/traces`
 
 #### 2. **Composition Over Inheritance**
 `OpperClient` composes specialized clients rather than using inheritance:
@@ -558,7 +558,7 @@ public async Task SaveMetricAsync(
     );
 
     var response = await _httpClient.PostAsync(
-        $"/v1/spans/{spanId}/metrics",
+        $"/v2/spans/{spanId}/metrics",
         content,
         cancellationToken
     );

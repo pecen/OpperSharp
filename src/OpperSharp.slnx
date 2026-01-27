@@ -6,6 +6,17 @@
     <Project Path="Models/OpperSharp.Models.Indexes/OpperSharp.Models.Indexes.csproj" Id="855ba4cb-6815-40a1-8d0e-5f08333a541c" />
     <Project Path="Models/OpperSharp.Models.Spans/OpperSharp.Models.Spans.csproj" Id="2c3fe6b6-200a-4002-ac84-d68cadd33bd4" />
   </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="../doc/OpperSharp-Complete-Overview.md" />
+    <File Path="../doc/OpperSharp-Presentation-Natural.html" />
+    <File Path="../doc/OpperSharp-Presentation-Swedish-Notes.html" />
+    <File Path="../doc/OpperSharp-Presentation-Swedish-Professional.html" />
+    <File Path="../doc/OpperSharp-Presentation-Swedish.html" />
+    <File Path="../doc/OpperSharp-Presentation.html" />
+    <File Path="../doc/OpperSharp-Presentation.md" />
+    <File Path="../doc/QuickStart-Guide.md" />
+    <File Path="../doc/SDK-Usage-Examples.md" />
+  </Folder>
   <Project Path="OpperSharp.Agents/OpperSharp.Agents.csproj" Id="0de0bf97-b970-4638-acda-b7dbec0bb718" />
   <Project Path="OpperSharp.Clients/OpperSharp.Clients.csproj" Id="2cecfc01-c946-48e0-8738-3cb1f302c4dd" />
   <Project Path="OpperSharp.Core/OpperSharp.Core.csproj" Id="274eca71-b211-4cb3-a0f0-4d1b9de6e694" />

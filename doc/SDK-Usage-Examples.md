@@ -81,7 +81,7 @@ var content = new StringContent(
 );
 
 var response = await httpClient.PostAsync(
-    "/v1/call/weather-function",
+    "/v2/call/weather-function",
     content
 );
 
@@ -137,7 +137,7 @@ var content = new StringContent(
     "application/json"
 );
 
-var request = new HttpRequestMessage(HttpMethod.Post, "/v1/call/story-generator")
+var request = new HttpRequestMessage(HttpMethod.Post, "/v2/call/story-generator")
 {
     Content = content
 };
@@ -209,7 +209,7 @@ var content = new StringContent(
     "application/json"
 );
 
-var response = await httpClient.PostAsync("/v1/functions", content);
+var response = await httpClient.PostAsync("/v2/functions", content);
 var responseString = await response.Content.ReadAsStringAsync();
 
 if (!response.IsSuccessStatusCode)
@@ -266,7 +266,7 @@ var content = new StringContent(
     "application/json"
 );
 
-var response = await httpClient.PostAsync("/v1/indexes", content);
+var response = await httpClient.PostAsync("/v2/indexes", content);
 var indexJson = await response.Content.ReadAsStringAsync();
 var index = JsonConvert.DeserializeObject<dynamic>(indexJson);
 
@@ -288,7 +288,7 @@ content = new StringContent(
 );
 
 response = await httpClient.PostAsync(
-    "/v1/indexes/knowledge-base/index",
+    "/v2/indexes/knowledge-base/index",
     content
 );
 ```
@@ -345,7 +345,7 @@ var content = new StringContent(
 );
 
 var response = await httpClient.PostAsync(
-    "/v1/indexes/knowledge-base/index/bulk",
+    "/v2/indexes/knowledge-base/index/bulk",
     content
 );
 
@@ -404,7 +404,7 @@ var content = new StringContent(
 );
 
 var response = await httpClient.PostAsync(
-    "/v1/indexes/knowledge-base/query",
+    "/v2/indexes/knowledge-base/query",
     content
 );
 
@@ -461,7 +461,7 @@ var content = new StringContent(
     "application/json"
 );
 
-var response = await httpClient.PostAsync("/v1/chat/completions", content);
+var response = await httpClient.PostAsync("/v2/chat/completions", content);
 var resultJson = await response.Content.ReadAsStringAsync();
 var chatResponse = JsonConvert.DeserializeObject<dynamic>(resultJson);
 
@@ -522,7 +522,7 @@ var content = new StringContent(
     "application/json"
 );
 
-var response = await httpClient.PostAsync("/v1/spans", content);
+var response = await httpClient.PostAsync("/v2/spans", content);
 var spanJson = await response.Content.ReadAsStringAsync();
 var span = JsonConvert.DeserializeObject<dynamic>(spanJson);
 var spanId = (string)span.id;
@@ -547,7 +547,7 @@ try
 
     var request = new HttpRequestMessage(
         new HttpMethod("PATCH"),
-        $"/v1/spans/{spanId}"
+        $"/v2/spans/{spanId}"
     )
     {
         Content = content
@@ -572,7 +572,7 @@ catch (Exception ex)
 
     var request = new HttpRequestMessage(
         new HttpMethod("PATCH"),
-        $"/v1/spans/{spanId}"
+        $"/v2/spans/{spanId}"
     )
     {
         Content = content
@@ -648,7 +648,7 @@ var content = new StringContent(
 );
 
 await httpClient.PostAsync(
-    $"/v1/spans/{spanId}/feedback",
+    $"/v2/spans/{spanId}/feedback",
     content
 );
 ```
@@ -687,7 +687,7 @@ while (iteration < maxIterations)
         "application/json"
     );
 
-    var response = await httpClient.PostAsync("/v1/call/agent-function", content);
+    var response = await httpClient.PostAsync("/v2/call/agent-function", content);
     var resultJson = await response.Content.ReadAsStringAsync();
     var result = JsonConvert.DeserializeObject<dynamic>(resultJson);
 

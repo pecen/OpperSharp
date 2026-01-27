@@ -1,5 +1,6 @@
 ﻿using OpperSharp.Core;
 using OpperSharp.Models.Functions;
+using OpperSharp.Models.Chat;
 using static System.Console;
 
 namespace OpperSharp.UI.TestConsole
@@ -71,7 +72,7 @@ namespace OpperSharp.UI.TestConsole
 
 		private async Task AskQuestion()
 		{
-			WriteLine("Ange din fråga:");
+			WriteLine("\n>Ange din fråga:");
 			var userPrompt = ReadLine() ?? string.Empty;
 
 			var response = await _client.CallAsync(
@@ -79,7 +80,35 @@ namespace OpperSharp.UI.TestConsole
 				input: new Dictionary<string, object>
 				{
 					["question"] = $"{userPrompt}" // "Vad är AI?"
-				});
+				},
+				options: new OpperCallOptions
+				{
+					Model = "gpt-4",
+					Temperature = 0.7
+				}
+			);
+
+			var output = response.Output;
+			var message = response.Message;
+			var tokens = response.Usage?.TotalTokens;
+
+			WriteLine($"Output: {output}");
+			WriteLine($"Message: {message}");
+			WriteLine($"Tokens: {tokens}");
+
+			//var response = await _client.Chat.CompletionsAsync(
+			//	messages: new List<OpperMessage>
+			//	{
+			//		OpperMessage.System("You are a helpful science teacher"),
+			//		OpperMessage.User("Explain quantum computing in simple terms")
+			//	},
+			//	model: "gpt-4",
+			//	temperature: 0.7,
+			//	maxTokens: 500
+			//);
+
+			//WriteLine($"Response: {response.Content}");
+			//WriteLine($"Tokens: {response.Usage?.TotalTokens}");
 		}
 
 		private async Task FunctionAPITest()
@@ -129,7 +158,7 @@ namespace OpperSharp.UI.TestConsole
 		private async Task RagPipeline()
 		{
 			WriteLine("Ange din fråga:");
-			var userPrompt = ReadLine() ?? string.Empty; 
+			var userPrompt = ReadLine() ?? string.Empty;
 
 			// Steg 1: Sök kunskapsbas
 			var searchResults = await _client.Indexes.QueryAsync(

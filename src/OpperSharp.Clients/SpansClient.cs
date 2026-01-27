@@ -2,6 +2,8 @@
 using OpperSharp.Exceptions;
 using OpperSharp.Models.Common;
 using OpperSharp.Models.Spans;
+using OpperSharp.Utilities.Enums;
+using OpperSharp.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -17,10 +19,15 @@ namespace OpperSharp.Clients
 	public class SpansClient
 	{
 		private readonly HttpClient _httpClient;
+		private readonly string _spansEndpoint;
+		private readonly string _tracesEndpoint;
 
 		public SpansClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
+
+			_spansEndpoint = EndPoints.Spans.GetDescription();
+			_tracesEndpoint = EndPoints.Traces.GetDescription();
 		}
 
 		/// <summary>
@@ -56,7 +63,7 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var response = await _httpClient.PostAsync("/v1/spans", content, cancellationToken);
+			var response = await _httpClient.PostAsync(_spansEndpoint, content, cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -65,7 +72,7 @@ namespace OpperSharp.Clients
 					$"Failed to create span: {response.StatusCode}",
 					responseString,
 					(int)response.StatusCode,
-					"/v1/spans"
+					_spansEndpoint
 				);
 			}
 
@@ -107,7 +114,7 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"/v1/spans/{spanId}")
+			var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{_spansEndpoint}/{spanId}")
 			{
 				Content = content
 			};
@@ -135,7 +142,7 @@ namespace OpperSharp.Clients
 			string spanId,
 			CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.GetAsync($"/v1/spans/{spanId}", cancellationToken);
+			var response = await _httpClient.GetAsync($"{_spansEndpoint}/{spanId}", cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -158,7 +165,7 @@ namespace OpperSharp.Clients
 			string traceId,
 			CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.GetAsync($"/v1/traces/{traceId}/spans", cancellationToken);
+			var response = await _httpClient.GetAsync($"{_tracesEndpoint}/{traceId}/spans", cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -198,7 +205,7 @@ namespace OpperSharp.Clients
 			);
 
 			var response = await _httpClient.PostAsync(
-				$"/v1/spans/{spanId}/feedback",
+				$"{_spansEndpoint}/{spanId}/feedback",
 				content,
 				cancellationToken
 			);

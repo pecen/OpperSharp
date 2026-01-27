@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using OpperSharp.Exceptions;
 using OpperSharp.Models.Chat;
+using OpperSharp.Utilities.Enums;
+using OpperSharp.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,10 +20,13 @@ namespace OpperSharp.Clients
 	public class ChatClient
 	{
 		private readonly HttpClient _httpClient;
+		private readonly string _chatCompletionsEndpoint;
 
 		public ChatClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
+
+			_chatCompletionsEndpoint = _httpClient.BaseAddress + EndPoints.ChatCompletions.GetDescription();
 		}
 
 		/// <summary>
@@ -64,7 +69,7 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var response = await _httpClient.PostAsync("/v1/chat/completions", content, cancellationToken);
+			var response = await _httpClient.PostAsync( _chatCompletionsEndpoint, content, cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -73,7 +78,7 @@ namespace OpperSharp.Clients
 					$"Chat completion failed: {response.StatusCode}",
 					responseString,
 					(int)response.StatusCode,
-					"/v1/chat/completions"
+					_chatCompletionsEndpoint
 				);
 			}
 
@@ -118,7 +123,7 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var request = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions")
+			var request = new HttpRequestMessage(HttpMethod.Post, _chatCompletionsEndpoint)
 			{
 				Content = content
 			};
