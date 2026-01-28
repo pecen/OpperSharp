@@ -1,6 +1,6 @@
 # OpperSharp - C# SDK for Opper AI (v2 API)
 
-A comprehensive C# SDK that wraps the functionality of the Opper AI v2 API. Since Opper officially only supports Python and TypeScript SDKs, OpperSharp brings the same powerful capabilities to the .NET ecosystem while leveraging C#-specific features for an even better developer experience.
+A comprehensive C# SDK that wraps the functionality of the Opper AI v2 API. Since Opper officially only supports Python and TypeScript SDKs, OpperSharp brings the same powerful capabilities to the .NET ecosystem while leveraging C#-specific features for an even better developer experience. Testing an add for the mirroring. 
 
 ## Table of Contents
 - [What is OpperSharp?](#what-is-oppersharp)
