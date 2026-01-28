@@ -1,10 +1,11 @@
-# OpperSharp - C# SDK for Opper AI
+# OpperSharp - C# SDK for Opper AI (v2 API)
 
-A comprehensive C# SDK that wraps the functionality of the Opper AI API. Since Opper officially only supports Python and TypeScript SDKs, OpperSharp brings the same powerful capabilities to the .NET ecosystem while leveraging C#-specific features for an even better developer experience.
+A comprehensive C# SDK that wraps the functionality of the Opper AI v2 API. Since Opper officially only supports Python and TypeScript SDKs, OpperSharp brings the same powerful capabilities to the .NET ecosystem while leveraging C#-specific features for an even better developer experience.
 
 ## Table of Contents
 - [What is OpperSharp?](#what-is-oppersharp)
 - [Core Capabilities](#core-capabilities)
+- [v2 API Features](#v2-api-features)
 - [Comparison with Python SDK](#comparison-with-python-sdk)
 - [OpperSharp Advantages](#oppersharp-advantages)
 - [Getting Started](#getting-started)
@@ -14,11 +15,11 @@ A comprehensive C# SDK that wraps the functionality of the Opper AI API. Since O
 
 ## What is OpperSharp?
 
-OpperSharp is a **production-ready, feature-complete C# SDK** that mirrors the Opper Python SDK while adding enhancements specific to the .NET ecosystem.
+OpperSharp is a **production-ready, feature-complete C# SDK** that implements the full Opper v2 API while adding enhancements specific to the .NET ecosystem.
 
 ### Key Benefits
 
-- ✅ **Full API Coverage** - Complete implementation of all Opper API endpoints
+- ✅ **Complete v2 API Coverage** - All endpoints including Knowledge, Datasets, Embeddings, Models, OCR, Rerank, Analytics
 - ✅ **Type Safety** - Strong typing with IntelliSense support throughout
 - ✅ **Async/Await** - Native C# async patterns for all operations
 - ✅ **Production-Ready** - Built-in retry logic, error handling, and resource management
@@ -45,19 +46,37 @@ var response = await client.CallAsync(
 - Full CRUD operations (create, update, delete, list)
 - Cache support
 
-### 2. **Indexes API**
-Vector/semantic search for knowledge retrieval:
+### 2. **Knowledge Bases API** (v2 - File-based RAG)
+Upload and manage files for Retrieval-Augmented Generation:
 ```csharp
-var index = await client.Indexes.CreateAsync("knowledge-base");
-await client.Indexes.AddBulkAsync("knowledge-base", documents);
-var results = await client.Indexes.QueryAsync("knowledge-base", "query", k: 5);
+// Create knowledge base
+var kb = await client.Knowledge.CreateAsync("company-docs");
+
+// Upload file
+using var fileStream = File.OpenRead("policy.pdf");
+await client.Knowledge.UploadFileAsync(
+    "company-docs",
+    "policy.pdf",
+    fileStream,
+    "application/pdf"
+);
+
+// Use with functions (integrated RAG)
+var answer = await client.Functions.CallAsync(
+    "answer-question",
+    new { question = "What is our vacation policy?" },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = "company-docs" }
+    }
+);
 ```
 
 **Features:**
-- Create and manage indexes
-- Add documents (single or bulk)
-- Semantic search with filters
-- Get-or-create patterns
+- File-based knowledge bases (PDF, CSV, TXT)
+- Presigned URLs for large file uploads
+- File management (list, delete, download)
+- Integrated with function calls for seamless RAG
 
 ### 3. **Chat API**
 Chat completions with OpenAI-compatible interface:
@@ -116,18 +135,124 @@ var result = await agent.RunAsync("Calculate 15% of $1000 then add $500");
 
 ---
 
+## v2 API Features
+
+OpperSharp implements the complete Opper v2 API with additional clients:
+
+### 6. **Datasets API** (v2)
+Manage training data and examples:
+```csharp
+await client.Datasets.CreateEntryAsync(
+    "training-data",
+    input: new { question = "What is AI?" },
+    output: new { answer = "AI is artificial intelligence..." },
+    expected: new { quality = "high" }
+);
+
+var entries = await client.Datasets.ListEntriesAsync("training-data");
+```
+
+### 7. **Embeddings API** (v2)
+Generate vector embeddings:
+```csharp
+var embedding = await client.Embeddings.CreateAsync(
+    "Text to embed",
+    model: "azure/text-embedding-3-large"
+);
+
+// Batch embeddings
+var embeddings = await client.Embeddings.CreateBatchAsync(
+    new[] { "text1", "text2", "text3" }
+);
+```
+
+### 8. **Models API** (v2)
+Manage models and aliases with fallback support:
+```csharp
+// Create alias with fallback models
+await client.Models.CreateAliasAsync(
+    "reliable-gpt4",
+    fallbackModels: new List<string>
+    {
+        "gpt-4",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo"
+    },
+    description: "GPT-4 with automatic fallbacks"
+);
+
+// List available models
+var models = await client.Models.ListAsync();
+
+// Register custom model
+await client.Models.RegisterCustomModelAsync(
+    "my-model",
+    "provider/model-id"
+);
+```
+
+### 9. **OCR API** (v2)
+Extract text from images and documents:
+```csharp
+var ocrResult = await client.Ocr.ProcessAsync(
+    new OpperOcrRequest
+    {
+        Model = "gpt-4-vision",
+        Document = documentData,
+        Pages = new List<int> { 0, 1, 2 }
+    }
+);
+
+Console.WriteLine(ocrResult.Text);
+```
+
+### 10. **Rerank API** (v2)
+Optimize search results by relevance:
+```csharp
+var reranked = await client.Rerank.RerankAsync(
+    query: "machine learning best practices",
+    documents: searchResults,
+    model: "rerank-model",
+    topK: 5
+);
+
+foreach (var result in reranked.Results)
+{
+    Console.WriteLine($"[{result.RelevanceScore:F2}] {result.Document}");
+}
+```
+
+### 11. **Analytics API** (v2)
+Query usage metrics and analytics:
+```csharp
+var usage = await client.Analytics.GetUsageAsync(
+    fromDate: DateTime.Now.AddDays(-30),
+    toDate: DateTime.Now,
+    granularity: "day",
+    groupBy: new List<string> { "model", "function" }
+);
+```
+
+---
+
 ## Comparison with Python SDK
 
-OpperSharp provides **100% feature parity** with the Opper Python SDK, plus additional enhancements:
+OpperSharp provides **100% feature parity** with the Opper Python SDK for v2 API, plus additional enhancements:
 
-### ✅ Features That Match Python SDK
+### ✅ Core Features (Python SDK Parity)
 
 | Feature | Python | OpperSharp |
 |---------|--------|------------|
 | Function calling | `opper.call()` | `client.CallAsync()` |
 | Streaming | `opper.stream()` | `client.CallStreamAsync()` |
-| Index operations | `opper.indexes` | `client.Indexes` |
+| Knowledge bases | `opper.knowledge` | `client.Knowledge` |
 | Chat completions | `opper.chat` | `client.Chat.CompletionsAsync()` |
+| Datasets | `opper.datasets` | `client.Datasets` |
+| Embeddings | `opper.embeddings` | `client.Embeddings` |
+| Models & Aliases | `opper.models` | `client.Models` |
+| OCR | `opper.ocr` | `client.Ocr` |
+| Rerank | `opper.rerank` | `client.Rerank` |
+| Analytics | `opper.analytics` | `client.Analytics` |
 | Tracing | `@trace` decorator | `TraceAsync()` method |
 | Agent tools | `@tool` decorator | `[Tool]` attribute |
 
@@ -135,7 +260,7 @@ OpperSharp provides **100% feature parity** with the Opper Python SDK, plus addi
 
 **1. Comprehensive CRUD Operations**
 ```csharp
-// OpperSharp has full function management
+// OpperSharp has full resource management
 await client.Functions.CreateAsync(definition);
 await client.Functions.GetAsync(path);
 await client.Functions.UpdateAsync(path, definition);
@@ -144,22 +269,16 @@ await client.Functions.DeleteAsync(path);
 await client.Functions.ExistsAsync(path);
 ```
 
-**2. Bulk Operations**
-```csharp
-// Add multiple documents at once
-await client.Indexes.AddBulkAsync(indexName, documents);
-```
-
-**3. Convenience Methods**
+**2. Convenience Methods**
 ```csharp
 // Get or create pattern
-var index = await client.Indexes.GetOrCreateAsync(name, description);
+var kb = await client.Knowledge.GetOrCreateAsync(name, embeddingModel);
 
 // Simple one-line chat
 var answer = await client.Chat.CompleteAsync(prompt, systemPrompt);
 ```
 
-**4. Built-in Retry Logic**
+**3. Built-in Retry Logic**
 ```csharp
 var client = new OpperClient(new OpperClientOptions
 {
@@ -169,10 +288,12 @@ var client = new OpperClient(new OpperClientOptions
 });
 ```
 
-**5. Document-Level Operations**
+**4. Presigned URL Support**
 ```csharp
-var doc = await client.Indexes.RetrieveAsync(indexName, documentId);
-await client.Indexes.DeleteDocumentAsync(indexName, documentId);
+// Get presigned URL for large file uploads
+var uploadUrl = await client.Knowledge.GetUploadUrlAsync(knowledgeBaseId);
+// Upload directly to storage, then register
+await client.Knowledge.RegisterFileAsync(knowledgeBaseId, fileRequest);
 ```
 
 ---
@@ -249,11 +370,11 @@ using var client = OpperClient.FromEnvironment();
 
 **Raw REST API** (~50 lines):
 ```csharp
-var httpClient = new HttpClient { BaseAddress = new Uri("https://api.opper.ai") };
+var httpClient = new HttpClient { BaseAddress = new Uri("https://api.opper.ai/v2") };
 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 var requestBody = new { input = new { data = "value" } };
 var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
-var response = await httpClient.PostAsync("/v1/call/func", content);
+var response = await httpClient.PostAsync("/call/func", content);
 var responseString = await response.Content.ReadAsStringAsync();
 // ... error handling, parsing, etc.
 ```
@@ -284,7 +405,7 @@ dotnet add reference path/to/OpperSharp.Core.csproj
 using OpperSharp.Core;
 using OpperSharp.Models.Chat;
 
-// Initialize client
+// Initialize client (v2 API)
 var client = OpperClient.FromEnvironment();  // Uses OPPER_API_KEY env var
 
 // Chat completion
@@ -294,16 +415,21 @@ var answer = await client.Chat.CompleteAsync(
 );
 Console.WriteLine(answer);
 
-// Knowledge base search
-var results = await client.Indexes.QueryAsync(
-    indexName: "company-docs",
-    query: "vacation policy",
-    k: 5
+// Knowledge base with file upload
+var kb = await client.Knowledge.CreateAsync("company-docs");
+using var fileStream = File.OpenRead("handbook.pdf");
+await client.Knowledge.UploadFileAsync(kb.Id, "handbook.pdf", fileStream, "application/pdf");
+
+// Query with RAG
+var result = await client.Functions.CallAsync(
+    "answer-question",
+    new { question = "What is the vacation policy?" },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = kb.Name }
+    }
 );
-foreach (var result in results.Results)
-{
-    Console.WriteLine($"[{result.Score:F2}] {result.Content}");
-}
+Console.WriteLine(result.Message);
 
 // Agent with tools
 var agent = new Agent(client, new AgentOptions
@@ -323,6 +449,7 @@ Console.WriteLine(response.Output);
 - 📖 **[Quick Start Guide](doc/QuickStart-Guide.md)** - 10 practical examples to get started
 - 📚 **[API Comparison](doc/SDK-Usage-Examples.md)** - Detailed comparison: REST API vs OpperSharp
 - 🏗️ **[Architecture](doc/OpperSharp-Complete-Overview.md)** - Complete SDK overview and design
+- 🔄 **[v2 Migration Analysis](doc/v2-API-Migration-Analysis.md)** - Complete v2 API migration details
 
 ### Key Concepts
 
@@ -331,9 +458,9 @@ Console.WriteLine(response.Output);
 var response = await client.CallAsync(path, input, options);
 ```
 
-**Indexes**: Vector search for knowledge retrieval
+**Knowledge Bases**: File-based RAG (v2 API)
 ```csharp
-var results = await client.Indexes.QueryAsync(indexName, query, k: 5);
+await client.Knowledge.UploadFileAsync(kbId, filename, stream, contentType);
 ```
 
 **Chat**: Conversational AI with message history
@@ -359,6 +486,16 @@ var agent = new Agent(client, options).WithTools(toolProvider);
 var result = await agent.RunAsync(query);
 ```
 
+**Embeddings**: Vector generation (v2 API)
+```csharp
+var embeddings = await client.Embeddings.CreateBatchAsync(texts);
+```
+
+**Models**: Alias management with fallbacks (v2 API)
+```csharp
+await client.Models.CreateAliasAsync(name, fallbackModels);
+```
+
 ---
 
 ## Architecture
@@ -368,9 +505,19 @@ OpperSharp is organized into modular components:
 ```
 OpperSharp/
 ├── OpperSharp.Core          # Main client (OpperClient)
-├── OpperSharp.Clients       # API clients (Functions, Indexes, Chat, Spans)
+├── OpperSharp.Clients       # API clients (Functions, Knowledge, Chat, Spans, etc.)
 ├── OpperSharp.Agents        # Agent framework with tools
 ├── OpperSharp.Models.*      # Typed models for all APIs
+│   ├── Models.Functions
+│   ├── Models.Knowledge     # v2: File-based knowledge bases
+│   ├── Models.Datasets      # v2: Training data
+│   ├── Models.Embeddings    # v2: Vector embeddings
+│   ├── Models.Models        # v2: Model aliases
+│   ├── Models.Ocr           # v2: OCR
+│   ├── Models.Rerank        # v2: Reranking
+│   ├── Models.Analytics     # v2: Usage analytics
+│   ├── Models.Chat
+│   └── Models.Spans
 ├── OpperSharp.Utilities     # Configuration and retry logic
 └── OpperSharp.Exceptions    # Typed exceptions
 ```
@@ -381,6 +528,7 @@ OpperSharp/
 - Resource management (IDisposable)
 - Extensibility
 - Testability
+- Full v2 API coverage
 
 ---
 
@@ -388,13 +536,30 @@ OpperSharp/
 
 ### What OpperSharp Provides
 
-✅ **100% Python SDK Parity** - All core features implemented
+✅ **Complete v2 API Coverage** - All 11 API clients implemented
+✅ **100% Python SDK Parity** - All core features match
 ✅ **Enhanced CRUD** - More comprehensive than Python
 ✅ **Better Developer Experience** - Type safety + IntelliSense
 ✅ **Production Features** - Retries, error handling, resource management
 ✅ **Modern C#** - async/await, IAsyncEnumerable, IDisposable
 ✅ **Powerful Agent Framework** - Easy to use, attribute-based
-✅ **Comprehensive** - ~2900 lines of well-structured code
+✅ **Comprehensive** - ~4800 lines of well-structured code
+
+### API Coverage
+
+| API | Python SDK | OpperSharp | Status |
+|-----|------------|------------|--------|
+| Functions | ✅ | ✅ | Complete |
+| Knowledge | ✅ | ✅ | Complete (v2) |
+| Chat | ✅ | ✅ | Complete |
+| Spans | ✅ | ✅ | Complete |
+| Agents | ✅ | ✅ | Complete |
+| Datasets | ✅ | ✅ | Complete (v2) |
+| Embeddings | ✅ | ✅ | Complete (v2) |
+| Models/Aliases | ✅ | ✅ | Complete (v2) |
+| OCR | ✅ | ✅ | Complete (v2) |
+| Rerank | ✅ | ✅ | Complete (v2) |
+| Analytics | ✅ | ✅ | Complete (v2) |
 
 ### Comparison Summary
 
@@ -406,23 +571,62 @@ OpperSharp/
 | Retry Logic | Manual | Manual | Built-in |
 | Streaming | Manual SSE | Generator | IAsyncEnumerable |
 | CRUD Operations | Manual | Limited | Complete |
-| Bulk Operations | Manual | ❌ | ✅ |
+| File Management | Manual | Basic | Presigned URLs |
 | Resource Cleanup | Manual | Context mgr | IDisposable |
+| v2 API Support | Manual | ✅ | ✅ Complete |
 
 ---
 
 ## Examples
 
-### RAG (Retrieval-Augmented Generation)
+### RAG with Knowledge Bases (v2)
 ```csharp
-// Search knowledge base
-var searchResults = await client.Indexes.QueryAsync("docs", query, k: 3);
-var context = string.Join("\n\n", searchResults.Results.Select(r => r.Content));
+// Create knowledge base
+var kb = await client.Knowledge.CreateAsync("product-docs");
 
-// Generate answer with context
-var answer = await client.Chat.CompleteAsync(
-    query,
-    systemPrompt: $"Use this context:\n{context}"
+// Upload documentation files
+var files = Directory.GetFiles("docs/", "*.pdf");
+foreach (var file in files)
+{
+    using var stream = File.OpenRead(file);
+    await client.Knowledge.UploadFileAsync(
+        kb.Id,
+        Path.GetFileName(file),
+        stream,
+        "application/pdf"
+    );
+}
+
+// Query with integrated RAG
+var answer = await client.Functions.CallAsync(
+    "product-qa",
+    new { question = "How do I configure authentication?" },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = kb.Name }
+    }
+);
+```
+
+### Model Aliases for Reliability (v2)
+```csharp
+// Create alias with fallback chain
+await client.Models.CreateAliasAsync(
+    "production-gpt4",
+    new List<string>
+    {
+        "gpt-4",           // Primary
+        "gpt-4-turbo",     // Fallback 1
+        "gpt-3.5-turbo"    // Fallback 2
+    },
+    "Production GPT-4 with automatic failover"
+);
+
+// Use alias in functions - automatic fallback if primary fails
+var result = await client.Functions.CallAsync(
+    "analyzer",
+    input,
+    new OpperCallOptions { Model = "production-gpt4" }
 );
 ```
 
@@ -454,6 +658,63 @@ var agent = new Agent(client, new AgentOptions
 var result = await agent.RunAsync("Research quantum computing and summarize");
 ```
 
+### Embeddings and Custom Search (v2)
+```csharp
+// Generate embeddings
+var documents = new[] { "doc1", "doc2", "doc3" };
+var embeddingsResponse = await client.Embeddings.CreateBatchAsync(documents);
+
+// Store embeddings in your database
+foreach (var (doc, embedding) in documents.Zip(embeddingsResponse.Data))
+{
+    await StoreEmbeddingAsync(doc, embedding.Embedding);
+}
+
+// Query embedding
+var queryEmbedding = await client.Embeddings.CreateAsync(userQuery);
+var similarDocs = await FindSimilarAsync(queryEmbedding);
+```
+
+### OCR Processing (v2)
+```csharp
+var ocrResult = await client.Ocr.ProcessAsync(
+    new OpperOcrRequest
+    {
+        Model = "gpt-4-vision",
+        Document = pdfBytes,
+        Pages = new List<int> { 0, 1, 2 },  // First 3 pages
+        IncludeImageBase64 = false
+    }
+);
+
+Console.WriteLine(ocrResult.Text);
+foreach (var page in ocrResult.Pages)
+{
+    Console.WriteLine($"Page {page.PageNumber}: {page.Text}");
+}
+```
+
+### Search Result Reranking (v2)
+```csharp
+// Initial search
+var searchResults = await SearchAsync(query);
+
+// Rerank by relevance
+var reranked = await client.Rerank.RerankAsync(
+    query: query,
+    documents: searchResults.Select(r => r.Content).ToList(),
+    model: "rerank-model",
+    topK: 10,
+    returnDocuments: true
+);
+
+// Use reranked results
+foreach (var result in reranked.Results)
+{
+    Console.WriteLine($"[{result.RelevanceScore:F3}] {result.Document}");
+}
+```
+
 ### Streaming with Progress
 ```csharp
 Console.Write("AI: ");
@@ -469,15 +730,37 @@ Console.WriteLine();
 
 ---
 
-## Optional Enhancements
+## Migration from v1 to v2
 
-While OpperSharp is production-ready, here are optional enhancements to consider:
+If you're upgrading from v1 Indexes to v2 Knowledge Bases:
 
-1. **Generic Call Method** - Type-safe responses: `var result = await client.CallAsync<MyType>(...);`
-2. **Metric Saving** - Generic metrics: `await client.Spans.SaveMetricAsync(spanId, "accuracy", 0.95);`
-3. **Trace Attribute** - Declarative tracing: `[Trace("operation")]`
+### Old (v1 - Deprecated):
+```csharp
+// v1: Document-based indexing
+await client.Indexes.CreateAsync("my-index");
+await client.Indexes.IndexAsync("my-index", documentContent);
+var results = await client.Indexes.QueryAsync("my-index", query);
+```
 
-These are enhancements, not gaps. OpperSharp is already more comprehensive than the Python SDK.
+### New (v2 - Recommended):
+```csharp
+// v2: File-based knowledge bases
+await client.Knowledge.CreateAsync("my-knowledge-base");
+using var fileStream = File.OpenRead("document.pdf");
+await client.Knowledge.UploadFileAsync("my-knowledge-base", "document.pdf", fileStream, "application/pdf");
+
+// Query through functions with context
+var result = await client.Functions.CallAsync(
+    "answer-question",
+    new { question = query },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = "my-knowledge-base" }
+    }
+);
+```
+
+**Note**: `client.Indexes` is still available but deprecated. Use `client.Knowledge` for new code.
 
 ---
 
@@ -500,6 +783,7 @@ Contributions welcome! Please open an issue or pull request.
 ## Conclusion
 
 OpperSharp is a **production-ready, feature-complete C# SDK** that:
+- ✅ Implements complete Opper v2 API (all 11 clients)
 - ✅ Matches Python SDK functionality (100% parity)
 - ✅ Exceeds Python SDK in several areas
 - ✅ Reduces code by ~90% vs REST API
