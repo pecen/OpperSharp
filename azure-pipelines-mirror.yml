@@ -1,0 +1,37 @@
+# Azure DevOps to GitHub Mirror Pipeline
+trigger:
+  branches:
+    include:
+      - '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: GitHub-Mirror-Secrets
+
+steps:
+  - checkout: self
+    persistCredentials: true
+    fetchDepth: 0
+
+  - script: |
+      COMMIT_MSG=$(git log -1 --pretty=%B)
+      if echo "$COMMIT_MSG" | grep -q "\[skip mirror\]"; then
+        echo "##[warning]Skipping mirror - commit originated from GitHub"
+        exit 0
+      fi
+      
+      BRANCH_NAME=$(echo "$(Build.SourceBranch)" | sed 's|refs/heads/||')
+      echo "Mirroring branch: $BRANCH_NAME"
+      
+      git config user.email "azure-pipeline@mirror.local"
+      git config user.name "Azure DevOps Mirror"
+      
+      git checkout -b $BRANCH_NAME
+      git remote add github https://$(GITHUB_PAT)@github.com/pecen/OpperSharp.git
+      git push github $BRANCH_NAME --force
+      
+    displayName: 'Mirror to GitHub'
+    env:
+      GITHUB_PAT: $(GITHUB_PAT)
