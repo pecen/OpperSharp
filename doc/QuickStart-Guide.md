@@ -1,6 +1,6 @@
-# OpperSharp Quick Start Guide
+# OpperSharp Quick Start Guide (v2 API)
 
-Get started with OpperSharp in minutes with these practical examples.
+Get started with OpperSharp v2 API in minutes with these practical examples.
 
 ## Installation
 
@@ -18,7 +18,7 @@ dotnet add reference path/to/OpperSharp.Core.csproj
 using OpperSharp.Core;
 using OpperSharp.Models.Chat;
 using OpperSharp.Models.Functions;
-using OpperSharp.Models.Indexes;
+using OpperSharp.Models.Knowledge;  // v2: Knowledge instead of Indexes
 
 // Set your API key as environment variable
 // OPPER_API_KEY=your-key-here
@@ -66,61 +66,59 @@ Console.WriteLine($"Tokens: {response.Usage?.TotalTokens}");
 
 ---
 
-### Example 2: Build a Knowledge Base
+### Example 2: Build a Knowledge Base (v2 - File-based)
 
 ```csharp
 using OpperSharp.Core;
-using OpperSharp.Models.Indexes;
+using OpperSharp.Models.Knowledge;
 
 var client = OpperClient.FromEnvironment();
 
-// Create or get index
-var index = await client.Indexes.GetOrCreateAsync(
+// Create knowledge base
+await client.Knowledge.CreateAsync(
     name: "company-docs",
-    description: "Internal company documentation"
+    embeddingModel: "azure/text-embedding-3-large"
 );
 
-// Add documents
-var documents = new List<OpperDocument>
-{
-    new()
-    {
-        Content = "Our vacation policy allows 20 days per year",
-        Metadata = new() { ["category"] = "HR", ["type"] = "policy" }
-    },
-    new()
-    {
-        Content = "Code review process requires 2 approvals",
-        Metadata = new() { ["category"] = "Engineering", ["type"] = "process" }
-    },
-    new()
-    {
-        Content = "Monthly all-hands meetings are on first Friday",
-        Metadata = new() { ["category"] = "General", ["type"] = "schedule" }
-    }
-};
-
-await client.Indexes.AddBulkAsync("company-docs", documents);
-
-// Search the knowledge base
-var results = await client.Indexes.QueryAsync(
-    indexName: "company-docs",
-    query: "How many vacation days do I get?",
-    k: 3
+// Upload PDF document
+using var policyFile = File.OpenRead("company-policies.pdf");
+await client.Knowledge.UploadFileAsync(
+    knowledgeBaseId: "company-docs",
+    filename: "company-policies.pdf",
+    fileStream: policyFile,
+    contentType: "application/pdf"
 );
 
-foreach (var result in results.Results)
+// Upload CSV file
+using var scheduleFile = File.OpenRead("team-schedule.csv");
+await client.Knowledge.UploadFileAsync(
+    knowledgeBaseId: "company-docs",
+    filename: "team-schedule.csv",
+    fileStream: scheduleFile,
+    contentType: "text/csv"
+);
+
+// List uploaded files
+var files = await client.Knowledge.ListFilesAsync("company-docs");
+foreach (var file in files)
 {
-    Console.WriteLine($"[Score: {result.Score:F2}] {result.Content}");
+    Console.WriteLine($"File: {file.Filename} (Size: {file.Size} bytes)");
 }
+
+// Use knowledge base with Functions (integrated RAG)
+var answer = await client.Functions.CallAsync(
+    "answer-from-docs",
+    new { question = "How many vacation days do I get?" },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = "company-docs" }
+    }
+);
+
+Console.WriteLine($"Answer: {answer.Message}");
 ```
 
-**Output:**
-```
-[Score: 0.92] Our vacation policy allows 20 days per year
-[Score: 0.34] Monthly all-hands meetings are on first Friday
-[Score: 0.21] Code review process requires 2 approvals
-```
+**v2 Advantage:** Upload entire PDF/CSV files instead of chunking documents manually. Opper handles parsing, chunking, and embedding generation automatically.
 
 ---
 
@@ -194,38 +192,35 @@ catch (OpperAPIException ex)
 
 ---
 
-### Example 5: RAG (Retrieval-Augmented Generation)
+### Example 5: RAG with Knowledge Base (v2 - Integrated)
 
 ```csharp
 using OpperSharp.Core;
-using OpperSharp.Models.Chat;
 
 var client = OpperClient.FromEnvironment();
 
-// Step 1: Query knowledge base
-var searchResults = await client.Indexes.QueryAsync(
-    indexName: "company-docs",
-    query: "What is our code review process?",
-    k: 3
+// v2 approach: Direct integration with Functions
+var answer = await client.Functions.CallAsync(
+    "answer-from-docs",
+    new { question = "What is our code review process?" },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = "company-docs" }
+    }
 );
 
-// Step 2: Build context from search results
-var context = string.Join("\n\n",
-    searchResults.Results.Select(r => r.Content)
-);
+Console.WriteLine($"Answer: {answer.Message}");
 
-// Step 3: Generate answer with context
-var answer = await client.Chat.CompleteAsync(
-    prompt: "What is our code review process?",
-    systemPrompt: $@"Answer the question using only the following context:
-
-{context}
-
-If the answer is not in the context, say 'I don't have that information.'"
-);
-
-Console.WriteLine(answer);
+// Alternative: Manual retrieval if needed
+var files = await client.Knowledge.ListFilesAsync("company-docs");
+Console.WriteLine($"\nKnowledge base contains {files.Count} files:");
+foreach (var file in files)
+{
+    Console.WriteLine($"  - {file.Filename}");
+}
 ```
+
+**v2 Advantage:** RAG is integrated directly into Functions. Just specify the knowledge_base in Context, and Opper handles retrieval and context injection automatically.
 
 ---
 
@@ -384,7 +379,7 @@ Console.WriteLine(result.Output);
 
 ---
 
-### Example 9: Complete Workflow with Error Handling
+### Example 9: Complete Workflow with Error Handling (v2)
 
 ```csharp
 using OpperSharp.Core;
@@ -397,35 +392,16 @@ async Task<string> ProcessCustomerQuery(string query)
 {
     try
     {
-        // Step 1: Search knowledge base
-        var searchResults = await client.Indexes.QueryAsync(
-            indexName: "help-docs",
-            query: query,
-            k: 5
-        );
-
-        if (searchResults.Results.Count == 0)
-        {
-            return "I couldn't find relevant information. Please contact support.";
-        }
-
-        // Step 2: Generate response with context
-        var context = string.Join("\n",
-            searchResults.Results.Select(r => r.Content)
-        );
-
-        var response = await client.CallAsync(
+        // Step 1: Use knowledge base with Functions (v2 integrated RAG)
+        var response = await client.Functions.CallAsync(
             path: "customer-support",
-            input: new Dictionary<string, object>
-            {
-                ["query"] = query,
-                ["context"] = context
-            },
+            input: new { query = query },
             options: new OpperCallOptions
             {
-                Model = "gpt-4",
+                Model = "reliable-gpt4", // Using model alias with fallback
                 Temperature = 0.3,
-                Cache = true
+                Cache = true,
+                Context = new() { ["knowledge_base"] = "help-docs" }
             }
         );
 
@@ -433,8 +409,8 @@ async Task<string> ProcessCustomerQuery(string query)
     }
     catch (OpperAPIException ex) when (ex.StatusCode == 404)
     {
-        Console.WriteLine("Index not found. Creating help-docs index...");
-        await client.Indexes.CreateAsync("help-docs");
+        Console.WriteLine("Knowledge base not found. Creating help-docs...");
+        await client.Knowledge.CreateAsync("help-docs");
         return "Please try again.";
     }
     catch (OpperAPIException ex) when (ex.StatusCode == 429)
@@ -539,6 +515,257 @@ if (await client.Functions.ExistsAsync("email-classifier"))
 
 ---
 
+### Example 11: Generating Embeddings (v2)
+
+```csharp
+using OpperSharp.Core;
+using OpperSharp.Models.Embeddings;
+
+var client = OpperClient.FromEnvironment();
+
+// Generate single embedding
+var embedding = await client.Embeddings.CreateAsync(
+    "Machine learning is transforming technology",
+    model: "azure/text-embedding-3-large"
+);
+
+Console.WriteLine($"Embedding dimensions: {embedding.Count}");
+Console.WriteLine($"First 5 values: {string.Join(", ", embedding.Take(5))}");
+
+// Generate batch embeddings
+var texts = new[]
+{
+    "Artificial intelligence is the future",
+    "Machine learning powers modern applications",
+    "Deep learning enables image recognition"
+};
+
+var batchResponse = await client.Embeddings.CreateBatchAsync(
+    texts,
+    model: "azure/text-embedding-3-large"
+);
+
+Console.WriteLine($"\nGenerated {batchResponse.Embeddings.Count} embeddings");
+foreach (var (text, idx) in texts.Select((t, i) => (t, i)))
+{
+    Console.WriteLine($"{idx + 1}. {text} -> {batchResponse.Embeddings[idx].Count} dimensions");
+}
+```
+
+**Use Case:** Generate embeddings for custom semantic search, similarity matching, or integration with external vector databases.
+
+---
+
+### Example 12: Model Aliases with Automatic Fallback (v2)
+
+```csharp
+using OpperSharp.Core;
+using OpperSharp.Models.Models;
+
+var client = OpperClient.FromEnvironment();
+
+// Create model alias with fallback chain
+var alias = await client.Models.CreateAliasAsync(
+    name: "reliable-gpt4",
+    fallbackModels: new List<string>
+    {
+        "gpt-4",           // Primary model
+        "gpt-4-turbo",     // Fallback 1
+        "gpt-3.5-turbo"    // Fallback 2
+    },
+    description: "GPT-4 with automatic fallback for high availability"
+);
+
+Console.WriteLine($"Created alias: {alias.Name}");
+Console.WriteLine($"Fallback chain: {string.Join(" → ", alias.FallbackModels)}");
+
+// Use the alias in function calls
+var result = await client.Functions.CallAsync(
+    "analyze-sentiment",
+    new { text = "This product is amazing!" },
+    new OpperCallOptions
+    {
+        Model = "reliable-gpt4"  // Will use fallback if gpt-4 unavailable
+    }
+);
+
+Console.WriteLine($"Result: {result.Message}");
+
+// List all aliases
+var aliases = await client.Models.ListAliasesAsync();
+foreach (var a in aliases)
+{
+    Console.WriteLine($"\n{a.Name}:");
+    foreach (var model in a.FallbackModels)
+    {
+        Console.WriteLine($"  - {model}");
+    }
+}
+
+// Delete alias when done
+await client.Models.DeleteAliasAsync("reliable-gpt4");
+```
+
+**v2 Advantage:** Automatic fallback ensures high availability without manual retry logic.
+
+---
+
+### Example 13: OCR Document Processing (v2)
+
+```csharp
+using OpperSharp.Core;
+using OpperSharp.Models.Ocr;
+
+var client = OpperClient.FromEnvironment();
+
+// Process scanned document
+var documentBytes = await File.ReadAllBytesAsync("invoice.png");
+
+var ocrResult = await client.Ocr.ProcessAsync(new OpperOcrRequest
+{
+    Model = "gpt-4-vision",
+    Document = documentBytes,
+    Instructions = "Extract invoice number, date, total amount, and line items. Return as structured JSON."
+});
+
+Console.WriteLine("Extracted Text:");
+Console.WriteLine(ocrResult.Text);
+
+if (ocrResult.StructuredData != null)
+{
+    Console.WriteLine("\nStructured Data:");
+    Console.WriteLine(ocrResult.StructuredData);
+}
+
+// List available OCR models
+var ocrModels = await client.Ocr.ListModelsAsync();
+Console.WriteLine($"\nAvailable OCR models: {string.Join(", ", ocrModels)}");
+
+// Process with specific extraction
+var receiptBytes = await File.ReadAllBytesAsync("receipt.jpg");
+var receiptData = await client.Ocr.ProcessAsync(new OpperOcrRequest
+{
+    Model = "gpt-4-vision",
+    Document = receiptBytes,
+    Instructions = "Extract: merchant name, date, items purchased, and total amount"
+});
+
+Console.WriteLine($"\nReceipt data: {receiptData.Text}");
+```
+
+**Use Case:** Extract text from scanned documents, invoices, receipts, handwritten notes, or images.
+
+---
+
+### Example 14: Reranking Search Results (v2)
+
+```csharp
+using OpperSharp.Core;
+using OpperSharp.Models.Rerank;
+
+var client = OpperClient.FromEnvironment();
+
+// Simulate search results from your system
+var searchResults = new List<object>
+{
+    "Machine learning uses algorithms to learn from data",
+    "Python is a popular programming language",
+    "Deep learning is a subset of machine learning using neural networks",
+    "JavaScript runs in web browsers",
+    "Neural networks mimic the human brain structure"
+};
+
+// Rerank based on relevance to query
+var reranked = await client.Rerank.RerankAsync(
+    query: "What is deep learning?",
+    documents: searchResults,
+    model: "rerank-model",
+    topK: 3,  // Return top 3 most relevant
+    returnDocuments: true
+);
+
+Console.WriteLine("Reranked results:");
+foreach (var result in reranked.Results)
+{
+    Console.WriteLine($"\n[Score: {result.Score:F4}] {result.Document}");
+}
+
+// List available rerank models
+var rerankModels = await client.Rerank.ListModelsAsync();
+Console.WriteLine($"\nAvailable rerank models: {string.Join(", ", rerankModels)}");
+```
+
+**v2 Advantage:** Improve RAG quality by reranking retrieved documents based on semantic relevance to the query.
+
+---
+
+### Example 15: Usage Analytics and Cost Tracking (v2)
+
+```csharp
+using OpperSharp.Core;
+using OpperSharp.Models.Analytics;
+
+var client = OpperClient.FromEnvironment();
+
+// Get last 30 days usage
+var usage = await client.Analytics.GetUsageAsync(
+    fromDate: DateTime.Now.AddDays(-30),
+    toDate: DateTime.Now,
+    granularity: "day",
+    fields: new List<string> { "tokens", "cost", "requests" },
+    groupBy: new List<string> { "function", "model" }
+);
+
+Console.WriteLine("Usage Summary:");
+var totalCost = 0.0;
+var totalRequests = 0;
+var totalTokens = 0;
+
+foreach (var entry in usage.Data)
+{
+    Console.WriteLine($"\nDate: {entry.Date:yyyy-MM-dd}");
+    Console.WriteLine($"  Requests: {entry.Requests}");
+    Console.WriteLine($"  Tokens: {entry.Tokens:N0}");
+    Console.WriteLine($"  Cost: ${entry.Cost:F4}");
+
+    totalRequests += entry.Requests ?? 0;
+    totalTokens += entry.Tokens ?? 0;
+    totalCost += entry.Cost ?? 0;
+
+    if (entry.GroupedBy != null)
+    {
+        Console.WriteLine("  By function:");
+        foreach (var group in entry.GroupedBy)
+        {
+            Console.WriteLine($"    - {group.Key}: {group.Value} requests");
+        }
+    }
+}
+
+Console.WriteLine($"\n--- Totals ---");
+Console.WriteLine($"Total Requests: {totalRequests:N0}");
+Console.WriteLine($"Total Tokens: {totalTokens:N0}");
+Console.WriteLine($"Total Cost: ${totalCost:F2}");
+Console.WriteLine($"Avg Cost/Request: ${(totalCost / totalRequests):F4}");
+
+// Weekly granularity
+var weeklyUsage = await client.Analytics.GetUsageAsync(
+    fromDate: DateTime.Now.AddDays(-90),
+    toDate: DateTime.Now,
+    granularity: "week"
+);
+
+Console.WriteLine("\nWeekly trend:");
+foreach (var week in weeklyUsage.Data.TakeLast(4))
+{
+    Console.WriteLine($"Week of {week.Date:MMM dd}: ${week.Cost:F2}");
+}
+```
+
+**Use Case:** Track API usage, monitor costs, identify expensive operations, and analyze usage patterns.
+
+---
+
 ## Best Practices
 
 ### 1. Use `using` statement for proper disposal
@@ -599,13 +826,43 @@ var response = await client.CallAsync(
 Console.WriteLine($"Was cached: {response.Cached}");
 ```
 
-### 5. Use GetOrCreate patterns
+### 5. Use model aliases for reliability
 
 ```csharp
-// Idempotent index creation
-var index = await client.Indexes.GetOrCreateAsync(
-    "my-index",
-    "Description of index"
+// Create alias with fallback for high availability
+await client.Models.CreateAliasAsync(
+    "production-model",
+    new List<string> { "gpt-4", "gpt-4-turbo", "gpt-3.5-turbo" }
+);
+
+// Use in calls - automatic fallback if primary fails
+var result = await client.Functions.CallAsync(
+    "my-function",
+    input,
+    new OpperCallOptions { Model = "production-model" }
+);
+```
+
+### 6. Leverage v2 knowledge bases
+
+```csharp
+// Upload entire documents - Opper handles chunking
+using var file = File.OpenRead("documentation.pdf");
+await client.Knowledge.UploadFileAsync(
+    "docs",
+    "documentation.pdf",
+    file,
+    "application/pdf"
+);
+
+// Use with integrated RAG
+var answer = await client.Functions.CallAsync(
+    "qa-bot",
+    new { question = query },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = "docs" }
+    }
 );
 ```
 
@@ -667,28 +924,35 @@ foreach (var batch in items.Chunk(10))
 }
 ```
 
-### Pattern: Multi-Index Search
+### Pattern: Multi-Knowledge Base Search with Reranking (v2)
 
 ```csharp
 var query = "machine learning algorithms";
 
-var searchTasks = new[]
+// Search multiple knowledge bases (v2 approach)
+var kbNames = new[] { "technical-docs", "research-papers", "blog-posts" };
+
+// Collect documents from all knowledge bases
+var allDocuments = new List<string>();
+
+foreach (var kb in kbNames)
 {
-    client.Indexes.QueryAsync("technical-docs", query, k: 5),
-    client.Indexes.QueryAsync("research-papers", query, k: 5),
-    client.Indexes.QueryAsync("blog-posts", query, k: 5)
-};
+    var files = await client.Knowledge.ListFilesAsync(kb);
+    allDocuments.AddRange(files.Select(f => f.Filename));
+}
 
-var allResults = await Task.WhenAll(searchTasks);
+// Use Rerank API to find most relevant (v2)
+var reranked = await client.Rerank.RerankAsync(
+    query: query,
+    documents: allDocuments.Cast<object>().ToList(),
+    model: "rerank-model",
+    topK: 10
+);
 
-var combinedResults = allResults
-    .SelectMany(r => r.Results)
-    .OrderByDescending(r => r.Score)
-    .Take(10);
-
-foreach (var result in combinedResults)
+Console.WriteLine("Top 10 most relevant documents:");
+foreach (var result in reranked.Results)
 {
-    Console.WriteLine($"[{result.Score:F2}] {result.Content}");
+    Console.WriteLine($"[{result.Score:F4}] {result.Document}");
 }
 ```
 
