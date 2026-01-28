@@ -31,60 +31,65 @@ This guide supports two scenarios:
 
 If you already have a GitHub repository that you want to mirror to Azure DevOps, follow these steps instead of Parts 1 and 4.
 
-### Step 1B.1: Create an Empty Azure DevOps Repository
+### Step 1B.1: Import GitHub Repo to Azure DevOps
+
+**Option A: Using Azure DevOps Import (recommended)**
 
 1. Go to **https://dev.azure.com**
 2. Navigate to your organization and project
 3. Click **Repos** in the left sidebar
-4. If you have existing repos, click the dropdown at the top and select **+ New repository**
+4. Click the repository dropdown at the top → **Import repository**
 5. Fill in the details:
-   - **Repository name**: Use the same name as your GitHub repo (recommended)
-   - **⚠️ IMPORTANT**: Uncheck "Add a README" — the repository MUST be empty
-6. Click **Create**
+   - **Source type**: Git
+   - **Clone URL**: `https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO.git`
+   - If your GitHub repo is private, check **Requires authentication** and enter your GitHub username and PAT (you can create one in Part 2 first, then come back)
+6. Click **Import**
+7. Wait for the import to complete — this copies all branches and history
 
-### Step 1B.2: Mirror GitHub to Azure DevOps
+**Option B: Using command line**
 
-Open a terminal (or Git Bash) and run:
+If Import doesn't work or you prefer the command line:
+
+**First, create an empty repository in Azure DevOps:**
+
+1. Go to **https://dev.azure.com**
+2. Navigate to your organization and project
+3. Click **Repos** in the left sidebar
+4. Click the repository dropdown → **+ New repository**
+5. Enter a repository name (use the same name as your GitHub repo)
+6. **⚠️ IMPORTANT**: Uncheck "Add a README" — the repository MUST be empty
+7. Click **Create**
+
+**Then, mirror your GitHub repo to Azure DevOps:**
 
 ```bash
 cd ~
 mkdir repo-mirror-temp
 cd repo-mirror-temp
-```
 
-Clone your GitHub repository as a mirror:
-
-```bash
+# Clone your GitHub repository as a mirror
 git clone --mirror https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO.git
-```
 
-Navigate into the cloned repository:
-
-```bash
 cd YOUR_REPO.git
-```
 
-Push to Azure DevOps:
-
-```bash
+# Push to the empty Azure DevOps repo you just created
 git push --mirror https://dev.azure.com/YOUR_ORG/YOUR_PROJECT/_git/YOUR_REPO
 ```
 
-You may be prompted to authenticate with your Microsoft account.
-
-### Step 1B.3: Verify the Mirror
-
-1. Go to Azure DevOps → Repos → Files
-2. You should see all your code, branches, and commit history
-
-### Step 1B.4: Clean Up
-
+**Finally, clean up:**
 ```bash
 cd ~
 rm -rf repo-mirror-temp
 ```
 
+### Step 1B.2: Verify the Import
+
+1. Go to Azure DevOps → Repos → Files
+2. You should see all your code, branches, and commit history
+
 **Now skip to Part 2** (Create a GitHub Personal Access Token) and continue from there. When you reach Part 4, skip it — you've already done the initial mirror.
+
+> **⚠️ Important order for Scenario B users:** When you get to Parts 5 and 6, do them in **reverse order** — complete Part 6 first (GitHub → Azure DevOps), then Part 5 (Azure DevOps → GitHub). This protects your original GitHub repository. If something goes wrong with the Azure DevOps pipeline, your GitHub source remains safe.
 
 ---
 
@@ -323,6 +328,8 @@ rm -rf repo-mirror-temp
 
 ## Part 5: Set Up Azure DevOps → GitHub Sync (Azure Pipeline)
 
+> **📝 Scenario B users:** If you started with an existing GitHub repo, do Part 6 first, then come back here.
+
 This creates an automatic process that pushes changes to GitHub whenever you push to Azure DevOps.
 
 > **📝 Note for Git Flow users:** If you're using Git Flow, your default branch is likely `develop` rather than `main`. You'll need the pipeline file to exist in **both** branches for syncing to work on both. The easiest approach is to create the file in one branch, then cherry-pick the commit into the other branch. Instructions for this are included at the end of this section.
@@ -483,6 +490,8 @@ Now pushes to both `main` and `develop` will trigger the mirror.
 ---
 
 ## Part 6: Set Up GitHub → Azure DevOps Sync (GitHub Action)
+
+> **📝 Scenario B users:** If you started with an existing GitHub repo, complete this part first, then go back to Part 5.
 
 This creates an automatic process that pushes changes to Azure DevOps whenever you push to GitHub.
 
