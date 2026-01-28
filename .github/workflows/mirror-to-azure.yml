@@ -1,0 +1,51 @@
+# GitHub to Azure DevOps Mirror Workflow
+# This workflow automatically mirrors commits to Azure DevOps
+
+name: Mirror to Azure DevOps
+
+on:
+  push:
+    branches:
+      - '**'  # Trigger on all branches
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all branches
+
+      - name: Mirror to Azure DevOps
+        run: |
+          echo "Checking if this commit should be mirrored..."
+          
+          # Skip if this commit came from Azure DevOps (prevents infinite loop)
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if echo "$COMMIT_MSG" | grep -q "\[skip mirror\]"; then
+            echo "⚠️ Skipping mirror - commit contains [skip mirror] tag"
+            exit 0
+          fi
+          
+          if echo "$COMMIT_MSG" | grep -q "\[azure-mirror\]"; then
+            echo "⚠️ Skipping mirror - commit originated from Azure DevOps"
+            exit 0
+          fi
+          
+          echo "Configuring git..."
+          git config user.email "github-action@mirror.local"
+          git config user.name "GitHub Actions Mirror"
+          
+          echo "Adding Azure DevOps remote..."
+          git remote add azure https://${{ secrets.AZURE_PAT }}@dev.azure.com/magello/Sway/_git/OpperSharp
+          
+          echo "Pushing all branches to Azure DevOps..."
+          git push azure --all --force
+          
+          echo "Pushing all tags to Azure DevOps..."
+          git push azure --tags --force
+          
+          echo "✅ Mirror complete!"
