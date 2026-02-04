@@ -24,7 +24,7 @@ namespace OpperSharp.Clients
 		public DatasetsClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
-			_datasetsEndpoint = EndPoints.Datasets.GetDescription();
+			_datasetsEndpoint = _httpClient.BaseAddress + EndPoints.Datasets.GetDescription();
 		}
 
 		/// <summary>

@@ -26,8 +26,8 @@ namespace OpperSharp.Clients
 		{
 			_httpClient = httpClient;
 
-			_spansEndpoint = EndPoints.Spans.GetDescription();
-			_tracesEndpoint = EndPoints.Traces.GetDescription();
+			_spansEndpoint = _httpClient.BaseAddress + EndPoints.Spans.GetDescription();
+			_tracesEndpoint = _httpClient.BaseAddress + EndPoints.Traces.GetDescription();
 		}
 
 		/// <summary>

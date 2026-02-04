@@ -22,7 +22,7 @@ namespace OpperSharp.Clients
 		public AnalyticsClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
-			_analyticsEndpoint = EndPoints.AnalyticsUsage.GetDescription();
+			_analyticsEndpoint = _httpClient.BaseAddress + EndPoints.AnalyticsUsage.GetDescription();
 		}
 
 		/// <summary>

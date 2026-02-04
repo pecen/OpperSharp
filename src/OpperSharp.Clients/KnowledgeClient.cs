@@ -25,7 +25,7 @@ namespace OpperSharp.Clients
 		public KnowledgeClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
-			_knowledgeEndpoint = EndPoints.Knowledge.GetDescription();
+			_knowledgeEndpoint = _httpClient.BaseAddress + EndPoints.Knowledge.GetDescription();
 		}
 
 		/// <summary>

@@ -24,7 +24,7 @@ namespace OpperSharp.Clients
 		public EmbeddingsClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
-			_embeddingsEndpoint = EndPoints.Embeddings.GetDescription();
+			_embeddingsEndpoint = _httpClient.BaseAddress + EndPoints.Embeddings.GetDescription();
 		}
 
 		/// <summary>

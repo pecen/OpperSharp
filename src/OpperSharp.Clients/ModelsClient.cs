@@ -24,7 +24,7 @@ namespace OpperSharp.Clients
 		public ModelsClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
-			_modelsEndpoint = EndPoints.Models.GetDescription();
+			_modelsEndpoint = _httpClient.BaseAddress + EndPoints.Models.GetDescription();
 		}
 
 		#region Standard Models

@@ -24,7 +24,7 @@ namespace OpperSharp.Clients
 		public OcrClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
-			_ocrEndpoint = EndPoints.Ocr.GetDescription();
+			_ocrEndpoint = _httpClient.BaseAddress + EndPoints.Ocr.GetDescription();
 		}
 
 		/// <summary>

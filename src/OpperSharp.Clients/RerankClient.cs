@@ -23,7 +23,7 @@ namespace OpperSharp.Clients
 		public RerankClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
-			_rerankEndpoint = EndPoints.Rerank.GetDescription();
+			_rerankEndpoint = _httpClient.BaseAddress + EndPoints.Rerank.GetDescription();
 		}
 
 		/// <summary>
