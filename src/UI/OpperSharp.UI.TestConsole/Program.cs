@@ -293,7 +293,10 @@ Then calculate what 18% employer tax on that total would be.";
 
 			var response = await _client!.Functions.CallAsync(
 				path: "general-qa", // You need to create this function in Opper
-				input: new { question = question },
+				input: new Dictionary<string, object>
+				{
+					["question"] = question
+				},
 				options: new OpperCallOptions
 				{
 					Model = "gpt-4",
@@ -321,9 +324,12 @@ Then calculate what 18% employer tax on that total would be.";
 			WriteLine("AI: ");
 			Write("    ");
 
-			await foreach (var chunk in _client!.Functions.StreamAsync(
+			await foreach (var chunk in _client!.Functions.CallStreamAsync(
 				path: "story-generator", // You need to create this in Opper
-				input: new { topic = topic }
+				input: new Dictionary<string, object>
+				{
+					["topic"] = topic
+				}
 			))
 			{
 				if (chunk.Delta != null)
@@ -466,20 +472,20 @@ Framework: .NET 8.0
 				model: "azure/text-embedding-3-large"
 			);
 
-			WriteLine($"✓ Generated {batchResponse.Embeddings.Count} embeddings");
+			WriteLine($"✓ Generated {batchResponse.Data.Count} embeddings");
 			WriteLine();
 
 			for (int i = 0; i < texts.Length; i++)
 			{
 				WriteLine($"{i + 1}. \"{texts[i]}\"");
-				WriteLine($"   Vector dimensions: {batchResponse.Embeddings[i].Count}");
-				WriteLine($"   First 5 values: {string.Join(", ", batchResponse.Embeddings[i].Take(5).Select(v => v.ToString("F4")))}");
+				WriteLine($"   Vector dimensions: {batchResponse.Data[i].Embedding.Count}");
+				WriteLine($"   First 5 values: {string.Join(", ", batchResponse.Data[i].Embedding.Take(5).Select(v => v.ToString("F4")))}");
 				WriteLine();
 			}
 
 			// Calculate similarity between first two (simple dot product)
-			var emb1 = batchResponse.Embeddings[0];
-			var emb2 = batchResponse.Embeddings[1];
+			var emb1 = batchResponse.Data[0].Embedding;
+			var emb2 = batchResponse.Data[1].Embedding;
 			var similarity = emb1.Zip(emb2, (a, b) => a * b).Sum();
 
 			WriteLine($"Similarity between text 1 and 2: {similarity:F4}");
@@ -606,14 +612,14 @@ Plats: Hybrid (Stockholm)
 			// Create agent with consultant database tool
 			var agent = new Agent(_client!, new AgentOptions
 			{
-				FunctionPath = "consultant-matcher",
+				FunctionPath: "consultant-matcher",
 				MaxIterations = 10,
 				Model = "gpt-4"
 			})
 			.WithTool(AgentTool.Create(
 				name: "get_consultants",
 				description: "Retrieves list of available consultants with their profiles",
-				handler: () =>
+				handler: (string _) => // Takes a string parameter but we ignore it
 				{
 					return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions
 					{
@@ -623,9 +629,14 @@ Plats: Hybrid (Stockholm)
 			))
 			.WithTool(AgentTool.Create(
 				name: "calculate_match_score",
-				description: "Calculate how well a consultant matches the requirements (0-100)",
-				handler: (string consultantName, string requirements) =>
+				description: "Calculate how well a consultant matches the requirements (0-100). Input should be JSON with consultantName and requirements fields.",
+				handler: (string input) =>
 				{
+					// Parse input JSON
+					var inputObj = JsonSerializer.Deserialize<Dictionary<string, string>>(input);
+					var consultantName = inputObj?.GetValueOrDefault("consultantName") ?? "";
+					var requirements = inputObj?.GetValueOrDefault("requirements") ?? "";
+
 					// Simple scoring logic (in reality, this would be more sophisticated)
 					var consultant = consultants.FirstOrDefault(c => c.Name == consultantName);
 					if (consultant == null) return Task.FromResult("0");
