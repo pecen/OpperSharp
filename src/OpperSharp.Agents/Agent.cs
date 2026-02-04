@@ -128,7 +128,7 @@ namespace OpperSharp.Agents
 					{
 						// No tool calls - agent is done
 						response.Output = functionResponse.Message ??
-							functionResponse.Output.GetValueOrDefault("output")?.ToString() ??
+							functionResponse.Output?["output"]?.ToString() ??
 							string.Empty;
 						response.Success = true;
 						break;
