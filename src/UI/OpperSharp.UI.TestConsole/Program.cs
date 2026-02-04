@@ -72,7 +72,7 @@ namespace OpperSharp.UI.TestConsole
 
 		private async Task AskQuestion()
 		{
-			WriteLine("\n>Ange din fråga:");
+			Write("\n > Ange din fråga: ");
 			var userPrompt = ReadLine() ?? string.Empty;
 
 			var response = await _client.CallAsync(
