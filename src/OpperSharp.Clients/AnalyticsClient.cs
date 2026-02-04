@@ -5,10 +5,9 @@ using OpperSharp.Utilities.Enums;
 using OpperSharp.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
-using System.Threading.Task;
+using System.Threading.Tasks;
 
 namespace OpperSharp.Clients
 {

@@ -27,6 +27,8 @@ namespace OpperSharp.Utilities.Enums
 		[Description("/rerank")]
 		Rerank,
 		[Description("/analytics/usage")]
-		AnalyticsUsage
+		AnalyticsUsage,
+		[Description("/indexes")]
+		Indexes
 	}
 }
