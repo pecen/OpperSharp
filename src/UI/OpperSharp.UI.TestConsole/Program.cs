@@ -618,7 +618,7 @@ Plats: Hybrid (Stockholm)
 			// Create agent with consultant database tool
 			var agent = new Agent(_client!, new AgentOptions
 			{
-				FunctionPath: "consultant-matcher",
+				FunctionPath = "consultant-matcher",
 				MaxIterations = 10,
 				Model = "gpt-4"
 			})
