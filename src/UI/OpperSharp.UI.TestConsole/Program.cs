@@ -92,7 +92,7 @@ namespace OpperSharp.UI.TestConsole
 		{
 			Clear();
 			WriteLine("╔═══════════════════════════════════════════════════════════════╗");
-			WriteLine("║           OpperSharp v2 API Test Console                     ║");
+			WriteLine("║           OpperSharp v2 API Test Console                      ║");
 			WriteLine("╚═══════════════════════════════════════════════════════════════╝");
 			WriteLine();
 			WriteLine("  AGENT TESTS (Priority):");

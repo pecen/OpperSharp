@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Models\OpperSharp.Models.Embeddings\OpperSharp.Models.Embeddings.csproj" />
+    <ProjectReference Include="..\..\Models\OpperSharp.Models.Knowledge\OpperSharp.Models.Knowledge.csproj" />
+    <ProjectReference Include="..\..\Models\OpperSharp.Models.Models\OpperSharp.Models.Models.csproj" />
+    <ProjectReference Include="..\..\OpperSharp.Agents\OpperSharp.Agents.csproj" />
     <ProjectReference Include="..\..\OpperSharp.Core\OpperSharp.Core.csproj" />
   </ItemGroup>
 
