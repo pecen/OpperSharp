@@ -4,8 +4,6 @@ namespace OpperSharp.Utilities.Enums
 {
 	public enum EndPoints
 	{
-		[Description("/chat/completions")]
-		ChatCompletions,
 		[Description("/functions")]
 		Functions,
 		[Description("/call")]

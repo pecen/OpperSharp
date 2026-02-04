@@ -1,7 +1,6 @@
 using OpperSharp.Core;
 using OpperSharp.Agents;
 using OpperSharp.Models.Functions;
-using OpperSharp.Models.Chat;
 using OpperSharp.Models.Knowledge;
 using OpperSharp.Models.Embeddings;
 using OpperSharp.Models.Models;
@@ -103,7 +102,7 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("  BASIC API TESTS:");
 			WriteLine("  4) Simple Function Call");
 			WriteLine("  5) Streaming Response");
-			WriteLine("  6) Chat API (Conversational)");
+			WriteLine("  6) Conversational Chat (via Functions)");
 			WriteLine();
 			WriteLine("  v2 API TESTS:");
 			WriteLine("  7) Knowledge Base (File-based RAG)");
@@ -344,16 +343,14 @@ Then calculate what 18% employer tax on that total would be.";
 		static async Task TestChatAPI()
 		{
 			WriteLine("═══════════════════════════════════════");
-			WriteLine("TEST: Chat API");
+			WriteLine("TEST: Conversational Chat (via Functions)");
 			WriteLine("═══════════════════════════════════════");
 			WriteLine();
 			WriteLine("Simple conversational chat. Type 'quit' to exit.");
+			WriteLine("NOTE: This uses a 'chat-assistant' function in Opper.");
 			WriteLine();
 
-			var messages = new List<OpperMessage>
-			{
-				OpperMessage.System("You are a helpful AI assistant. Be concise and friendly.")
-			};
+			var conversationHistory = new List<string>();
 
 			while (true)
 			{
@@ -362,16 +359,25 @@ Then calculate what 18% employer tax on that total would be.";
 				if (string.IsNullOrWhiteSpace(input) || input.ToLower() == "quit")
 					break;
 
-				messages.Add(OpperMessage.User(input));
+				conversationHistory.Add($"User: {input}");
 
-				var response = await _client!.Chat.CompletionsAsync(
-					messages: messages,
-					model: "gpt-4",
-					temperature: 0.8
+				var response = await _client!.Functions.CallAsync(
+					path: "chat-assistant",
+					input: new Dictionary<string, object>
+					{
+						["message"] = input,
+						["history"] = string.Join("\n", conversationHistory.Take(conversationHistory.Count - 1))
+					},
+					options: new OpperCallOptions
+					{
+						Model = "gpt-4",
+						Temperature = 0.8
+					}
 				);
 
-				messages.Add(OpperMessage.Assistant(response.Content ?? ""));
-				WriteLine($"AI: {response.Content}");
+				var aiResponse = response.Message ?? "";
+				conversationHistory.Add($"Assistant: {aiResponse}");
+				WriteLine($"AI: {aiResponse}");
 				WriteLine();
 			}
 		}

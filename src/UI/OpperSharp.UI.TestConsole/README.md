@@ -36,6 +36,7 @@ För att vissa tester ska fungera behöver du skapa följande functions i Opper-
 **Optional Functions (för övriga tester):**
 - `general-qa` - En Q&A funktion (används i menyval 4)
 - `story-generator` - En berättelse-generator (används i menyval 5)
+- `chat-assistant` - En konversationsassistent (används i menyval 6)
 
 **Tips för Function-skapande i Opper:**
 1. Gå till Opper Dashboard
@@ -84,8 +85,9 @@ dotnet run
 - Genererar en kort berättelse baserat på ditt ämne
 - Visar text allt eftersom den genereras
 
-**6) Chat API**
-- Interaktiv konversation
+**6) Conversational Chat**
+- Interaktiv konversation via Functions
+- Använder 'chat-assistant' function i Opper
 - Bygger upp en konversationshistorik
 - Skriv 'quit' för att avsluta
 

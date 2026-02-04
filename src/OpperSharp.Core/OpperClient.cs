@@ -99,7 +99,6 @@ namespace OpperSharp.Core
 		{
 			Functions = new FunctionsClient(_httpClient);
 			Knowledge = new KnowledgeClient(_httpClient);
-			Chat = new ChatClient(_httpClient);
 			Spans = new SpansClient(_httpClient);
 			Datasets = new DatasetsClient(_httpClient);
 			Embeddings = new EmbeddingsClient(_httpClient);
@@ -127,11 +126,6 @@ namespace OpperSharp.Core
 		/// </summary>
 		[Obsolete("Use Knowledge property instead. Indexes is deprecated in v2 API.")]
 		public IndexesClient Indexes { get; private set; } = null!;
-
-		/// <summary>
-		/// Client for chat completions.
-		/// </summary>
-		public ChatClient Chat { get; private set; } = null!;
 
 		/// <summary>
 		/// Client for span/tracing operations.
