@@ -98,6 +98,7 @@ namespace OpperSharp.UI.TestConsole
 						// CONSULTANT MATCHING (End goal)
 						case "10": await TestConsultantMatching(); break;
 
+						case "94": await TestAdHocFunctionCall(); break;
 						case "95": await DebugGetFunction(); break;
 						case "96": await DeleteAllFunctions(); break;
 						case "97": await CreateAllFunctions(); break;
@@ -156,6 +157,7 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("  10) Match Consultant to Assignment");
 			WriteLine();
 			WriteLine("  DEBUG:");
+			WriteLine("  94) Test Ad-Hoc Function Call (inline/unnamed)");
 			WriteLine("  95) Get Function Details (math-solver)");
 			WriteLine("  96) Delete all 7 Functions (cleanup)");
 			WriteLine("  97) Create all 7 Functions via API");
@@ -1065,6 +1067,66 @@ Provide a ranked recommendation with clear reasoning.",
 				WriteLine("⚠️  Failed functions were not found by the API.");
 				WriteLine("   They may not have been created correctly in Opper Dashboard,");
 				WriteLine("   or they may have different names than expected.");
+			}
+		}
+
+		static async Task TestAdHocFunctionCall()
+		{
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("TEST: Ad-Hoc Function Call");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+			WriteLine("This tests calling a function WITHOUT creating it first.");
+			WriteLine("All function config (name, instructions, model) is sent in the request body.");
+			WriteLine();
+
+			try
+			{
+				var apiKey = _configuration?["OPPER_API_KEY"];
+				using var httpClient = new HttpClient();
+				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+				httpClient.BaseAddress = new Uri("https://api.opper.ai/v2/");
+
+				var requestBody = new
+				{
+					name = "math-solver-adhoc",
+					instructions = "You are a helpful math solver. Answer the math question.",
+					input = new { problem = "What is 10 + 5?" },
+					model = "anthropic/claude-opus-4.5"
+				};
+
+				var jsonContent = new StringContent(
+					Newtonsoft.Json.JsonConvert.SerializeObject(requestBody),
+					System.Text.Encoding.UTF8,
+					"application/json"
+				);
+
+				WriteLine("Sending ad-hoc call to POST /v2/call");
+				WriteLine($"Request body: {Newtonsoft.Json.JsonConvert.SerializeObject(requestBody, Newtonsoft.Json.Formatting.Indented)}");
+				WriteLine();
+
+				var response = await httpClient.PostAsync("call", jsonContent);
+				var responseContent = await response.Content.ReadAsStringAsync();
+
+				WriteLine($"Response Status: {response.StatusCode}");
+				WriteLine($"Response: {responseContent}");
+				WriteLine();
+
+				if (response.IsSuccessStatusCode)
+				{
+					WriteLine("✓ Ad-hoc function call SUCCEEDED!");
+					WriteLine();
+					WriteLine("This proves ad-hoc calls work, but named function calls don't.");
+				}
+				else
+				{
+					WriteLine("❌ Ad-hoc function call also failed.");
+				}
+			}
+			catch (Exception ex)
+			{
+				WriteLine($"❌ Exception: {ex.GetType().Name}");
+				WriteLine($"   Message: {ex.Message}");
 			}
 		}
 
