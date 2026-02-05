@@ -144,17 +144,43 @@ namespace OpperSharp.Agents
 				for (int i = 0; i < methodParams.Length; i++)
 				{
 					var param = methodParams[i];
-					if (parameters.TryGetValue(param.Name ?? $"arg{i}", out var value))
+					var paramName = param.Name ?? $"arg{i}";
+
+					// Try exact match first
+					if (parameters.TryGetValue(paramName, out var value))
 					{
 						args[i] = ConvertParameter(value, param.ParameterType);
 					}
-					else if (param.HasDefaultValue)
-					{
-						args[i] = param.DefaultValue;
-					}
+					// Try case-insensitive match
 					else
 					{
-						throw new ArgumentException($"Missing required parameter: {param.Name}");
+						var matchedKey = parameters.Keys.FirstOrDefault(k =>
+							string.Equals(k, paramName, StringComparison.OrdinalIgnoreCase));
+
+						if (matchedKey != null)
+						{
+							args[i] = ConvertParameter(parameters[matchedKey], param.ParameterType);
+						}
+						// Try common aliases
+						else
+						{
+							var aliases = GetParameterAliases(paramName);
+							var aliasMatch = aliases.FirstOrDefault(alias =>
+								parameters.ContainsKey(alias));
+
+							if (aliasMatch != null)
+							{
+								args[i] = ConvertParameter(parameters[aliasMatch], param.ParameterType);
+							}
+							else if (param.HasDefaultValue)
+							{
+								args[i] = param.DefaultValue;
+							}
+							else
+							{
+								throw new ArgumentException($"Missing required parameter: {param.Name}. Tried aliases: {string.Join(", ", aliases)}");
+							}
+						}
 					}
 				}
 
@@ -334,6 +360,55 @@ namespace OpperSharp.Agents
 			if (string.IsNullOrEmpty(str))
 				return str;
 			return char.ToLowerInvariant(str[0]) + str[1..];
+		}
+
+		/// <summary>
+		/// Gets common aliases for a parameter name to handle Claude's inconsistent naming.
+		/// </summary>
+		private static List<string> GetParameterAliases(string paramName)
+		{
+			var aliases = new List<string>();
+			var lower = paramName.ToLowerInvariant();
+
+			// Common aliases for numeric value parameters
+			if (lower == "number" || lower == "num" || lower == "n")
+			{
+				aliases.AddRange(new[] { "number", "value", "whole", "val", "num", "n", "amount" });
+			}
+			else if (lower == "value" || lower == "val")
+			{
+				aliases.AddRange(new[] { "value", "number", "whole", "val", "num", "amount" });
+			}
+			else if (lower == "whole")
+			{
+				aliases.AddRange(new[] { "whole", "number", "value", "total", "amount" });
+			}
+
+			// Common aliases for percentage parameters
+			else if (lower == "percentage" || lower == "percent" || lower == "pct")
+			{
+				aliases.AddRange(new[] { "percentage", "percent", "pct", "rate", "part" });
+			}
+
+			// Common aliases for generic parameters
+			else if (lower == "a" || lower == "first")
+			{
+				aliases.AddRange(new[] { "a", "first", "x", "left", "arg0" });
+			}
+			else if (lower == "b" || lower == "second")
+			{
+				aliases.AddRange(new[] { "b", "second", "y", "right", "arg1" });
+			}
+
+			// If no specific aliases, return some generic fallbacks
+			if (aliases.Count == 0)
+			{
+				aliases.Add(paramName);
+				aliases.Add(paramName.ToLowerInvariant());
+				aliases.Add(ToCamelCase(paramName));
+			}
+
+			return aliases;
 		}
 	}
 }
