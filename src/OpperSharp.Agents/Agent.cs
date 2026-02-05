@@ -89,15 +89,26 @@ namespace OpperSharp.Agents
 						System.Console.WriteLine($"[DEBUG] First tool: {Newtonsoft.Json.JsonConvert.SerializeObject(callOptions.Tools[0])}");
 					}
 
-					var functionResponse = await _client.Functions.CallAsync(
-						_options.FunctionPath,
-						currentInput,
-						callOptions,
-						cancellationToken
-					);
+					OpperFunctionResponse functionResponse;
+					try
+					{
+						functionResponse = await _client.Functions.CallAsync(
+							_options.FunctionPath,
+							currentInput,
+							callOptions,
+							cancellationToken
+						);
+						System.Console.WriteLine($"[DEBUG] Function call succeeded");
+					}
+					catch (Exception ex)
+					{
+						System.Console.WriteLine($"[DEBUG] Function call FAILED: {ex.GetType().Name}: {ex.Message}");
+						throw;
+					}
 
 					// DEBUG: Log response
 					System.Console.WriteLine($"[DEBUG] Response has tool_calls: {functionResponse.Output.ContainsKey("tool_calls")}");
+					System.Console.WriteLine($"[DEBUG] Response Output keys: {string.Join(", ", functionResponse.Output.Keys)}");
 					System.Console.WriteLine($"[DEBUG] Response message: {functionResponse.Message?.Substring(0, Math.Min(100, functionResponse.Message?.Length ?? 0))}");
 
 					// Check if the response indicates tool calls
