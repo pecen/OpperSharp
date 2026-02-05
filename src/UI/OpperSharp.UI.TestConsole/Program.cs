@@ -752,7 +752,7 @@ Provide a ranked recommendation with reasoning.";
 			using var httpClient = new HttpClient();
 			httpClient.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
 
-			var response = await httpClient.GetAsync("https://api.opper.ai/v1/functions");
+			var response = await httpClient.GetAsync("https://api.opper.ai/v2/functions");
 			var rawJson = await response.Content.ReadAsStringAsync();
 
 			WriteLine("Response Status: " + response.StatusCode);
