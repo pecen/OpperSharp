@@ -97,6 +97,7 @@ namespace OpperSharp.UI.TestConsole
 						case "10": await TestConsultantMatching(); break;
 
 						// DEBUG
+						case "98": await InitializeFunctions(); break;
 						case "99": await DebugListFunctions(); break;
 						case "0": WriteLine("Goodbye!"); return;
 
@@ -150,6 +151,7 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("  10) Match Consultant to Assignment");
 			WriteLine();
 			WriteLine("  DEBUG:");
+			WriteLine("  98) Initialize/Activate all 7 Functions");
 			WriteLine("  99) List all Functions in Opper account");
 			WriteLine();
 			WriteLine("  0) Exit");
@@ -770,6 +772,83 @@ Provide a ranked recommendation with reasoning.";
 		// ═══════════════════════════════════════════════════════════════
 		// DEBUG UTILITIES
 		// ═══════════════════════════════════════════════════════════════
+
+
+	static async Task InitializeFunctions()
+	{
+		WriteLine("═══════════════════════════════════════");
+		WriteLine("INITIALIZE ALL FUNCTIONS");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+		WriteLine("This will call each function once to initialize/activate it.");
+		WriteLine("After this, they should appear in the API list.");
+		WriteLine();
+
+		var functionsToInitialize = new[]
+		{
+			("math-solver", new Dictionary<string, object> { ["problem"] = "What is 2+2?" }),
+			("research-agent", new Dictionary<string, object> { ["query"] = "test" }),
+			("problem-solver", new Dictionary<string, object> { ["problem"] = "test" }),
+			("general-qa", new Dictionary<string, object> { ["question"] = "What is AI?" }),
+			("story-generator", new Dictionary<string, object> { ["topic"] = "test" }),
+			("chat-assistant", new Dictionary<string, object> { ["message"] = "Hello" }),
+			("consultant-matcher", new Dictionary<string, object> { ["assignment"] = "test" })
+		};
+
+		WriteLine("Attempting to call each function...");
+		WriteLine();
+
+		int successCount = 0;
+		int failCount = 0;
+
+		foreach (var (functionName, input) in functionsToInitialize)
+		{
+			Write($"  {functionName}... ");
+			try
+			{
+				var response = await _client!.Functions.CallAsync(
+					path: functionName,
+					input: input
+				);
+
+				if (!string.IsNullOrEmpty(response.Message))
+				{
+					WriteLine($"✅ SUCCESS (got response)");
+					successCount++;
+				}
+				else
+				{
+					WriteLine($"⚠️  RESPONDED (but empty message)");
+					successCount++;
+				}
+			}
+			catch (Exception ex)
+			{
+				WriteLine($"❌ FAILED: {ex.Message}");
+				failCount++;
+			}
+		}
+
+		WriteLine();
+		WriteLine("═══════════════════════════════════════");
+		WriteLine($"Results: {successCount} succeeded, {failCount} failed");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+
+		if (successCount > 0)
+		{
+			WriteLine("✅ Functions that succeeded should now be active in the API!");
+			WriteLine("   Run menu option 99 to verify they appear in the list.");
+		}
+
+		if (failCount > 0)
+		{
+			WriteLine();
+			WriteLine("⚠️  Failed functions were not found by the API.");
+			WriteLine("   They may not have been created correctly in Opper Dashboard,");
+			WriteLine("   or they may have different names than expected.");
+		}
+	}
 
 		static async Task DebugListFunctions()
 		{
