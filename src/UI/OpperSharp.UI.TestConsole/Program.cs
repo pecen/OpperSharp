@@ -751,13 +751,10 @@ Provide a ranked recommendation with reasoning.";
 				// Make raw API call to see what we actually get
 				WriteLine("🔍 RAW API CALL:");
 				var apiKey = Environment.GetEnvironmentVariable("OPPER_API_KEY");
-				using var httpClient = new HttpClient();
 
+			using var httpClient = new HttpClient();
 				httpClient.DefaultRequestHeaders.Authorization =
 					new AuthenticationHeaderValue("Bearer", apiKey);
-
-
-				httpClient.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
 
 				var response = await httpClient.GetAsync("https://api.opper.ai/v2/functions");
 				var rawJson = await response.Content.ReadAsStringAsync();
