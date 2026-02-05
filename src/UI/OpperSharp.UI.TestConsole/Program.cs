@@ -237,33 +237,41 @@ namespace OpperSharp.UI.TestConsole
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "research-agent",
-				Instructions = "You are a research assistant with access to a user database and weather information. Help users find information by using the available tools.",
+				Instructions = @"You are a research assistant with access to EXACTLY TWO tools:
+
+1. query_database - Returns ALL users in the database with their roles and skills. Pass any search query (e.g., 'developers', 'Python skills', or just 'all users'). Returns JSON array of user objects.
+
+2. get_weather - Gets weather for a specific city. Pass the city name as input.
+
+IMPORTANT: These are the ONLY tools available. Do NOT try to call any other tools like 'get_users', 'search_users', etc. Always use query_database for user-related queries and get_weather for weather queries.",
 				MaxIterations = 10,
 				Model = "anthropic/claude-opus-4.5"
 			})
 			.WithTool(AgentTool.Create(
 				name: "query_database",
-				description: "Query user database for information about users",
+				description: "Queries the user database and returns all users with their roles and skills as JSON. Use this tool for ANY user-related queries (finding developers, searching by skills, listing all users, etc.)",
 				handler: (string query) =>
 				{
-					// Simulate database query
+					// Simulate database query - always returns all users
 					return Task.FromResult(JsonSerializer.Serialize(new[]
 					{
 						new { Name = "Anna Andersson", Role = "Senior Developer", Skills = new[] { "C#", ".NET", "Azure" } },
 						new { Name = "Erik Eriksson", Role = "Tech Lead", Skills = new[] { "Python", "AI/ML", "AWS" } },
 						new { Name = "Maria Svensson", Role = "Architect", Skills = new[] { "Architecture", "Microservices", "Kubernetes" } }
 					}));
-				}
+				},
+				inputDescription: "Any search query for users (e.g., 'developers', 'Python skills', 'all users'). The tool returns all users and you should filter the results."
 			))
 			.WithTool(AgentTool.Create(
 				name: "get_weather",
-				description: "Get current weather for a city",
+				description: "Gets current weather information for a specific city",
 				handler: (string city) =>
 				{
 					// Simulate weather API
 					var temp = new Random().Next(15, 25);
 					return Task.FromResult($"Temperature in {city}: {temp}°C, Partly cloudy");
-				}
+				},
+				inputDescription: "The name of the city to get weather for (e.g., 'Stockholm', 'London', 'New York')"
 			));
 
 			WriteLine("Agent created with tools: query_database, get_weather");
@@ -281,6 +289,10 @@ namespace OpperSharp.UI.TestConsole
 				WriteLine($"❓ Query: {query}");
 				var response = await agent.RunAsync(query);
 				WriteLine($"   ✓ Response: {response.Output}");
+				if (response.ToolCalls.Any())
+				{
+					WriteLine($"   Tools used: {string.Join(", ", response.ToolCalls.Select(tc => tc.ToolName))}");
+				}
 				WriteLine();
 			}
 		}

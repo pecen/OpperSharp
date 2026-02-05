@@ -84,8 +84,12 @@ namespace OpperSharp.Agents
 		public static AgentTool Create(
 			string name,
 			string description,
-			Func<string, Task<string>> handler)
+			Func<string, Task<string>> handler,
+			string? inputDescription = null)
 		{
+			// Generate a better parameter description from the tool description if not provided
+			var paramDesc = inputDescription ?? $"Input for {name}: {description}";
+
 			var tool = new AgentTool
 			{
 				Name = name,
@@ -95,7 +99,7 @@ namespace OpperSharp.Agents
 					type = "object",
 					properties = new
 					{
-						input = new { type = "string", description = "Input to the tool" }
+						input = new { type = "string", description = paramDesc }
 					},
 					required = new[] { "input" }
 				})
@@ -116,9 +120,10 @@ namespace OpperSharp.Agents
 		public static AgentTool Create(
 			string name,
 			string description,
-			Func<string, string> handler)
+			Func<string, string> handler,
+			string? inputDescription = null)
 		{
-			return Create(name, description, input => Task.FromResult(handler(input)));
+			return Create(name, description, input => Task.FromResult(handler(input)), inputDescription);
 		}
 
 		/// <summary>
