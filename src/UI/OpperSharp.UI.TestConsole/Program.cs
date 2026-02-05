@@ -8,26 +8,44 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using static System.Console;
+using Microsoft.Extensions.Configuration;
 
 namespace OpperSharp.UI.TestConsole
 {
 	internal class Program
 	{
 		private static OpperClient? _client;
+		private static IConfiguration? _configuration;
 
 		static async Task Main(string[] args)
 		{
 			try
 			{
+				// Build configuration from User Secrets and Environment Variables
+				_configuration = new ConfigurationBuilder()
+					.AddUserSecrets<Program>() // Reads from User Secrets first
+					.AddEnvironmentVariables() // Falls back to Environment Variables
+					.Build();
+
+				// Get API key from configuration (checks User Secrets first, then env vars)
+				var apiKey = _configuration["OPPER_API_KEY"];
+
+				if (string.IsNullOrEmpty(apiKey))
+				{
+					throw new InvalidOperationException(
+						"OPPER_API_KEY not found in User Secrets or Environment Variables");
+				}
+
 				// Initialize client
-				_client = OpperClient.FromEnvironment();
-				WriteLine("✓ OpperClient initialized from environment variable OPPER_API_KEY");
+				_client = new OpperClient(apiKey);
+				WriteLine("✓ OpperClient initialized from OPPER_API_KEY");
+				WriteLine("  (from User Secrets or Environment Variables)");
 				WriteLine();
 			}
 			catch (Exception ex)
 			{
 				WriteLine("ERROR: Could not initialize OpperClient.");
-				WriteLine("Make sure OPPER_API_KEY environment variable is set.");
+				WriteLine("Make sure OPPER_API_KEY is set in User Secrets or Environment Variables.");
 				WriteLine($"Details: {ex.Message}");
 				WriteLine("\nPress any key to exit...");
 				ReadKey();
@@ -750,7 +768,7 @@ Provide a ranked recommendation with reasoning.";
 			{
 				// Make raw API call to see what we actually get
 				WriteLine("🔍 RAW API CALL:");
-				var apiKey = Environment.GetEnvironmentVariable("OPPER_API_KEY");
+				var apiKey = _configuration?["OPPER_API_KEY"];
 
 			using var httpClient = new HttpClient();
 				httpClient.DefaultRequestHeaders.Authorization =
