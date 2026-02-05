@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using static System.Console;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Memory;
 
 namespace OpperSharp.UI.TestConsole
 {
@@ -21,32 +22,19 @@ namespace OpperSharp.UI.TestConsole
 		{
 			try
 			{
-				// Build configuration from User Secrets and Environment Variables
-				_configuration = new ConfigurationBuilder()
-					.AddEnvironmentVariables()
+				// Try User Secrets first, then fall back to Environment Variables
+				var userSecretsConfig = new ConfigurationBuilder()
 					.AddUserSecrets<Program>()
 					.Build();
 
-				// Get API key with smart fallback logic
-				// Priority: User Secrets (if not empty) -> Environment Variables -> Error
-				var apiKey = _configuration["OPPER_API_KEY"];
-				var apiKeySource = "Configuration";
+				var apiKey = userSecretsConfig["OPPER_API_KEY"];
+				var apiKeySource = "User Secrets";
 
-				// If configuration value is empty/null, try environment variable directly
+				// If User Secrets is empty/null, fall back to Environment Variable
 				if (string.IsNullOrWhiteSpace(apiKey))
 				{
 					apiKey = Environment.GetEnvironmentVariable("OPPER_API_KEY");
-					apiKeySource = "Environment Variable (fallback)";
-				}
-				else
-				{
-					// Determine source by checking User Secrets directly
-					var userSecretsConfig = new ConfigurationBuilder()
-						.AddUserSecrets<Program>()
-						.Build();
-					apiKeySource = !string.IsNullOrWhiteSpace(userSecretsConfig["OPPER_API_KEY"])
-						? "User Secrets"
-						: "Environment Variable";
+					apiKeySource = "Environment Variable";
 				}
 
 				if (string.IsNullOrWhiteSpace(apiKey))
@@ -55,6 +43,14 @@ namespace OpperSharp.UI.TestConsole
 						"OPPER_API_KEY not found in User Secrets or Environment Variables.\n" +
 						"Please set it using 'Manage User Secrets' in Visual Studio or as an environment variable.");
 				}
+
+				// Store in configuration for later use (debug method needs it)
+				_configuration = new ConfigurationBuilder()
+					.AddInMemoryCollection(new Dictionary<string, string?>
+					{
+						["OPPER_API_KEY"] = apiKey
+					})
+					.Build();
 
 				// Initialize client
 				_client = new OpperClient(apiKey);
