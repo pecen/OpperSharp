@@ -154,11 +154,11 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("  10) Match Consultant to Assignment");
 			WriteLine();
 			WriteLine("  DEBUG:");
-		WriteLine("  DEBUG:");
-		WriteLine("  96) Delete all 7 Functions (cleanup)");
-		WriteLine("  97) Create all 7 Functions via API");
-		WriteLine("  98) Initialize/Activate all 7 Functions");
-		WriteLine("  99) List all Functions in Opper account");
+			WriteLine("  DEBUG:");
+			WriteLine("  96) Delete all 7 Functions (cleanup)");
+			WriteLine("  97) Create all 7 Functions via API");
+			WriteLine("  98) Initialize/Activate all 7 Functions");
+			WriteLine("  99) List all Functions in Opper account");
 			WriteLine();
 			WriteLine("  0) Exit");
 			WriteLine();
@@ -782,18 +782,18 @@ Provide a ranked recommendation with reasoning.";
 
 
 
-	static async Task DeleteAllFunctions()
-	{
-		WriteLine("═══════════════════════════════════════");
-		WriteLine("DELETE ALL FUNCTIONS");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
-		WriteLine("This will delete all 7 expected functions from your Opper account.");
-		WriteLine("Use this to clean up before creating new ones.");
-		WriteLine();
-
-		var functionsToDelete = new[]
+		static async Task DeleteAllFunctions()
 		{
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("DELETE ALL FUNCTIONS");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+			WriteLine("This will delete all 7 expected functions from your Opper account.");
+			WriteLine("Use this to clean up before creating new ones.");
+			WriteLine();
+
+			var functionsToDelete = new[]
+			{
 			"math-solver",
 			"research-agent",
 			"problem-solver",
@@ -803,72 +803,72 @@ Provide a ranked recommendation with reasoning.";
 			"consultant-matcher"
 		};
 
-		WriteLine("Attempting to delete functions...");
-		WriteLine();
-
-		int successCount = 0;
-		int notFoundCount = 0;
-		int failCount = 0;
-
-		foreach (var functionName in functionsToDelete)
-		{
-			Write($"  {functionName}... ");
-			try
-			{
-				await _client!.Functions.DeleteAsync(functionName);
-				WriteLine($"✅ DELETED");
-				successCount++;
-			}
-			catch (OpperAPIException ex) when (ex.Message.Contains("NotFound") || ex.StatusCode == 404)
-			{
-				WriteLine($"⚠️  NOT FOUND (already deleted or never existed)");
-				notFoundCount++;
-			}
-			catch (Exception ex)
-			{
-				WriteLine($"❌ FAILED: {ex.Message}");
-				failCount++;
-			}
-		}
-
-		WriteLine();
-		WriteLine("═══════════════════════════════════════");
-		WriteLine($"Results: {successCount} deleted, {notFoundCount} not found, {failCount} failed");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
-
-		if (successCount > 0)
-		{
-			WriteLine("✅ Functions deleted successfully!");
-			WriteLine("   You can now run menu option 97 to create fresh functions.");
-		}
-
-		if (notFoundCount > 0)
-		{
+			WriteLine("Attempting to delete functions...");
 			WriteLine();
-			WriteLine($"⚠️  {notFoundCount} function(s) were not found (already deleted or never existed).");
-		}
 
-		if (failCount > 0)
-		{
+			int successCount = 0;
+			int notFoundCount = 0;
+			int failCount = 0;
+
+			foreach (var functionName in functionsToDelete)
+			{
+				Write($"  {functionName}... ");
+				try
+				{
+					await _client!.Functions.DeleteAsync(functionName);
+					WriteLine($"✅ DELETED");
+					successCount++;
+				}
+				catch (OpperAPIException ex) when (ex.Message.Contains("NotFound") || ex.StatusCode == 404)
+				{
+					WriteLine($"⚠️  NOT FOUND (already deleted or never existed)");
+					notFoundCount++;
+				}
+				catch (Exception ex)
+				{
+					WriteLine($"❌ FAILED: {ex.Message}");
+					failCount++;
+				}
+			}
+
 			WriteLine();
-			WriteLine($"❌ {failCount} function(s) failed to delete.");
-			WriteLine("   Check the error messages above for details.");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine($"Results: {successCount} deleted, {notFoundCount} not found, {failCount} failed");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+
+			if (successCount > 0)
+			{
+				WriteLine("✅ Functions deleted successfully!");
+				WriteLine("   You can now run menu option 97 to create fresh functions.");
+			}
+
+			if (notFoundCount > 0)
+			{
+				WriteLine();
+				WriteLine($"⚠️  {notFoundCount} function(s) were not found (already deleted or never existed).");
+			}
+
+			if (failCount > 0)
+			{
+				WriteLine();
+				WriteLine($"❌ {failCount} function(s) failed to delete.");
+				WriteLine("   Check the error messages above for details.");
+			}
 		}
-	}
 
-	static async Task CreateAllFunctions()
-	{
-		WriteLine("═══════════════════════════════════════");
-		WriteLine("CREATE ALL FUNCTIONS VIA API");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
-		WriteLine("This will create all 7 functions programmatically via the Opper API.");
-		WriteLine("Functions created via Dashboard don't work - they must be created via API!");
-		WriteLine();
-
-		var functionsToCreate = new[]
+		static async Task CreateAllFunctions()
 		{
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("CREATE ALL FUNCTIONS VIA API");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+			WriteLine("This will create all 7 functions programmatically via the Opper API.");
+			WriteLine("Functions created via Dashboard don't work - they must be created via API!");
+			WriteLine();
+
+			var functionsToCreate = new[]
+			{
 			new OpperFunctionDefinition
 			{
 				Path = "math-solver",
@@ -947,61 +947,61 @@ Provide a ranked recommendation with clear reasoning.",
 			}
 		};
 
-		WriteLine("Creating functions...");
-		WriteLine();
-
-		int successCount = 0;
-		int failCount = 0;
-
-		foreach (var functionDef in functionsToCreate)
-		{
-			Write($"  {functionDef.Path}... ");
-			try
-			{
-				var created = await _client!.Functions.CreateAsync(functionDef);
-				WriteLine($"✅ CREATED (ID: {created.Id})");
-				successCount++;
-			}
-			catch (Exception ex)
-			{
-				WriteLine($"❌ FAILED: {ex.Message}");
-				failCount++;
-			}
-		}
-
-		WriteLine();
-		WriteLine("═══════════════════════════════════════");
-		WriteLine($"Results: {successCount} created, {failCount} failed");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
-
-		if (successCount > 0)
-		{
-			WriteLine("✅ Functions created successfully!");
-			WriteLine("   Run menu option 99 to verify they appear in the API.");
-			WriteLine("   Then run menu options 1-6, 10 to test them!");
-		}
-
-		if (failCount > 0)
-		{
+			WriteLine("Creating functions...");
 			WriteLine();
-			WriteLine("⚠️  Some functions failed to create.");
-			WriteLine("   They may already exist. Try deleting them first.");
+
+			int successCount = 0;
+			int failCount = 0;
+
+			foreach (var functionDef in functionsToCreate)
+			{
+				Write($"  {functionDef.Path}... ");
+				try
+				{
+					var created = await _client!.Functions.CreateAsync(functionDef);
+					WriteLine($"✅ CREATED (ID: {created.Id})");
+					successCount++;
+				}
+				catch (Exception ex)
+				{
+					WriteLine($"❌ FAILED: {ex.Message}");
+					failCount++;
+				}
+			}
+
+			WriteLine();
+			WriteLine("═══════════════════════════════════════");
+			WriteLine($"Results: {successCount} created, {failCount} failed");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+
+			if (successCount > 0)
+			{
+				WriteLine("✅ Functions created successfully!");
+				WriteLine("   Run menu option 99 to verify they appear in the API.");
+				WriteLine("   Then run menu options 1-6, 10 to test them!");
+			}
+
+			if (failCount > 0)
+			{
+				WriteLine();
+				WriteLine("⚠️  Some functions failed to create.");
+				WriteLine("   They may already exist. Try deleting them first.");
+			}
 		}
-	}
 
-	static async Task InitializeFunctions()
-	{
-		WriteLine("═══════════════════════════════════════");
-		WriteLine("INITIALIZE ALL FUNCTIONS");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
-		WriteLine("This will call each function once to initialize/activate it.");
-		WriteLine("After this, they should appear in the API list.");
-		WriteLine();
-
-		var functionsToInitialize = new[]
+		static async Task InitializeFunctions()
 		{
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("INITIALIZE ALL FUNCTIONS");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+			WriteLine("This will call each function once to initialize/activate it.");
+			WriteLine("After this, they should appear in the API list.");
+			WriteLine();
+
+			var functionsToInitialize = new[]
+			{
 			("math-solver", new Dictionary<string, object> { ["problem"] = "What is 2+2?" }),
 			("research-agent", new Dictionary<string, object> { ["query"] = "test" }),
 			("problem-solver", new Dictionary<string, object> { ["problem"] = "test" }),
@@ -1011,60 +1011,60 @@ Provide a ranked recommendation with clear reasoning.",
 			("consultant-matcher", new Dictionary<string, object> { ["assignment"] = "test" })
 		};
 
-		WriteLine("Attempting to call each function...");
-		WriteLine();
-
-		int successCount = 0;
-		int failCount = 0;
-
-		foreach (var (functionName, input) in functionsToInitialize)
-		{
-			Write($"  {functionName}... ");
-			try
-			{
-				var response = await _client!.Functions.CallAsync(
-					path: functionName,
-					input: input
-				);
-
-				if (!string.IsNullOrEmpty(response.Message))
-				{
-					WriteLine($"✅ SUCCESS (got response)");
-					successCount++;
-				}
-				else
-				{
-					WriteLine($"⚠️  RESPONDED (but empty message)");
-					successCount++;
-				}
-			}
-			catch (Exception ex)
-			{
-				WriteLine($"❌ FAILED: {ex.Message}");
-				failCount++;
-			}
-		}
-
-		WriteLine();
-		WriteLine("═══════════════════════════════════════");
-		WriteLine($"Results: {successCount} succeeded, {failCount} failed");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
-
-		if (successCount > 0)
-		{
-			WriteLine("✅ Functions that succeeded should now be active in the API!");
-			WriteLine("   Run menu option 99 to verify they appear in the list.");
-		}
-
-		if (failCount > 0)
-		{
+			WriteLine("Attempting to call each function...");
 			WriteLine();
-			WriteLine("⚠️  Failed functions were not found by the API.");
-			WriteLine("   They may not have been created correctly in Opper Dashboard,");
-			WriteLine("   or they may have different names than expected.");
+
+			int successCount = 0;
+			int failCount = 0;
+
+			foreach (var (functionName, input) in functionsToInitialize)
+			{
+				Write($"  {functionName}... ");
+				try
+				{
+					var response = await _client!.Functions.CallAsync(
+						path: functionName,
+						input: input
+					);
+
+					if (!string.IsNullOrEmpty(response.Message))
+					{
+						WriteLine($"✅ SUCCESS (got response)");
+						successCount++;
+					}
+					else
+					{
+						WriteLine($"⚠️  RESPONDED (but empty message)");
+						successCount++;
+					}
+				}
+				catch (Exception ex)
+				{
+					WriteLine($"❌ FAILED: {ex.Message}");
+					failCount++;
+				}
+			}
+
+			WriteLine();
+			WriteLine("═══════════════════════════════════════");
+			WriteLine($"Results: {successCount} succeeded, {failCount} failed");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+
+			if (successCount > 0)
+			{
+				WriteLine("✅ Functions that succeeded should now be active in the API!");
+				WriteLine("   Run menu option 99 to verify they appear in the list.");
+			}
+
+			if (failCount > 0)
+			{
+				WriteLine();
+				WriteLine("⚠️  Failed functions were not found by the API.");
+				WriteLine("   They may not have been created correctly in Opper Dashboard,");
+				WriteLine("   or they may have different names than expected.");
+			}
 		}
-	}
 
 		static async Task DebugListFunctions()
 		{
@@ -1081,7 +1081,7 @@ Provide a ranked recommendation with clear reasoning.",
 				WriteLine("🔍 RAW API CALL:");
 				var apiKey = _configuration?["OPPER_API_KEY"];
 
-			using var httpClient = new HttpClient();
+				using var httpClient = new HttpClient();
 				httpClient.DefaultRequestHeaders.Authorization =
 					new AuthenticationHeaderValue("Bearer", apiKey);
 
