@@ -1371,9 +1371,9 @@ Provide a ranked recommendation with clear reasoning.",
 			}
 
 			[Tool("Calculates percentage of a value")]
-			public double Percentage(double value, double percent)
+			public double Percentage(double number, double percentage)
 			{
-				return value * (percent / 100.0);
+				return number * (percentage / 100.0);
 			}
 
 			[Tool("Divides first number by second number")]
