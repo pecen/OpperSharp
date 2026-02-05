@@ -528,19 +528,19 @@ Framework: .NET 8.0
 				WriteLine();
 			}
 
-			var aliasName = "test-reliable-gpt4-" + DateTime.Now.Ticks;
+			var aliasName = "test-reliable-claude-" + DateTime.Now.Ticks;
 
 			WriteLine($"1. Creating model alias: {aliasName}");
-			WriteLine("   Using standard OpenAI model names...");
+			WriteLine("   Using Claude models with fallback chain...");
 			var alias = await _client!.Models.CreateAliasAsync(
 				name: aliasName,
 				fallbackModels: new List<string>
 				{
-					"gpt-4o",
-					"gpt-4-turbo",
-					"gpt-3.5-turbo"
+					"anthropic/claude-opus-4.5",
+					"anthropic/claude-sonnet-4",
+					"anthropic/claude-3.5-haiku"
 				},
-				description: "Test alias with GPT-4 fallback chain"
+				description: "Test alias with Claude fallback chain (Opus → Sonnet → Haiku)"
 			);
 
 			WriteLine($"   ✓ Alias created: {alias.Name}");
