@@ -61,6 +61,10 @@ namespace OpperSharp.UI.TestConsole
 						case 'c':
 						case 'C': await TestConsultantMatching(); break;
 
+						// DEBUG
+						case 'd':
+						case 'D': await DebugListFunctions(); break;
+
 						case '0': WriteLine("Goodbye!"); return;
 
 						default: WriteLine("Invalid option. Try again."); break;
@@ -111,6 +115,9 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine();
 			WriteLine("  CONSULTANT MATCHING:");
 			WriteLine("  C) Match Consultant to Assignment");
+			WriteLine();
+			WriteLine("  DEBUG:");
+			WriteLine("  D) List all Functions in Opper account");
 			WriteLine();
 			WriteLine("  0) Exit");
 			WriteLine();
@@ -726,6 +733,81 @@ Provide a ranked recommendation with reasoning.";
 		}
 
 		// ═══════════════════════════════════════════════════════════════
+
+		// ═══════════════════════════════════════════════════════════════
+		// DEBUG UTILITIES
+		// ═══════════════════════════════════════════════════════════════
+
+		static async Task DebugListFunctions()
+		{
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("DEBUG: List All Functions");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+			WriteLine("Fetching all functions from your Opper account...");
+			WriteLine();
+
+			try
+			{
+				var functions = await _client!.Functions.ListAsync();
+
+				if (functions.Count == 0)
+				{
+					WriteLine("❌ NO FUNCTIONS FOUND!");
+					WriteLine();
+					WriteLine("This means the functions were not created successfully in Opper Dashboard.");
+					WriteLine("Please go back to https://platform.opper.ai and verify:");
+					WriteLine("1. Functions section exists");
+					WriteLine("2. You created the 7 functions");
+					WriteLine("3. Functions were saved successfully");
+				}
+				else
+				{
+					WriteLine($"✓ Found {functions.Count} function(s):");
+					WriteLine();
+
+					var expectedFunctions = new[]
+					{
+						"math-solver",
+						"research-agent",
+						"problem-solver",
+						"general-qa",
+						"story-generator",
+						"chat-assistant",
+						"consultant-matcher"
+					};
+
+					foreach (var func in functions)
+					{
+						var isExpected = Array.Exists(expectedFunctions, f => f == func.Path);
+						var marker = isExpected ? "✓" : " ";
+						WriteLine($"{marker} Path: {func.Path}");
+						WriteLine($"  ID: {func.Id}");
+						if (!string.IsNullOrEmpty(func.Description))
+							WriteLine($"  Description: {func.Description}");
+						WriteLine();
+					}
+
+					WriteLine("═══════════════════════════════════════");
+					WriteLine("Expected functions for TestConsole:");
+					WriteLine("═══════════════════════════════════════");
+					foreach (var expected in expectedFunctions)
+					{
+						var found = functions.Exists(f => f.Path == expected);
+						var marker = found ? "✓" : "❌";
+						WriteLine($"{marker} {expected}");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				WriteLine($"❌ ERROR: {ex.Message}");
+				WriteLine();
+				WriteLine("Stack trace:");
+				WriteLine(ex.StackTrace);
+			}
+		}
+
 		// HELPER CLASSES
 		// ═══════════════════════════════════════════════════════════════
 
