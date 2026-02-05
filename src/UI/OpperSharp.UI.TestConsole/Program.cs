@@ -398,11 +398,11 @@ Then calculate what 18% employer tax on that total would be.";
 			var kbName = "test-kb-" + DateTime.Now.Ticks;
 
 			WriteLine($"1. Creating knowledge base: {kbName}");
-			await _client!.Knowledge.CreateAsync(
+			var kb = await _client!.Knowledge.CreateAsync(
 				name: kbName,
 				embeddingModel: "azure/text-embedding-3-large"
 			);
-			WriteLine("   ✓ Knowledge base created");
+			WriteLine($"   ✓ Knowledge base created with ID: {kb.Id}");
 			WriteLine();
 
 			WriteLine("2. Creating sample document...");
@@ -430,7 +430,7 @@ Framework: .NET 8.0
 			WriteLine("3. Uploading file to knowledge base...");
 			using var fileStream = File.OpenRead(tempFile);
 			await _client.Knowledge.UploadFileAsync(
-				knowledgeBaseId: kbName,
+				knowledgeBaseId: kb.Id,
 				filename: "oppersharp-info.txt",
 				fileStream: fileStream,
 				contentType: "text/plain"
@@ -439,7 +439,7 @@ Framework: .NET 8.0
 			WriteLine();
 
 			WriteLine("4. Listing files...");
-			var files = await _client.Knowledge.ListFilesAsync(kbName);
+			var files = await _client.Knowledge.ListFilesAsync(kb.Id);
 			foreach (var file in files)
 			{
 				WriteLine($"   - {file.Filename} ({file.Size} bytes)");
