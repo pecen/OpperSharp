@@ -35,22 +35,38 @@ namespace OpperSharp.Clients
 
 		/// <summary>
 		/// Call a function with the given input.
+		/// Supports both named functions (with path) and ad-hoc calls (with options.Name and options.Instructions).
 		/// </summary>
 		public async Task<OpperFunctionResponse> CallAsync(
-			string path,
+			string? path,
 			Dictionary<string, object> input,
 			OpperCallOptions? options = null,
 			CancellationToken cancellationToken = default)
 		{
-			if (string.IsNullOrWhiteSpace(path))
-				throw new ArgumentException("Function path cannot be null or empty", nameof(path));
-
 			options ??= new OpperCallOptions();
+
+			// Determine if this is an ad-hoc call or a named function call
+			bool isAdHocCall = string.IsNullOrWhiteSpace(path) && !string.IsNullOrWhiteSpace(options.Name);
 
 			var requestBody = new Dictionary<string, object>
 			{
 				["input"] = input
 			};
+
+			// For ad-hoc calls, include name and instructions in the request body
+			if (isAdHocCall)
+			{
+				requestBody["name"] = options.Name!;
+
+				if (!string.IsNullOrWhiteSpace(options.Instructions))
+					requestBody["instructions"] = options.Instructions;
+			}
+			else if (string.IsNullOrWhiteSpace(path))
+			{
+				throw new ArgumentException(
+					"Either path must be provided (for named function calls) or options.Name must be set (for ad-hoc calls)",
+					nameof(path));
+			}
 
 			if (options.Context != null)
 				requestBody["context"] = options.Context;
@@ -79,8 +95,13 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
+			// Choose endpoint based on call type
+			string endpoint = isAdHocCall
+				? _callEndpoint  // POST /v2/call (ad-hoc)
+				: $"{_callEndpoint}/{path}";  // POST /v2/call/{path} (named function)
+
 			var response = await _httpClient.PostAsync(
-				$"{_callEndpoint}/{path}",
+				endpoint,
 				content,
 				cancellationToken
 			);
@@ -93,7 +114,7 @@ namespace OpperSharp.Clients
 					$"Function call failed: {response.StatusCode}",
 					responseString,
 					(int)response.StatusCode,
-					$"{_callEndpoint}/{path}"
+					endpoint
 				);
 			}
 

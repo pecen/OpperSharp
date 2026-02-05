@@ -8,6 +8,16 @@ namespace OpperSharp.Models.Functions
 	public class OpperCallOptions
 	{
 		/// <summary>
+		/// Function name for ad-hoc calls (when not using a pre-created function).
+		/// </summary>
+		public string? Name { get; set; }
+
+		/// <summary>
+		/// Instructions for ad-hoc calls (when not using a pre-created function).
+		/// </summary>
+		public string? Instructions { get; set; }
+
+		/// <summary>
 		/// Additional context to pass to the function.
 		/// </summary>
 		public Dictionary<string, object>? Context { get; set; }

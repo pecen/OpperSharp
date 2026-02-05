@@ -50,8 +50,9 @@ namespace OpperSharp.Agents
 				// Create parent span if tracing is enabled
 				if (_options.EnableTracing)
 				{
+					var agentName = _options.Name ?? _options.FunctionPath ?? "agent";
 					var span = await _client.Spans.CreateAsync(
-						$"agent:{_options.FunctionPath}",
+						$"agent:{agentName}",
 						input,
 						_options.ParentSpanId,
 						_options.Metadata,
@@ -73,6 +74,8 @@ namespace OpperSharp.Agents
 					// Call the function with current input
 					var callOptions = new OpperCallOptions
 					{
+						Name = _options.Name ?? _options.FunctionPath ?? "agent",
+						Instructions = _options.Instructions,
 						Context = _options.Context,
 						ParentSpanId = currentSpanId,
 						Model = _options.Model,
@@ -82,7 +85,8 @@ namespace OpperSharp.Agents
 					};
 
 					// DEBUG: Log what's being sent
-					System.Console.WriteLine($"[DEBUG] Iteration {iteration}: Calling {_options.FunctionPath}");
+					var callMode = string.IsNullOrWhiteSpace(_options.FunctionPath) ? "ad-hoc" : "named";
+					System.Console.WriteLine($"[DEBUG] Iteration {iteration}: Calling {callOptions.Name} ({callMode} mode)");
 					System.Console.WriteLine($"[DEBUG] Tools count: {callOptions.Tools?.Count ?? 0}");
 					if (callOptions.Tools != null && callOptions.Tools.Count > 0)
 					{
@@ -92,8 +96,10 @@ namespace OpperSharp.Agents
 					OpperFunctionResponse functionResponse;
 					try
 					{
+						// Use null for path to trigger ad-hoc mode (name/instructions from options)
+						// Or use FunctionPath for backward compatibility with named functions
 						functionResponse = await _client.Functions.CallAsync(
-							_options.FunctionPath,
+							string.IsNullOrWhiteSpace(_options.FunctionPath) ? null : _options.FunctionPath,
 							currentInput,
 							callOptions,
 							cancellationToken

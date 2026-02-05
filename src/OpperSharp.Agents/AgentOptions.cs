@@ -9,9 +9,20 @@ namespace OpperSharp.Agents
 	public class AgentOptions
 	{
 		/// <summary>
-		/// The path to the function that powers this agent.
+		/// The path to the function that powers this agent (DEPRECATED - use Name and Instructions instead).
 		/// </summary>
-		public string FunctionPath { get; set; } = string.Empty;
+		[Obsolete("Named functions are deprecated. Use Name and Instructions instead for ad-hoc calls.")]
+		public string? FunctionPath { get; set; }
+
+		/// <summary>
+		/// The name for this agent (used in ad-hoc calls).
+		/// </summary>
+		public string? Name { get; set; }
+
+		/// <summary>
+		/// Instructions that define the agent's behavior and capabilities.
+		/// </summary>
+		public string? Instructions { get; set; }
 
 		/// <summary>
 		/// Maximum number of iterations the agent can take (default: 10).

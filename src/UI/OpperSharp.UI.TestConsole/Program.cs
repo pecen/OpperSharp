@@ -182,13 +182,14 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("This agent can perform mathematical calculations using tools.");
 			WriteLine();
 
-			// Create agent with math tools
+			// Create agent with math tools using ad-hoc mode
 			var agent = new Agent(_client!, new AgentOptions
 			{
-				FunctionPath = "math-solver",
+				Name = "math-solver",
+				Instructions = "You are a helpful math solver. You have access to calculation tools (Add, Multiply, Percentage, Divide, Subtract). Use them to solve mathematical problems step by step. Always use the tools instead of calculating manually.",
 				MaxIterations = 10,
 				EnableTracing = true,
-				Model = "gpt-4"
+				Model = "anthropic/claude-opus-4.5"
 			}).WithTools(new MathTools());
 
 			WriteLine("Agent created with tools: Add, Multiply, Percentage");
@@ -235,8 +236,10 @@ namespace OpperSharp.UI.TestConsole
 
 			var agent = new Agent(_client!, new AgentOptions
 			{
-				FunctionPath = "research-agent",
-				MaxIterations = 10
+				Name = "research-agent",
+				Instructions = "You are a research assistant with access to a user database and weather information. Help users find information by using the available tools.",
+				MaxIterations = 10,
+				Model = "anthropic/claude-opus-4.5"
 			})
 			.WithTool(AgentTool.Create(
 				name: "query_database",
@@ -293,9 +296,11 @@ namespace OpperSharp.UI.TestConsole
 
 			var agent = new Agent(_client!, new AgentOptions
 			{
-				FunctionPath = "problem-solver",
+				Name = "problem-solver",
+				Instructions = "You are a problem solver that can break down complex problems into steps and use mathematical tools to solve them. Always use the available calculation tools.",
 				MaxIterations = 15,
-				EnableTracing = true
+				EnableTracing = true,
+				Model = "anthropic/claude-opus-4.5"
 			}).WithTools(new MathTools());
 
 			var complexProblem = @"
