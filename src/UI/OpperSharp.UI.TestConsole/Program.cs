@@ -507,16 +507,38 @@ Framework: .NET 8.0
 			WriteLine("Model aliases provide automatic fallback chains for reliability.");
 			WriteLine();
 
+			WriteLine("0. Listing available models to use...");
+			try
+			{
+				var availableModels = await _client!.Models.ListAsync();
+				WriteLine($"   Found {availableModels.Count} models");
+				if (availableModels.Count > 0)
+				{
+					WriteLine("   First 10 models:");
+					foreach (var model in availableModels.Take(10))
+					{
+						WriteLine($"   - {model.Name ?? model.Id}");
+					}
+				}
+				WriteLine();
+			}
+			catch (Exception ex)
+			{
+				WriteLine($"   (Could not list models: {ex.Message})");
+				WriteLine();
+			}
+
 			var aliasName = "test-reliable-gpt4-" + DateTime.Now.Ticks;
 
 			WriteLine($"1. Creating model alias: {aliasName}");
+			WriteLine("   Using standard OpenAI model names...");
 			var alias = await _client!.Models.CreateAliasAsync(
 				name: aliasName,
 				fallbackModels: new List<string>
 				{
-					"openai/gpt-4o",
-					"openai/gpt-4-turbo",
-					"openai/gpt-3.5-turbo"
+					"gpt-4o",
+					"gpt-4-turbo",
+					"gpt-3.5-turbo"
 				},
 				description: "Test alias with GPT-4 fallback chain"
 			);
