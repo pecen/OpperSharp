@@ -81,12 +81,24 @@ namespace OpperSharp.Agents
 						Tools = ConvertToolsToApiFormat(_options.Tools)
 					};
 
+					// DEBUG: Log what's being sent
+					System.Console.WriteLine($"[DEBUG] Iteration {iteration}: Calling {_options.FunctionPath}");
+					System.Console.WriteLine($"[DEBUG] Tools count: {callOptions.Tools?.Count ?? 0}");
+					if (callOptions.Tools != null && callOptions.Tools.Count > 0)
+					{
+						System.Console.WriteLine($"[DEBUG] First tool: {Newtonsoft.Json.JsonConvert.SerializeObject(callOptions.Tools[0])}");
+					}
+
 					var functionResponse = await _client.Functions.CallAsync(
 						_options.FunctionPath,
 						currentInput,
 						callOptions,
 						cancellationToken
 					);
+
+					// DEBUG: Log response
+					System.Console.WriteLine($"[DEBUG] Response has tool_calls: {functionResponse.Output.ContainsKey("tool_calls")}");
+					System.Console.WriteLine($"[DEBUG] Response message: {functionResponse.Message?.Substring(0, Math.Min(100, functionResponse.Message?.Length ?? 0))}");
 
 					// Check if the response indicates tool calls
 					if (functionResponse.Output.TryGetValue("tool_calls", out var toolCallsToken)
@@ -271,11 +283,16 @@ namespace OpperSharp.Agents
 			var apiTools = new List<object>();
 			foreach (var tool in tools)
 			{
+				// Try OpenAI/Anthropic standard format first
 				apiTools.Add(new
 				{
-					name = tool.Name,
-					description = tool.Description,
-					parameters = tool.ParametersSchema
+					type = "function",
+					function = new
+					{
+						name = tool.Name,
+						description = tool.Description,
+						parameters = tool.ParametersSchema
+					}
 				});
 			}
 
