@@ -1,9 +1,11 @@
-using OpperSharp.Core;
 using OpperSharp.Agents;
+using OpperSharp.Core;
+using OpperSharp.Models.Embeddings;
 using OpperSharp.Models.Functions;
 using OpperSharp.Models.Knowledge;
-using OpperSharp.Models.Embeddings;
 using OpperSharp.Models.Models;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using static System.Console;
 
@@ -746,21 +748,26 @@ Provide a ranked recommendation with reasoning.";
 
 			try
 			{
-			// Make raw API call to see what we actually get
-			WriteLine("🔍 RAW API CALL:");
-			var apiKey = Environment.GetEnvironmentVariable("OPPER_API_KEY");
-			using var httpClient = new HttpClient();
-			httpClient.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+				// Make raw API call to see what we actually get
+				WriteLine("🔍 RAW API CALL:");
+				var apiKey = Environment.GetEnvironmentVariable("OPPER_API_KEY");
+				using var httpClient = new HttpClient();
 
-			var response = await httpClient.GetAsync("https://api.opper.ai/v2/functions");
-			var rawJson = await response.Content.ReadAsStringAsync();
+				httpClient.DefaultRequestHeaders.Authorization =
+					new AuthenticationHeaderValue("Bearer", apiKey);
 
-			WriteLine("Response Status: " + response.StatusCode);
-			WriteLine("Raw JSON Response:");
-			WriteLine(rawJson);
-			WriteLine();
-			WriteLine("═══════════════════════════════════════");
-			WriteLine();
+
+				httpClient.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+
+				var response = await httpClient.GetAsync("https://api.opper.ai/v2/functions");
+				var rawJson = await response.Content.ReadAsStringAsync();
+
+				WriteLine("Response Status: " + response.StatusCode);
+				WriteLine("Raw JSON Response:");
+				WriteLine(rawJson);
+				WriteLine();
+				WriteLine("═══════════════════════════════════════");
+				WriteLine();
 
 				var functions = await _client!.Functions.ListAsync();
 
