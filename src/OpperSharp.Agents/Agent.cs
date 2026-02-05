@@ -133,26 +133,59 @@ namespace OpperSharp.Agents
 					System.Console.WriteLine($"[DEBUG] Response message preview: {functionResponse.Message?.Substring(0, Math.Min(200, functionResponse.Message?.Length ?? 0))}");
 
 					// Check if the response indicates tool calls
-					if (functionResponse.Output.TryGetValue("tool_calls", out var toolCallsToken)
-						&& toolCallsToken is JArray toolCallsArray
-						&& toolCallsArray.Count > 0)
+					// First try structured format (Output.tool_calls)
+					bool hasToolCalls = false;
+					List<Dictionary<string, object>>? toolCallsList = null;
+
+					if (functionResponse.Output?.TryGetValue("tool_calls", out var toolCallsToken) == true
+						&& toolCallsToken is JArray toolCallsFromOutput
+						&& toolCallsFromOutput.Count > 0)
+					{
+						hasToolCalls = true;
+						toolCallsList = new List<Dictionary<string, object>>();
+						foreach (var tc in toolCallsFromOutput)
+						{
+							var dict = tc.ToObject<Dictionary<string, object>>();
+							if (dict != null) toolCallsList.Add(dict);
+						}
+						System.Console.WriteLine($"[DEBUG] Found {toolCallsList.Count} tool calls in Output.tool_calls (structured format)");
+					}
+					// If not in Output, try parsing from message (Claude's native XML format)
+					else if (!string.IsNullOrEmpty(functionResponse.Message))
+					{
+						toolCallsList = ParseToolCallsFromMessage(functionResponse.Message);
+						if (toolCallsList.Count > 0)
+						{
+							hasToolCalls = true;
+							System.Console.WriteLine($"[DEBUG] Found {toolCallsList.Count} tool calls in message (XML format)");
+						}
+					}
+
+					if (hasToolCalls && toolCallsList != null && toolCallsList.Count > 0)
 					{
 						// Execute tool calls
 						var toolResults = new List<object>();
 
-						foreach (var toolCallToken in toolCallsArray)
+						foreach (var toolCall in toolCallsList)
 						{
-							var toolCall = toolCallToken.ToObject<Dictionary<string, object>>();
-							if (toolCall == null) continue;
-
 							var toolName = toolCall.GetValueOrDefault("name")?.ToString();
-							var toolArgs = toolCall.GetValueOrDefault("arguments") as JObject;
+							var toolArgs = toolCall.GetValueOrDefault("arguments");
 
 							if (string.IsNullOrEmpty(toolName)) continue;
 
+							Dictionary<string, object?>? argsDict = null;
+							if (toolArgs is JObject jobj)
+							{
+								argsDict = jobj.ToObject<Dictionary<string, object?>>();
+							}
+							else if (toolArgs is Dictionary<string, object> dict)
+							{
+								argsDict = dict.ToDictionary(kv => kv.Key, kv => (object?)kv.Value);
+							}
+
 							var result = await ExecuteToolAsync(
 								toolName,
-								toolArgs?.ToObject<Dictionary<string, object?>>() ?? new Dictionary<string, object?>(),
+								argsDict ?? new Dictionary<string, object?>(),
 								response.ToolCalls
 							);
 
@@ -329,6 +362,105 @@ namespace OpperSharp.Agents
 			}
 
 			return apiTools;
+		}
+
+		/// <summary>
+		/// Parses tool calls from Claude's native XML format in the message field.
+		/// Supports formats like:
+		/// - <function_calls><invoke name="ToolName"><arg name="param">value</arg></invoke></function_calls>
+		/// - <tool_call>{"name": "ToolName", "arguments": {"param": "value"}}</tool_call>
+		/// </summary>
+		private static List<Dictionary<string, object>> ParseToolCallsFromMessage(string message)
+		{
+			var toolCalls = new List<Dictionary<string, object>>();
+
+			// Try parsing <function_calls> XML format first
+			var functionCallsMatch = System.Text.RegularExpressions.Regex.Match(
+				message,
+				@"<function_calls>(.*?)</function_calls>",
+				System.Text.RegularExpressions.RegexOptions.Singleline
+			);
+
+			if (functionCallsMatch.Success)
+			{
+				var innerXml = functionCallsMatch.Groups[1].Value;
+
+				// Find all <invoke> tags
+				var invokeMatches = System.Text.RegularExpressions.Regex.Matches(
+					innerXml,
+					@"<invoke\s+name=""([^""]+)""[^>]*>(.*?)</invoke>",
+					System.Text.RegularExpressions.RegexOptions.Singleline
+				);
+
+				foreach (System.Text.RegularExpressions.Match invokeMatch in invokeMatches)
+				{
+					var toolName = invokeMatch.Groups[1].Value;
+					var argsXml = invokeMatch.Groups[2].Value;
+
+					// Parse arguments from <arg> or <parameter> tags
+					var arguments = new Dictionary<string, object>();
+					var argMatches = System.Text.RegularExpressions.Regex.Matches(
+						argsXml,
+						@"<(?:arg|parameter)\s+name=""([^""]+)""[^>]*>([^<]*)</(?:arg|parameter)>",
+						System.Text.RegularExpressions.RegexOptions.Singleline
+					);
+
+					foreach (System.Text.RegularExpressions.Match argMatch in argMatches)
+					{
+						var paramName = argMatch.Groups[1].Value;
+						var paramValue = argMatch.Groups[2].Value.Trim();
+
+						// Try to parse as number
+						if (double.TryParse(paramValue, out var numValue))
+						{
+							arguments[paramName] = numValue;
+						}
+						else if (bool.TryParse(paramValue, out var boolValue))
+						{
+							arguments[paramName] = boolValue;
+						}
+						else
+						{
+							arguments[paramName] = paramValue;
+						}
+					}
+
+					toolCalls.Add(new Dictionary<string, object>
+					{
+						["name"] = toolName,
+						["arguments"] = arguments
+					});
+				}
+			}
+
+			// Try parsing <tool_call> JSON format if no function_calls found
+			if (toolCalls.Count == 0)
+			{
+				var toolCallMatches = System.Text.RegularExpressions.Regex.Matches(
+					message,
+					@"<tool_call>\s*(\{[^}]+\})\s*</tool_call>",
+					System.Text.RegularExpressions.RegexOptions.Singleline
+				);
+
+				foreach (System.Text.RegularExpressions.Match match in toolCallMatches)
+				{
+					try
+					{
+						var json = match.Groups[1].Value;
+						var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+						if (parsed != null)
+						{
+							toolCalls.Add(parsed);
+						}
+					}
+					catch
+					{
+						// Skip invalid JSON
+					}
+				}
+			}
+
+			return toolCalls;
 		}
 	}
 }
