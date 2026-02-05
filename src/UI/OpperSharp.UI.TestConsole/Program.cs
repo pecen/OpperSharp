@@ -96,6 +96,7 @@ namespace OpperSharp.UI.TestConsole
 						// CONSULTANT MATCHING (End goal)
 						case "10": await TestConsultantMatching(); break;
 
+						case "97": await CreateAllFunctions(); break;
 						// DEBUG
 						case "98": await InitializeFunctions(); break;
 						case "99": await DebugListFunctions(); break;
@@ -151,6 +152,7 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("  10) Match Consultant to Assignment");
 			WriteLine();
 			WriteLine("  DEBUG:");
+			WriteLine("  97) Create all 7 Functions via API");
 			WriteLine("  98) Initialize/Activate all 7 Functions");
 			WriteLine("  99) List all Functions in Opper account");
 			WriteLine();
@@ -773,6 +775,140 @@ Provide a ranked recommendation with reasoning.";
 		// DEBUG UTILITIES
 		// ═══════════════════════════════════════════════════════════════
 
+
+
+	static async Task CreateAllFunctions()
+	{
+		WriteLine("═══════════════════════════════════════");
+		WriteLine("CREATE ALL FUNCTIONS VIA API");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+		WriteLine("This will create all 7 functions programmatically via the Opper API.");
+		WriteLine("Functions created via Dashboard don't work - they must be created via API!");
+		WriteLine();
+
+		var functionsToCreate = new[]
+		{
+			new OpperFunctionDefinition
+			{
+				Path = "math-solver",
+				Name = "math-solver",
+				Description = "Math solver agent with calculation tools",
+				Instructions = "You are a helpful math solver. You have access to calculation tools. Use them to solve mathematical problems step by step.",
+				Model = "anthropic/claude-opus-4.5"
+			},
+			new OpperFunctionDefinition
+			{
+				Path = "research-agent",
+				Name = "research-agent",
+				Description = "Research agent with database and weather tools",
+				Instructions = "You are a research agent with access to database queries and weather information. Help users find information.",
+				Model = "anthropic/claude-opus-4.5"
+			},
+			new OpperFunctionDefinition
+			{
+				Path = "problem-solver",
+				Name = "problem-solver",
+				Description = "Multi-step problem solver for complex reasoning",
+				Instructions = "You are a problem solver that can handle complex multi-step problems. Break down problems and solve them systematically.",
+				Model = "anthropic/claude-opus-4.5"
+			},
+			new OpperFunctionDefinition
+			{
+				Path = "general-qa",
+				Name = "general-qa",
+				Description = "General Q&A function for simple questions",
+				Instructions = "You are a helpful assistant that answers general questions clearly and concisely.",
+				Model = "anthropic/claude-sonnet-4"
+			},
+			new OpperFunctionDefinition
+			{
+				Path = "story-generator",
+				Name = "story-generator",
+				Description = "Creative story generator for TestConsole",
+				Instructions = "You are a creative writer. Generate engaging short stories based on the given topic.",
+				Model = "anthropic/claude-sonnet-4.5"
+			},
+			new OpperFunctionDefinition
+			{
+				Path = "chat-assistant",
+				Name = "chat-assistant",
+				Description = "Conversational chat assistant",
+				Instructions = @"You are a helpful AI assistant for conversational chat.
+
+Guidelines:
+- Be friendly and concise
+- Consider the conversation history when responding
+- Ask clarifying questions when needed
+- Provide helpful, relevant answers
+- Maintain context throughout the conversation
+
+The user will provide:
+- ""message"": Their current message
+- ""history"": Previous conversation (if any)
+
+Respond naturally and conversationally.",
+				Model = "anthropic/claude-sonnet-4.5"
+			},
+			new OpperFunctionDefinition
+			{
+				Path = "consultant-matcher",
+				Name = "consultant-matcher",
+				Description = "Consultant matching system for assignments",
+				Instructions = @"You are an AI consultant matching system. Analyze assignments and match them with the best consultants.
+
+For each consultant:
+1. Get their profile using the get_consultants tool
+2. Calculate match score using the calculate_match_score tool
+3. Explain why they are or aren't a good fit
+
+Provide a ranked recommendation with clear reasoning.",
+				Model = "anthropic/claude-opus-4.5"
+			}
+		};
+
+		WriteLine("Creating functions...");
+		WriteLine();
+
+		int successCount = 0;
+		int failCount = 0;
+
+		foreach (var functionDef in functionsToCreate)
+		{
+			Write($"  {functionDef.Path}... ");
+			try
+			{
+				var created = await _client!.Functions.CreateAsync(functionDef);
+				WriteLine($"✅ CREATED (ID: {created.Id})");
+				successCount++;
+			}
+			catch (Exception ex)
+			{
+				WriteLine($"❌ FAILED: {ex.Message}");
+				failCount++;
+			}
+		}
+
+		WriteLine();
+		WriteLine("═══════════════════════════════════════");
+		WriteLine($"Results: {successCount} created, {failCount} failed");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+
+		if (successCount > 0)
+		{
+			WriteLine("✅ Functions created successfully!");
+			WriteLine("   Run menu option 99 to verify they appear in the API.");
+			WriteLine("   Then run menu options 1-6, 10 to test them!");
+		}
+
+		if (failCount > 0)
+		{
+			WriteLine();
+			WriteLine("⚠️  Some functions failed to create.");
+			WriteLine("   They may already exist. Try deleting them first.");
+		}
+	}
 
 	static async Task InitializeFunctions()
 	{
