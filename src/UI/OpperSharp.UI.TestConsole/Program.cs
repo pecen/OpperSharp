@@ -557,9 +557,21 @@ Framework: .NET 8.0
 			}
 			WriteLine();
 
-			WriteLine("3. Deleting test alias...");
-			await _client.Models.DeleteAliasAsync(alias.Id);
-			WriteLine("   ✓ Alias deleted");
+			WriteLine("3. Cleaning up all test aliases...");
+			var testAliases = aliases.Where(a => a.Name.StartsWith("test-reliable-")).ToList();
+			if (testAliases.Count > 0)
+			{
+				WriteLine($"   Found {testAliases.Count} test alias(es) to delete");
+				foreach (var testAlias in testAliases)
+				{
+					await _client.Models.DeleteAliasAsync(testAlias.Id);
+					WriteLine($"   ✓ Deleted: {testAlias.Name}");
+				}
+			}
+			else
+			{
+				WriteLine("   No test aliases to clean up");
+			}
 		}
 
 		// ═══════════════════════════════════════════════════════════════
