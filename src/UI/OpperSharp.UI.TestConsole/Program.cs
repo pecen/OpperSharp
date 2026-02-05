@@ -37,35 +37,32 @@ namespace OpperSharp.UI.TestConsole
 				try
 				{
 					ShowMenu();
-					var key = ReadKey().KeyChar;
-					WriteLine("\n");
+					var input = ReadLine()?.Trim() ?? "";
+					WriteLine();
 
-					switch (key)
+					switch (input)
 					{
 						// AGENT TESTS (Priority)
-						case '1': await TestAgentBasicMath(); break;
-						case '2': await TestAgentWithCustomTools(); break;
-						case '3': await TestAgentMultiStep(); break;
+						case "1": await TestAgentBasicMath(); break;
+						case "2": await TestAgentWithCustomTools(); break;
+						case "3": await TestAgentMultiStep(); break;
 
 						// BASIC API TESTS
-						case '4': await TestSimpleFunctionCall(); break;
-						case '5': await TestStreaming(); break;
-						case '6': await TestChatAPI(); break;
+						case "4": await TestSimpleFunctionCall(); break;
+						case "5": await TestStreaming(); break;
+						case "6": await TestChatAPI(); break;
 
 						// v2 API TESTS
-						case '7': await TestKnowledgeBase(); break;
-						case '8': await TestEmbeddings(); break;
-						case '9': await TestModelAliases(); break;
+						case "7": await TestKnowledgeBase(); break;
+						case "8": await TestEmbeddings(); break;
+						case "9": await TestModelAliases(); break;
 
 						// CONSULTANT MATCHING (End goal)
-						case 'c':
-						case 'C': await TestConsultantMatching(); break;
+						case "10": await TestConsultantMatching(); break;
 
 						// DEBUG
-						case 'd':
-						case 'D': await DebugListFunctions(); break;
-
-						case '0': WriteLine("Goodbye!"); return;
+						case "99": await DebugListFunctions(); break;
+						case "0": WriteLine("Goodbye!"); return;
 
 						default: WriteLine("Invalid option. Try again."); break;
 					}
@@ -114,14 +111,14 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("  9) Model Aliases (Fallback chains)");
 			WriteLine();
 			WriteLine("  CONSULTANT MATCHING:");
-			WriteLine("  C) Match Consultant to Assignment");
+			WriteLine("  10) Match Consultant to Assignment");
 			WriteLine();
 			WriteLine("  DEBUG:");
-			WriteLine("  D) List all Functions in Opper account");
+			WriteLine("  99) List all Functions in Opper account");
 			WriteLine();
 			WriteLine("  0) Exit");
 			WriteLine();
-			Write("  Select option > ");
+			Write("  Select option and press ENTER > ");
 		}
 
 		// ═══════════════════════════════════════════════════════════════
