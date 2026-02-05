@@ -108,7 +108,7 @@ namespace OpperSharp.Agents
 
 					// DEBUG: Log response
 					System.Console.WriteLine($"[DEBUG] Response has tool_calls: {functionResponse.Output.ContainsKey("tool_calls")}");
-					System.Console.WriteLine($"[DEBUG] Response Output keys: {string.Join(", ", functionResponse.Output.Keys)}");
+					System.Console.WriteLine($"[DEBUG] Response Output keys: {string.Join(", ", functionResponse.Output.Properties().Select(p => p.Name))}");
 					System.Console.WriteLine($"[DEBUG] Response message: {functionResponse.Message?.Substring(0, Math.Min(100, functionResponse.Message?.Length ?? 0))}");
 
 					// Check if the response indicates tool calls
