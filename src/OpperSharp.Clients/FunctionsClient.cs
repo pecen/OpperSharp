@@ -70,6 +70,9 @@ namespace OpperSharp.Clients
 			if (options.Metadata != null)
 				requestBody["metadata"] = options.Metadata;
 
+			if (options.Tools != null && options.Tools.Count > 0)
+				requestBody["tools"] = options.Tools;
+
 			var content = new StringContent(
 				JsonConvert.SerializeObject(requestBody),
 				Encoding.UTF8,
@@ -123,6 +126,18 @@ namespace OpperSharp.Clients
 
 			if (options.ParentSpanId != null)
 				requestBody["parent_span_id"] = options.ParentSpanId;
+
+			if (options.Model != null)
+				requestBody["model"] = options.Model;
+
+			if (options.Temperature.HasValue)
+				requestBody["temperature"] = options.Temperature.Value;
+
+			if (options.Metadata != null)
+				requestBody["metadata"] = options.Metadata;
+
+			if (options.Tools != null && options.Tools.Count > 0)
+				requestBody["tools"] = options.Tools;
 
 			var content = new StringContent(
 				JsonConvert.SerializeObject(requestBody),

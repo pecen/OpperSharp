@@ -77,7 +77,8 @@ namespace OpperSharp.Agents
 						ParentSpanId = currentSpanId,
 						Model = _options.Model,
 						Temperature = _options.Temperature,
-						Metadata = _options.Metadata
+						Metadata = _options.Metadata,
+						Tools = ConvertToolsToApiFormat(_options.Tools)
 					};
 
 					var functionResponse = await _client.Functions.CallAsync(
@@ -257,6 +258,28 @@ namespace OpperSharp.Agents
 				toolCallHistory.Add(toolCall);
 				throw;
 			}
+		}
+
+		/// <summary>
+		/// Converts AgentTools to the format expected by the Opper API.
+		/// </summary>
+		private static List<object>? ConvertToolsToApiFormat(List<AgentTool> tools)
+		{
+			if (tools == null || tools.Count == 0)
+				return null;
+
+			var apiTools = new List<object>();
+			foreach (var tool in tools)
+			{
+				apiTools.Add(new
+				{
+					name = tool.Name,
+					description = tool.Description,
+					parameters = tool.ParametersSchema
+				});
+			}
+
+			return apiTools;
 		}
 	}
 }

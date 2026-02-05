@@ -36,5 +36,11 @@ namespace OpperSharp.Models.Functions
 		/// Custom metadata to attach to this call.
 		/// </summary>
 		public Dictionary<string, object>? Metadata { get; set; }
+
+		/// <summary>
+		/// Tools available for the function to use during this call.
+		/// Each tool should have 'name', 'description', and 'parameters' (JSON Schema).
+		/// </summary>
+		public List<object>? Tools { get; set; }
 	}
 }
