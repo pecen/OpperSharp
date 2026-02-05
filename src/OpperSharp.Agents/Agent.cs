@@ -26,8 +26,16 @@ namespace OpperSharp.Agents
 			_client = client ?? throw new ArgumentNullException(nameof(client));
 			_options = options ?? throw new ArgumentNullException(nameof(options));
 
-			if (string.IsNullOrWhiteSpace(_options.FunctionPath))
-				throw new ArgumentException("Function path is required", nameof(options));
+			// Require either Name (for ad-hoc calls) or FunctionPath (for legacy named function calls)
+			if (string.IsNullOrWhiteSpace(_options.Name) && string.IsNullOrWhiteSpace(_options.FunctionPath))
+				throw new ArgumentException("Either Name or FunctionPath is required", nameof(options));
+
+			// If using ad-hoc mode (Name without FunctionPath), Instructions should be provided
+			if (!string.IsNullOrWhiteSpace(_options.Name) && string.IsNullOrWhiteSpace(_options.FunctionPath)
+				&& string.IsNullOrWhiteSpace(_options.Instructions))
+			{
+				throw new ArgumentException("Instructions are required when using ad-hoc mode (Name without FunctionPath)", nameof(options));
+			}
 		}
 
 		/// <summary>
