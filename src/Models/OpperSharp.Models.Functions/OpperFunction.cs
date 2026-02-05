@@ -43,6 +43,20 @@ namespace OpperSharp.Models.Functions
 
 		[JsonProperty("updated_at")]
 		public DateTime? UpdatedAt { get; set; }
+
+		/// <summary>
+		/// Called after JSON deserialization to ensure Path is set.
+		/// If Path is empty but Name has a value, use Name as Path.
+		/// </summary>
+		[Newtonsoft.Json.Serialization.OnDeserialized]
+		internal void OnDeserializedMethod(System.Runtime.Serialization.StreamingContext context)
+		{
+			// Fallback: if Path is empty but Name has a value, use Name as Path
+			if (string.IsNullOrEmpty(Path) && !string.IsNullOrEmpty(Name))
+			{
+				Path = Name;
+			}
+		}
 	}
 
 	/// <summary>
