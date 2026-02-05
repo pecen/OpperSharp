@@ -97,6 +97,7 @@ namespace OpperSharp.UI.TestConsole
 						// CONSULTANT MATCHING (End goal)
 						case "10": await TestConsultantMatching(); break;
 
+						case "95": await DebugGetFunction(); break;
 						case "96": await DeleteAllFunctions(); break;
 						case "97": await CreateAllFunctions(); break;
 						// DEBUG
@@ -154,7 +155,7 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("  10) Match Consultant to Assignment");
 			WriteLine();
 			WriteLine("  DEBUG:");
-			WriteLine("  DEBUG:");
+			WriteLine("  95) Get Function Details (math-solver)");
 			WriteLine("  96) Delete all 7 Functions (cleanup)");
 			WriteLine("  97) Create all 7 Functions via API");
 			WriteLine("  98) Initialize/Activate all 7 Functions");
@@ -1063,6 +1064,88 @@ Provide a ranked recommendation with clear reasoning.",
 				WriteLine("⚠️  Failed functions were not found by the API.");
 				WriteLine("   They may not have been created correctly in Opper Dashboard,");
 				WriteLine("   or they may have different names than expected.");
+			}
+		}
+
+		static async Task DebugGetFunction()
+		{
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("DEBUG: Get Function Details");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+
+			try
+			{
+				var functionPath = "math-solver";
+				WriteLine($"Attempting to GET function: {functionPath}");
+				WriteLine();
+
+				var function = await _client!.Functions.GetAsync(functionPath);
+
+				WriteLine("✓ Function retrieved successfully!");
+				WriteLine();
+				WriteLine($"  ID: {function.Id}");
+				WriteLine($"  Path: {function.Path}");
+				WriteLine($"  Name: {function.Name}");
+				WriteLine($"  Description: {function.Description}");
+				WriteLine($"  Model: {function.Model}");
+				WriteLine($"  Instructions: {function.Instructions?.Substring(0, Math.Min(100, function.Instructions?.Length ?? 0))}...");
+				WriteLine($"  Created: {function.CreatedAt}");
+				WriteLine($"  Updated: {function.UpdatedAt}");
+				WriteLine();
+
+				if (function.InputSchema != null)
+				{
+					WriteLine($"  Input Schema: {function.InputSchema}");
+					WriteLine();
+				}
+
+				if (function.IndexIds != null && function.IndexIds.Count > 0)
+				{
+					WriteLine($"  Index IDs: {string.Join(", ", function.IndexIds)}");
+					WriteLine();
+				}
+
+				WriteLine("═══════════════════════════════════════");
+				WriteLine("Now trying to CALL this function...");
+				WriteLine("═══════════════════════════════════════");
+				WriteLine();
+
+				var input = new Dictionary<string, object>
+				{
+					["problem"] = "What is 10 + 5?"
+				};
+
+				WriteLine($"Calling with input: {Newtonsoft.Json.JsonConvert.SerializeObject(input)}");
+				WriteLine();
+
+				var result = await _client!.Functions.CallAsync(
+					functionPath,
+					input,
+					cancellationToken: default
+				);
+
+				WriteLine("✓ Function call succeeded!");
+				WriteLine();
+				WriteLine($"  Message: {result.Message}");
+				WriteLine($"  Output: {result.Output}");
+				WriteLine($"  Cached: {result.Cached}");
+				if (result.Usage != null)
+				{
+					WriteLine($"  Tokens: {result.Usage.TotalTokens} (prompt: {result.Usage.PromptTokens}, completion: {result.Usage.CompletionTokens})");
+				}
+			}
+			catch (OpperAPIException ex)
+			{
+				WriteLine($"❌ API Exception: {ex.StatusCode}");
+				WriteLine($"   Message: {ex.Message}");
+				WriteLine($"   Response: {ex.ResponseContent}");
+				WriteLine($"   Endpoint: {ex.Endpoint}");
+			}
+			catch (Exception ex)
+			{
+				WriteLine($"❌ Exception: {ex.GetType().Name}");
+				WriteLine($"   Message: {ex.Message}");
 			}
 		}
 
