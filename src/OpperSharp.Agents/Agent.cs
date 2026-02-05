@@ -443,86 +443,60 @@ namespace OpperSharp.Agents
 			// Try parsing <tool_call> JSON format if no function_calls found
 			if (toolCalls.Count == 0)
 			{
-				var toolCallMatches = System.Text.RegularExpressions.Regex.Matches(
-					message,
-					@"<tool_call>\s*(\{[^}]+\})\s*</tool_call>",
-					System.Text.RegularExpressions.RegexOptions.Singleline
-				);
-
-				foreach (System.Text.RegularExpressions.Match match in toolCallMatches)
+				// Find all <tool_call> tags and extract JSON properly
+				var startIndex = 0;
+				while ((startIndex = message.IndexOf("<tool_call>", startIndex)) != -1)
 				{
-					try
+					var contentStart = startIndex + "<tool_call>".Length;
+					var endIndex = message.IndexOf("</tool_call>", contentStart);
+					if (endIndex == -1) break;
+
+					var jsonCandidate = ExtractJsonObject(message, contentStart);
+					if (jsonCandidate != null)
 					{
-						var json = match.Groups[1].Value;
-						var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-						if (parsed != null)
+						try
 						{
-							toolCalls.Add(parsed);
+							var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonCandidate);
+							if (parsed != null && TryNormalizeToolCall(parsed, out var normalized))
+							{
+								toolCalls.Add(normalized);
+							}
+						}
+						catch
+						{
+							// Skip invalid JSON
 						}
 					}
-					catch
-					{
-						// Skip invalid JSON
-					}
+
+					startIndex = endIndex + "</tool_call>".Length;
 				}
 			}
 
-			// Try parsing inline JSON format: {"tool": "ToolName", "param": value}
+			// Try parsing inline JSON format: {"tool": "ToolName", ...}
 			if (toolCalls.Count == 0)
 			{
-				var jsonMatches = System.Text.RegularExpressions.Regex.Matches(
-					message,
-					@"\{""(?:tool|tool_name)""\s*:\s*""([^""]+)""[^}]+\}",
-					System.Text.RegularExpressions.RegexOptions.Singleline
-				);
-
-				foreach (System.Text.RegularExpressions.Match match in jsonMatches)
+				// Find JSON objects that contain "tool", "tool_name", or "name" keys
+				for (int i = 0; i < message.Length; i++)
 				{
-					try
+					if (message[i] == '{')
 					{
-						var json = match.Value;
-						var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-						if (parsed != null)
+						var jsonCandidate = ExtractJsonObject(message, i);
+						if (jsonCandidate != null)
 						{
-							// Normalize: extract tool name and parameters
-							string? toolName = null;
-							if (parsed.ContainsKey("tool"))
+							try
 							{
-								toolName = parsed["tool"]?.ToString();
-								parsed.Remove("tool");
-							}
-							else if (parsed.ContainsKey("tool_name"))
-							{
-								toolName = parsed["tool_name"]?.ToString();
-								parsed.Remove("tool_name");
-							}
-
-							if (!string.IsNullOrEmpty(toolName))
-							{
-								// If there's a "parameters" key, use it as arguments
-								if (parsed.ContainsKey("parameters") && parsed["parameters"] is Newtonsoft.Json.Linq.JObject paramsObj)
+								var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonCandidate);
+								if (parsed != null && TryNormalizeToolCall(parsed, out var normalized))
 								{
-									toolCalls.Add(new Dictionary<string, object>
-									{
-										["name"] = toolName,
-										["arguments"] = paramsObj.ToObject<Dictionary<string, object>>() ?? new Dictionary<string, object>()
-									});
+									toolCalls.Add(normalized);
+									i += jsonCandidate.Length - 1; // Skip past this JSON
 								}
-								else
-								{
-									// Otherwise use all remaining keys as arguments
-									toolCalls.Add(new Dictionary<string, object>
-									{
-										["name"] = toolName,
-										["arguments"] = parsed
-									});
-								}
+							}
+							catch
+							{
+								// Not valid JSON, continue
 							}
 						}
-					}
-					catch
-					{
-						// Skip invalid JSON
 					}
 				}
 			}
@@ -568,6 +542,141 @@ namespace OpperSharp.Agents
 			}
 
 			return toolCalls;
+		}
+
+		/// <summary>
+		/// Extracts a complete JSON object starting at the given position, handling nested braces.
+		/// </summary>
+		private static string? ExtractJsonObject(string text, int startIndex)
+		{
+			if (startIndex >= text.Length || text[startIndex] != '{')
+				return null;
+
+			int depth = 0;
+			bool inString = false;
+			bool escaped = false;
+
+			for (int i = startIndex; i < text.Length; i++)
+			{
+				char c = text[i];
+
+				if (escaped)
+				{
+					escaped = false;
+					continue;
+				}
+
+				if (c == '\\' && inString)
+				{
+					escaped = true;
+					continue;
+				}
+
+				if (c == '"')
+				{
+					inString = !inString;
+					continue;
+				}
+
+				if (!inString)
+				{
+					if (c == '{')
+					{
+						depth++;
+					}
+					else if (c == '}')
+					{
+						depth--;
+						if (depth == 0)
+						{
+							// Found the closing brace
+							return text.Substring(startIndex, i - startIndex + 1);
+						}
+					}
+				}
+			}
+
+			return null; // Unclosed JSON object
+		}
+
+		/// <summary>
+		/// Tries to normalize a tool call dictionary into standard {name, arguments} format.
+		/// </summary>
+		private static bool TryNormalizeToolCall(Dictionary<string, object> parsed, out Dictionary<string, object> normalized)
+		{
+			normalized = new Dictionary<string, object>();
+
+			// Extract tool name
+			string? toolName = null;
+			if (parsed.TryGetValue("name", out var nameVal))
+			{
+				toolName = nameVal?.ToString();
+			}
+			else if (parsed.TryGetValue("tool", out var toolVal))
+			{
+				toolName = toolVal?.ToString();
+			}
+			else if (parsed.TryGetValue("tool_name", out var toolNameVal))
+			{
+				toolName = toolNameVal?.ToString();
+			}
+
+			if (string.IsNullOrEmpty(toolName))
+				return false;
+
+			normalized["name"] = toolName;
+
+			// Extract arguments
+			Dictionary<string, object>? arguments = null;
+
+			if (parsed.TryGetValue("arguments", out var argsVal))
+			{
+				if (argsVal is JObject argsObj)
+				{
+					arguments = argsObj.ToObject<Dictionary<string, object>>();
+				}
+				else if (argsVal is Dictionary<string, object> argsDict)
+				{
+					arguments = argsDict;
+				}
+			}
+			else if (parsed.TryGetValue("parameters", out var paramsVal))
+			{
+				if (paramsVal is JObject paramsObj)
+				{
+					arguments = paramsObj.ToObject<Dictionary<string, object>>();
+				}
+				else if (paramsVal is Dictionary<string, object> paramsDict)
+				{
+					arguments = paramsDict;
+				}
+			}
+			else if (parsed.TryGetValue("args", out var args2Val))
+			{
+				if (args2Val is JObject args2Obj)
+				{
+					arguments = args2Obj.ToObject<Dictionary<string, object>>();
+				}
+				else if (args2Val is Dictionary<string, object> args2Dict)
+				{
+					arguments = args2Dict;
+				}
+			}
+			else
+			{
+				// Use all remaining keys as arguments
+				arguments = new Dictionary<string, object>();
+				foreach (var kvp in parsed)
+				{
+					if (kvp.Key != "name" && kvp.Key != "tool" && kvp.Key != "tool_name")
+					{
+						arguments[kvp.Key] = kvp.Value;
+					}
+				}
+			}
+
+			normalized["arguments"] = arguments ?? new Dictionary<string, object>();
+			return true;
 		}
 	}
 }
