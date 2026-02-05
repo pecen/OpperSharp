@@ -56,7 +56,6 @@ namespace OpperSharp.Core
 				new AuthenticationHeaderValue("Bearer", options.ApiKey);
 			_httpClient.DefaultRequestHeaders.Accept.Add(
 				new MediaTypeWithQualityHeaderValue("application/json"));
-			_httpClient.DefaultRequestHeaders.Add("X-OPPER-API-KEY", options.ApiKey);
 
 			if (options.CustomHeaders != null)
 			{
