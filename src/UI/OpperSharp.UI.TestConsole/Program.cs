@@ -23,8 +23,8 @@ namespace OpperSharp.UI.TestConsole
 			{
 				// Build configuration from User Secrets and Environment Variables
 				_configuration = new ConfigurationBuilder()
-					.AddUserSecrets<Program>() // Reads from User Secrets first
-					.AddEnvironmentVariables() // Falls back to Environment Variables
+					.AddEnvironmentVariables() // Reads from Environment Variables first (lower priority)
+					.AddUserSecrets<Program>() // Reads from User Secrets last (higher priority - overrides env vars)
 					.Build();
 
 				// Get API key from configuration (checks User Secrets first, then env vars)
