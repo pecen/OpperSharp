@@ -96,6 +96,7 @@ namespace OpperSharp.UI.TestConsole
 						// CONSULTANT MATCHING (End goal)
 						case "10": await TestConsultantMatching(); break;
 
+						case "96": await DeleteAllFunctions(); break;
 						case "97": await CreateAllFunctions(); break;
 						// DEBUG
 						case "98": await InitializeFunctions(); break;
@@ -112,6 +113,7 @@ namespace OpperSharp.UI.TestConsole
 					WriteLine("ERROR:");
 					WriteLine("═══════════════════════════════════════");
 					var current = ex;
+			WriteLine("  96) Delete all 7 Functions (cleanup)");
 					while (current != null)
 					{
 						WriteLine($"  {current.Message}");
@@ -776,6 +778,82 @@ Provide a ranked recommendation with reasoning.";
 		// ═══════════════════════════════════════════════════════════════
 
 
+
+
+	static async Task DeleteAllFunctions()
+	{
+		WriteLine("═══════════════════════════════════════");
+		WriteLine("DELETE ALL FUNCTIONS");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+		WriteLine("This will delete all 7 expected functions from your Opper account.");
+		WriteLine("Use this to clean up before creating new ones.");
+		WriteLine();
+
+		var functionsToDelete = new[]
+		{
+			"math-solver",
+			"research-agent",
+			"problem-solver",
+			"general-qa",
+			"story-generator",
+			"chat-assistant",
+			"consultant-matcher"
+		};
+
+		WriteLine("Attempting to delete functions...");
+		WriteLine();
+
+		int successCount = 0;
+		int notFoundCount = 0;
+		int failCount = 0;
+
+		foreach (var functionName in functionsToDelete)
+		{
+			Write($"  {functionName}... ");
+			try
+			{
+				await _client!.Functions.DeleteAsync(functionName);
+				WriteLine($"✅ DELETED");
+				successCount++;
+			}
+			catch (OpperAPIException ex) when (ex.Message.Contains("NotFound") || ex.StatusCode == 404)
+			{
+				WriteLine($"⚠️  NOT FOUND (already deleted or never existed)");
+				notFoundCount++;
+			}
+			catch (Exception ex)
+			{
+				WriteLine($"❌ FAILED: {ex.Message}");
+				failCount++;
+			}
+		}
+
+		WriteLine();
+		WriteLine("═══════════════════════════════════════");
+		WriteLine($"Results: {successCount} deleted, {notFoundCount} not found, {failCount} failed");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+
+		if (successCount > 0)
+		{
+			WriteLine("✅ Functions deleted successfully!");
+			WriteLine("   You can now run menu option 97 to create fresh functions.");
+		}
+
+		if (notFoundCount > 0)
+		{
+			WriteLine();
+			WriteLine($"⚠️  {notFoundCount} function(s) were not found (already deleted or never existed).");
+		}
+
+		if (failCount > 0)
+		{
+			WriteLine();
+			WriteLine($"❌ {failCount} function(s) failed to delete.");
+			WriteLine("   Check the error messages above for details.");
+		}
+	}
 
 	static async Task CreateAllFunctions()
 	{
