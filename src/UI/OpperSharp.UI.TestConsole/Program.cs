@@ -114,7 +114,6 @@ namespace OpperSharp.UI.TestConsole
 					WriteLine("ERROR:");
 					WriteLine("═══════════════════════════════════════");
 					var current = ex;
-			WriteLine("  96) Delete all 7 Functions (cleanup)");
 					while (current != null)
 					{
 						WriteLine($"  {current.Message}");
@@ -155,9 +154,11 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine("  10) Match Consultant to Assignment");
 			WriteLine();
 			WriteLine("  DEBUG:");
-			WriteLine("  97) Create all 7 Functions via API");
-			WriteLine("  98) Initialize/Activate all 7 Functions");
-			WriteLine("  99) List all Functions in Opper account");
+		WriteLine("  DEBUG:");
+		WriteLine("  96) Delete all 7 Functions (cleanup)");
+		WriteLine("  97) Create all 7 Functions via API");
+		WriteLine("  98) Initialize/Activate all 7 Functions");
+		WriteLine("  99) List all Functions in Opper account");
 			WriteLine();
 			WriteLine("  0) Exit");
 			WriteLine();
