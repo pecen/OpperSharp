@@ -23,23 +23,43 @@ namespace OpperSharp.UI.TestConsole
 			{
 				// Build configuration from User Secrets and Environment Variables
 				_configuration = new ConfigurationBuilder()
-					.AddEnvironmentVariables() // Reads from Environment Variables first (lower priority)
-					.AddUserSecrets<Program>() // Reads from User Secrets last (higher priority - overrides env vars)
+					.AddEnvironmentVariables()
+					.AddUserSecrets<Program>()
 					.Build();
 
-				// Get API key from configuration (checks User Secrets first, then env vars)
+				// Get API key with smart fallback logic
+				// Priority: User Secrets (if not empty) -> Environment Variables -> Error
 				var apiKey = _configuration["OPPER_API_KEY"];
+				var apiKeySource = "Configuration";
 
-				if (string.IsNullOrEmpty(apiKey))
+				// If configuration value is empty/null, try environment variable directly
+				if (string.IsNullOrWhiteSpace(apiKey))
+				{
+					apiKey = Environment.GetEnvironmentVariable("OPPER_API_KEY");
+					apiKeySource = "Environment Variable (fallback)";
+				}
+				else
+				{
+					// Determine source by checking User Secrets directly
+					var userSecretsConfig = new ConfigurationBuilder()
+						.AddUserSecrets<Program>()
+						.Build();
+					apiKeySource = !string.IsNullOrWhiteSpace(userSecretsConfig["OPPER_API_KEY"])
+						? "User Secrets"
+						: "Environment Variable";
+				}
+
+				if (string.IsNullOrWhiteSpace(apiKey))
 				{
 					throw new InvalidOperationException(
-						"OPPER_API_KEY not found in User Secrets or Environment Variables");
+						"OPPER_API_KEY not found in User Secrets or Environment Variables.\n" +
+						"Please set it using 'Manage User Secrets' in Visual Studio or as an environment variable.");
 				}
 
 				// Initialize client
 				_client = new OpperClient(apiKey);
-				WriteLine("✓ OpperClient initialized from OPPER_API_KEY");
-				WriteLine("  (from User Secrets or Environment Variables)");
+				WriteLine($"✓ OpperClient initialized successfully");
+				WriteLine($"  Source: {apiKeySource}");
 				WriteLine();
 			}
 			catch (Exception ex)
