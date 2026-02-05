@@ -746,6 +746,22 @@ Provide a ranked recommendation with reasoning.";
 
 			try
 			{
+			// Make raw API call to see what we actually get
+			WriteLine("🔍 RAW API CALL:");
+			var apiKey = Environment.GetEnvironmentVariable("OPPER_API_KEY");
+			using var httpClient = new HttpClient();
+			httpClient.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+
+			var response = await httpClient.GetAsync("https://api.opper.ai/v1/functions");
+			var rawJson = await response.Content.ReadAsStringAsync();
+
+			WriteLine("Response Status: " + response.StatusCode);
+			WriteLine("Raw JSON Response:");
+			WriteLine(rawJson);
+			WriteLine();
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+
 				var functions = await _client!.Functions.ListAsync();
 
 				if (functions.Count == 0)
