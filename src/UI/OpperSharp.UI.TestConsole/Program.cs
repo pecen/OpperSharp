@@ -10,6 +10,7 @@ using System.Text.Json;
 using static System.Console;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
+using OpperSharp.Exceptions;
 
 namespace OpperSharp.UI.TestConsole
 {
