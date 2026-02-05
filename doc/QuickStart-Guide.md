@@ -16,7 +16,6 @@ dotnet add reference path/to/OpperSharp.Core.csproj
 
 ```csharp
 using OpperSharp.Core;
-using OpperSharp.Models.Chat;
 using OpperSharp.Models.Functions;
 using OpperSharp.Models.Knowledge;  // v2: Knowledge instead of Indexes
 
@@ -32,41 +31,7 @@ var client = new OpperClient("your-api-key");
 
 ## 5-Minute Examples
 
-### Example 1: Simple Chat Completion
-
-```csharp
-using OpperSharp.Core;
-using OpperSharp.Models.Chat;
-
-var client = OpperClient.FromEnvironment();
-
-// Quick one-liner
-var answer = await client.Chat.CompleteAsync(
-    prompt: "Explain quantum computing in simple terms",
-    systemPrompt: "You are a helpful science teacher"
-);
-
-Console.WriteLine(answer);
-
-// Full control version
-var response = await client.Chat.CompletionsAsync(
-    messages: new List<OpperMessage>
-    {
-        OpperMessage.System("You are a helpful science teacher"),
-        OpperMessage.User("Explain quantum computing in simple terms")
-    },
-    model: "gpt-4",
-    temperature: 0.7,
-    maxTokens: 500
-);
-
-Console.WriteLine($"Response: {response.Content}");
-Console.WriteLine($"Tokens: {response.Usage?.TotalTokens}");
-```
-
----
-
-### Example 2: Build a Knowledge Base (v2 - File-based)
+### Example 1: Build a Knowledge Base (v2 - File-based)
 
 ```csharp
 using OpperSharp.Core;
@@ -122,7 +87,7 @@ Console.WriteLine($"Answer: {answer.Message}");
 
 ---
 
-### Example 3: Streaming Response
+### Example 2: Streaming Response
 
 ```csharp
 using OpperSharp.Core;
@@ -150,7 +115,7 @@ Console.WriteLine();
 
 ---
 
-### Example 4: Function with Retry Logic
+### Example 3: Function with Retry Logic
 
 ```csharp
 using OpperSharp.Core;
@@ -192,7 +157,7 @@ catch (OpperAPIException ex)
 
 ---
 
-### Example 5: RAG with Knowledge Base (v2 - Integrated)
+### Example 4: RAG with Knowledge Base (v2 - Integrated)
 
 ```csharp
 using OpperSharp.Core;
@@ -224,7 +189,7 @@ foreach (var file in files)
 
 ---
 
-### Example 6: Traced Operations
+### Example 5: Traced Operations
 
 ```csharp
 using OpperSharp.Core;
@@ -270,7 +235,7 @@ await client.Spans.SaveFeedbackAsync(
 
 ---
 
-### Example 7: Agent with Tools
+### Example 6: Agent with Tools
 
 ```csharp
 using OpperSharp.Core;
@@ -331,7 +296,7 @@ Tools used: 3
 
 ---
 
-### Example 8: Custom Tool with Async Operation
+### Example 7: Custom Tool with Async Operation
 
 ```csharp
 using OpperSharp.Core;
@@ -379,7 +344,7 @@ Console.WriteLine(result.Output);
 
 ---
 
-### Example 9: Complete Workflow with Error Handling (v2)
+### Example 8: Complete Workflow with Error Handling (v2)
 
 ```csharp
 using OpperSharp.Core;
@@ -433,7 +398,7 @@ Console.WriteLine(answer);
 
 ---
 
-### Example 10: Function Management
+### Example 9: Function Management
 
 ```csharp
 using OpperSharp.Core;
@@ -515,7 +480,7 @@ if (await client.Functions.ExistsAsync("email-classifier"))
 
 ---
 
-### Example 11: Generating Embeddings (v2)
+### Example 10: Generating Embeddings (v2)
 
 ```csharp
 using OpperSharp.Core;
@@ -556,7 +521,7 @@ foreach (var (text, idx) in texts.Select((t, i) => (t, i)))
 
 ---
 
-### Example 12: Model Aliases with Automatic Fallback (v2)
+### Example 11: Model Aliases with Automatic Fallback (v2)
 
 ```csharp
 using OpperSharp.Core;
@@ -610,7 +575,7 @@ await client.Models.DeleteAliasAsync("reliable-gpt4");
 
 ---
 
-### Example 13: OCR Document Processing (v2)
+### Example 12: OCR Document Processing (v2)
 
 ```csharp
 using OpperSharp.Core;
@@ -657,7 +622,7 @@ Console.WriteLine($"\nReceipt data: {receiptData.Text}");
 
 ---
 
-### Example 14: Reranking Search Results (v2)
+### Example 13: Reranking Search Results (v2)
 
 ```csharp
 using OpperSharp.Core;
@@ -699,7 +664,7 @@ Console.WriteLine($"\nAvailable rerank models: {string.Join(", ", rerankModels)}
 
 ---
 
-### Example 15: Usage Analytics and Cost Tracking (v2)
+### Example 14: Usage Analytics and Cost Tracking (v2)
 
 ```csharp
 using OpperSharp.Core;
@@ -878,29 +843,6 @@ var answer = await client.Functions.CallAsync(
 ---
 
 ## Common Patterns
-
-### Pattern: Conversational Chat
-
-```csharp
-var messages = new List<OpperMessage>
-{
-    OpperMessage.System("You are a helpful assistant")
-};
-
-while (true)
-{
-    Console.Write("You: ");
-    var input = Console.ReadLine();
-    if (string.IsNullOrEmpty(input)) break;
-
-    messages.Add(OpperMessage.User(input));
-
-    var response = await client.Chat.CompletionsAsync(messages);
-
-    messages.Add(OpperMessage.Assistant(response.Content ?? ""));
-    Console.WriteLine($"AI: {response.Content}");
-}
-```
 
 ### Pattern: Batch Processing with Progress
 

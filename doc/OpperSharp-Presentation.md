@@ -117,13 +117,10 @@ Execute AI-powered functions
 ### 2. Indexes API
 Vector/semantic search
 
-### 3. Chat API
-Conversational AI
-
-### 4. Spans API
+### 3. Spans API
 Distributed tracing
 
-### 5. Agent Framework
+### 4. Agent Framework
 Multi-step reasoning with tools
 
 ---
@@ -238,34 +235,7 @@ foreach (var result in results.Results)
 
 ---
 
-## 3. Chat API
-
-### Conversational AI
-
-```csharp
-// Simple one-liner
-var answer = await client.Chat.CompleteAsync(
-    prompt: "Explain quantum computing in simple terms",
-    systemPrompt: "You are a helpful science teacher"
-);
-
-// Full control
-var response = await client.Chat.CompletionsAsync(
-    messages: new List<OpperMessage> {
-        OpperMessage.System("You are helpful"),
-        OpperMessage.User("Hello!")
-    },
-    model: "gpt-4",
-    temperature: 0.7,
-    maxTokens: 500
-);
-
-Console.WriteLine($"Tokens used: {response.Usage?.TotalTokens}");
-```
-
----
-
-## 4. Spans API
+## 3. Spans API
 
 ### Distributed Tracing
 
@@ -297,7 +267,7 @@ await client.Spans.SaveFeedbackAsync(
 
 ---
 
-## 5. Agent Framework
+## 4. Agent Framework
 
 ### Multi-Step AI Agents
 
@@ -366,17 +336,17 @@ var context = string.Join("\n\n",
     searchResults.Results.Select(r => r.Content)
 );
 
-// Step 3: Generate answer with context
-var answer = await client.Chat.CompleteAsync(
-    prompt: "What is our code review process?",
-    systemPrompt: $@"Answer using only this context:
-
-{context}
-
-If not in context, say 'I don't have that information.'"
+// Step 3: Generate answer with context using a function
+var response = await client.Functions.CallAsync(
+    path: "qa-assistant",
+    input: new Dictionary<string, object>
+    {
+        ["question"] = "What is our code review process?",
+        ["context"] = context
+    }
 );
 
-Console.WriteLine(answer);
+Console.WriteLine(response.Message);
 ```
 
 ---
@@ -388,7 +358,6 @@ Console.WriteLine(answer);
 | Function calling | ✅ | ✅ |
 | Streaming | ✅ | ✅ |
 | Indexes | ✅ | ✅ |
-| Chat | ✅ | ✅ |
 | Tracing | ✅ | ✅ |
 | Agents | ✅ | ✅ |
 | **Full CRUD** | ⚠️ Limited | ✅ **Complete** |
@@ -490,11 +459,6 @@ if (await client.Functions.ExistsAsync("my-function")) {
 }
 ```
 
-**Simple Chat:**
-```csharp
-var answer = await client.Chat.CompleteAsync(prompt, systemPrompt);
-```
-
 ---
 
 ## Code Reduction Comparison
@@ -528,7 +492,6 @@ OpperSharp/
 ├── OpperSharp.Clients        # API clients
 │   ├── FunctionsClient
 │   ├── IndexesClient
-│   ├── ChatClient
 │   └── SpansClient
 ├── OpperSharp.Agents         # Agent framework
 ├── OpperSharp.Models.*       # Type-safe models
@@ -580,12 +543,16 @@ using OpperSharp.Core;
 var client = OpperClient.FromEnvironment();  // Uses OPPER_API_KEY
 
 // Use it!
-var answer = await client.Chat.CompleteAsync(
-    "Explain AI in simple terms",
-    systemPrompt: "You are a teacher"
+var response = await client.Functions.CallAsync(
+    path: "explainer",
+    input: new Dictionary<string, object>
+    {
+        ["topic"] = "AI",
+        ["style"] = "simple terms"
+    }
 );
 
-Console.WriteLine(answer);
+Console.WriteLine(response.Message);
 ```
 
 ---
@@ -636,11 +603,17 @@ async Task<string> HandleCustomerQuery(string query)
         docs.Results.Select(r => r.Content)
     );
 
-    // Generate response
-    return await client.Chat.CompleteAsync(
-        query,
-        systemPrompt: $"Use this context:\n{context}"
+    // Generate response using a function
+    var response = await client.Functions.CallAsync(
+        path: "customer-support",
+        input: new Dictionary<string, object>
+        {
+            ["query"] = query,
+            ["context"] = context
+        }
     );
+
+    return response.Message ?? "";
 }
 
 var answer = await HandleCustomerQuery("How do I reset my password?");
@@ -682,31 +655,7 @@ var analysis = await agent.RunAsync("Analyze this document...");
 
 ---
 
-## Use Case 3: Conversational Interface
-
-```csharp
-var messages = new List<OpperMessage> {
-    OpperMessage.System("You are a helpful assistant")
-};
-
-while (true)
-{
-    Console.Write("You: ");
-    var input = Console.ReadLine();
-    if (string.IsNullOrEmpty(input)) break;
-
-    messages.Add(OpperMessage.User(input));
-
-    var response = await client.Chat.CompletionsAsync(messages);
-    messages.Add(OpperMessage.Assistant(response.Content ?? ""));
-
-    Console.WriteLine($"AI: {response.Content}");
-}
-```
-
----
-
-## Use Case 4: Batch Processing
+## Use Case 3: Batch Processing
 
 ```csharp
 var items = GetItemsToProcess();  // 1000 items
@@ -931,12 +880,15 @@ using OpperSharp.Core;
 
 var client = OpperClient.FromEnvironment();
 
-// Example 1: Simple chat
-var answer = await client.Chat.CompleteAsync(
-    "What is machine learning?",
-    systemPrompt: "You are a teacher"
+// Example 1: Call a function
+var response = await client.Functions.CallAsync(
+    path: "explainer",
+    input: new Dictionary<string, object>
+    {
+        ["question"] = "What is machine learning?"
+    }
 );
-Console.WriteLine(answer);
+Console.WriteLine(response.Message);
 
 // Example 2: Search knowledge base
 var results = await client.Indexes.QueryAsync(
@@ -1013,8 +965,11 @@ export OPPER_API_KEY="your-api-key"
 
 ```csharp
 var client = OpperClient.FromEnvironment();
-var answer = await client.Chat.CompleteAsync("Hello!");
-Console.WriteLine(answer);
+var response = await client.Functions.CallAsync(
+    path: "greeter",
+    input: new Dictionary<string, object> { ["message"] = "Hello!" }
+);
+Console.WriteLine(response.Message);
 ```
 
 ---

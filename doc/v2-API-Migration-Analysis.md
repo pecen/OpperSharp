@@ -41,7 +41,6 @@ OpperSharp is missing several v2-only endpoints:
 4. **OCR** (`/ocr`) - For document processing
 5. **Rerank** (`/rerank`) - For search result optimization
 6. **Analytics** (`/analytics/usage`) - For usage tracking
-7. **OpenAI Compatibility** (`/openai/chat/completions`) - Drop-in replacement
 
 ## Detailed Endpoint Comparison
 
@@ -49,7 +48,6 @@ OpperSharp is missing several v2-only endpoints:
 
 | OpperSharp Endpoint | v2 API Endpoint | Status |
 |---------------------|-----------------|--------|
-| `/chat/completions` | `/chat/completions` | ✅ Correct |
 | `/functions` | `/functions` | ✅ Correct |
 | `/call` | `/call` | ✅ Correct |
 | `/spans` | `/spans` | ✅ Correct |

@@ -20,7 +20,7 @@ This document provides a comprehensive technical analysis of OpperSharp, includi
 - **~2,900 lines of code** across 31 C# files
 - **10 modular projects** with clear separation of concerns
 - **100% API coverage** of all Opper endpoints
-- **5 major components**: Functions, Indexes, Chat, Spans, Agents
+- **4 major components**: Functions, Indexes, Spans, Agents
 - **90% code reduction** compared to raw REST API calls
 
 ### Quality Indicators
@@ -46,7 +46,6 @@ OpperSharp/
 ├── OpperSharp.Clients/
 │   ├── FunctionsClient.cs                 # Function operations
 │   ├── IndexesClient.cs                   # Vector/semantic search
-│   ├── ChatClient.cs                      # Chat completions
 │   └── SpansClient.cs                     # Distributed tracing
 │
 ├── OpperSharp.Agents/
@@ -69,13 +68,6 @@ OpperSharp/
 │   ├── OpperIndexedDocument.cs            # Document with ID
 │   └── OpperSearchResponse.cs             # Search results
 │
-├── OpperSharp.Models.Chat/
-│   ├── OpperChatResponse.cs               # Chat result
-│   ├── OpperChatStreamChunk.cs            # Streaming chunk
-│   ├── OpperMessage.cs                    # Message model
-│   ├── OpperChatChoice.cs                 # Response choice
-│   └── OpperUsage.cs                      # Token usage
-│
 ├── OpperSharp.Models.Spans/
 │   └── OpperSpan.cs                       # Tracing span
 │
@@ -97,7 +89,6 @@ OpperSharp/
 Each client handles a single API domain:
 - `FunctionsClient` → `/v2/functions` and `/v2/call`
 - `IndexesClient` → `/v2/indexes`
-- `ChatClient` → `/v2/chat`
 - `SpansClient` → `/v2/spans` and `/v2/traces`
 
 #### 2. **Composition Over Inheritance**
@@ -108,7 +99,6 @@ public class OpperClient
 {
     public FunctionsClient Functions { get; }
     public IndexesClient Indexes { get; }
-    public ChatClient Chat { get; }
     public SpansClient Spans { get; }
 }
 ```
@@ -169,9 +159,6 @@ public void Dispose()
 | | Retrieve document | ❌ | `RetrieveAsync()` | ✅ New |
 | | Delete document | ❌ | `DeleteDocumentAsync()` | ✅ New |
 | | Get or create | ❌ | `GetOrCreateAsync()` | ✅ New |
-| **Chat** | Completions | `opper.chat()` | `CompletionsAsync()` | ✅ 100% |
-| | Stream chat | `opper.chat(stream=True)` | `CompletionsStreamAsync()` | ✅ 100% |
-| | Simple complete | ❌ | `CompleteAsync()` | ✅ New |
 | **Spans** | Create span | `opper.spans.create()` | `CreateAsync()` | ✅ 100% |
 | | Update span | `opper.spans.update()` | `UpdateAsync()` | ✅ 100% |
 | | Get span | `opper.spans.get()` | `GetAsync()` | ✅ 100% |
@@ -711,13 +698,6 @@ public static class OpperExtensions
         return await indexes.GetOrCreateAsync(name, description, cancellationToken);
     }
 
-    public static async Task<string> GetContentAsync(
-        this Task<OpperChatResponse> responseTask)
-    {
-        var response = await responseTask;
-        return response.Content ?? string.Empty;
-    }
-
     public static async Task<bool> TryCallAsync(
         this OpperClient client,
         string path,
@@ -817,11 +797,6 @@ These are enhancements, not gaps. **OpperSharp is ready for production use today
 - [x] Retrieve document
 - [x] Delete document
 - [x] Get or create
-
-### Chat ✅
-- [x] Completions
-- [x] Stream completions
-- [x] Simple complete helper
 
 ### Spans ✅
 - [x] Create span

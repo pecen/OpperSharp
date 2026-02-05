@@ -78,22 +78,7 @@ var answer = await client.Functions.CallAsync(
 - File management (list, delete, download)
 - Integrated with function calls for seamless RAG
 
-### 3. **Chat API**
-Chat completions with OpenAI-compatible interface:
-```csharp
-var answer = await client.Chat.CompleteAsync(
-    prompt: "Explain quantum computing",
-    systemPrompt: "You are a helpful teacher"
-);
-```
-
-**Features:**
-- Multi-turn conversations
-- Streaming support
-- Message helpers (System, User, Assistant)
-- Token usage tracking
-
-### 4. **Spans API**
+### 3. **Spans API**
 Distributed tracing and observability:
 ```csharp
 await client.Spans.TraceAsync("operation", async (span) =>
@@ -109,7 +94,7 @@ await client.Spans.TraceAsync("operation", async (span) =>
 - Error capture
 - Feedback/scoring
 
-### 5. **Agent Framework**
+### 4. **Agent Framework**
 Multi-step AI agents with tool capabilities:
 ```csharp
 public class MathTools
@@ -139,7 +124,7 @@ var result = await agent.RunAsync("Calculate 15% of $1000 then add $500");
 
 OpperSharp implements the complete Opper v2 API with additional clients:
 
-### 6. **Datasets API** (v2)
+### 5. **Datasets API** (v2)
 Manage training data and examples:
 ```csharp
 await client.Datasets.CreateEntryAsync(
@@ -152,7 +137,7 @@ await client.Datasets.CreateEntryAsync(
 var entries = await client.Datasets.ListEntriesAsync("training-data");
 ```
 
-### 7. **Embeddings API** (v2)
+### 6. **Embeddings API** (v2)
 Generate vector embeddings:
 ```csharp
 var embedding = await client.Embeddings.CreateAsync(
@@ -166,7 +151,7 @@ var embeddings = await client.Embeddings.CreateBatchAsync(
 );
 ```
 
-### 8. **Models API** (v2)
+### 7. **Models API** (v2)
 Manage models and aliases with fallback support:
 ```csharp
 // Create alias with fallback models
@@ -191,7 +176,7 @@ await client.Models.RegisterCustomModelAsync(
 );
 ```
 
-### 9. **OCR API** (v2)
+### 8. **OCR API** (v2)
 Extract text from images and documents:
 ```csharp
 var ocrResult = await client.Ocr.ProcessAsync(
@@ -206,7 +191,7 @@ var ocrResult = await client.Ocr.ProcessAsync(
 Console.WriteLine(ocrResult.Text);
 ```
 
-### 10. **Rerank API** (v2)
+### 9. **Rerank API** (v2)
 Optimize search results by relevance:
 ```csharp
 var reranked = await client.Rerank.RerankAsync(
@@ -222,7 +207,7 @@ foreach (var result in reranked.Results)
 }
 ```
 
-### 11. **Analytics API** (v2)
+### 10. **Analytics API** (v2)
 Query usage metrics and analytics:
 ```csharp
 var usage = await client.Analytics.GetUsageAsync(
@@ -246,7 +231,6 @@ OpperSharp provides **100% feature parity** with the Opper Python SDK for v2 API
 | Function calling | `opper.call()` | `client.CallAsync()` |
 | Streaming | `opper.stream()` | `client.CallStreamAsync()` |
 | Knowledge bases | `opper.knowledge` | `client.Knowledge` |
-| Chat completions | `opper.chat` | `client.Chat.CompletionsAsync()` |
 | Datasets | `opper.datasets` | `client.Datasets` |
 | Embeddings | `opper.embeddings` | `client.Embeddings` |
 | Models & Aliases | `opper.models` | `client.Models` |
@@ -273,9 +257,6 @@ await client.Functions.ExistsAsync(path);
 ```csharp
 // Get or create pattern
 var kb = await client.Knowledge.GetOrCreateAsync(name, embeddingModel);
-
-// Simple one-line chat
-var answer = await client.Chat.CompleteAsync(prompt, systemPrompt);
 ```
 
 **3. Built-in Retry Logic**
@@ -403,17 +384,9 @@ dotnet add reference path/to/OpperSharp.Core.csproj
 
 ```csharp
 using OpperSharp.Core;
-using OpperSharp.Models.Chat;
 
 // Initialize client (v2 API)
 var client = OpperClient.FromEnvironment();  // Uses OPPER_API_KEY env var
-
-// Chat completion
-var answer = await client.Chat.CompleteAsync(
-    "Explain quantum computing in simple terms",
-    systemPrompt: "You are a helpful teacher"
-);
-Console.WriteLine(answer);
 
 // Knowledge base with file upload
 var kb = await client.Knowledge.CreateAsync("company-docs");
@@ -461,16 +434,6 @@ var response = await client.CallAsync(path, input, options);
 **Knowledge Bases**: File-based RAG (v2 API)
 ```csharp
 await client.Knowledge.UploadFileAsync(kbId, filename, stream, contentType);
-```
-
-**Chat**: Conversational AI with message history
-```csharp
-var messages = new List<OpperMessage>
-{
-    OpperMessage.System("You are helpful"),
-    OpperMessage.User("Hello!")
-};
-var response = await client.Chat.CompletionsAsync(messages);
 ```
 
 **Spans**: Distributed tracing for observability
@@ -536,7 +499,7 @@ OpperSharp/
 
 ### What OpperSharp Provides
 
-✅ **Complete v2 API Coverage** - All 11 API clients implemented
+✅ **Complete v2 API Coverage** - All 10 API clients implemented
 ✅ **100% Python SDK Parity** - All core features match
 ✅ **Enhanced CRUD** - More comprehensive than Python
 ✅ **Better Developer Experience** - Type safety + IntelliSense
@@ -551,7 +514,6 @@ OpperSharp/
 |-----|------------|------------|--------|
 | Functions | ✅ | ✅ | Complete |
 | Knowledge | ✅ | ✅ | Complete (v2) |
-| Chat | ✅ | ✅ | Complete |
 | Spans | ✅ | ✅ | Complete |
 | Agents | ✅ | ✅ | Complete |
 | Datasets | ✅ | ✅ | Complete (v2) |
@@ -783,7 +745,7 @@ Contributions welcome! Please open an issue or pull request.
 ## Conclusion
 
 OpperSharp is a **production-ready, feature-complete C# SDK** that:
-- ✅ Implements complete Opper v2 API (all 11 clients)
+- ✅ Implements complete Opper v2 API (all 10 clients)
 - ✅ Matches Python SDK functionality (100% parity)
 - ✅ Exceeds Python SDK in several areas
 - ✅ Reduces code by ~90% vs REST API

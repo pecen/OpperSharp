@@ -12,7 +12,6 @@ This document demonstrates how to use OpperSharp v2 API compared to calling the 
 - [OCR (v2)](#ocr-v2)
 - [Rerank (v2)](#rerank-v2)
 - [Analytics (v2)](#analytics-v2)
-- [Chat Completions](#chat-completions)
 - [Spans & Tracing](#spans--tracing)
 - [Agent Framework](#agent-framework)
 
@@ -800,66 +799,6 @@ foreach (var entry in usage.Data)
 **Benefits**: Type-safe analytics queries, automatic date formatting, cleaner grouping/filtering.
 
 **v2 Use Case**: Track API usage, monitor costs, identify expensive operations.
-
----
-
-## Chat Completions
-
-### ❌ Raw REST API
-```csharp
-var chatRequest = new
-{
-    messages = new[]
-    {
-        new { role = "system", content = "You are a helpful assistant" },
-        new { role = "user", content = "What is machine learning?" }
-    },
-    model = "gpt-4",
-    temperature = 0.7,
-    max_tokens = 500
-};
-
-var content = new StringContent(
-    JsonConvert.SerializeObject(chatRequest),
-    Encoding.UTF8,
-    "application/json"
-);
-
-var response = await httpClient.PostAsync("/v2/chat/completions", content);
-var resultJson = await response.Content.ReadAsStringAsync();
-var chatResponse = JsonConvert.DeserializeObject<dynamic>(resultJson);
-
-var message = chatResponse.choices[0].message.content;
-Console.WriteLine(message);
-```
-
-### ✅ OpperSharp SDK
-```csharp
-using OpperSharp.Models.Chat;
-
-var response = await client.Chat.CompletionsAsync(
-    messages: new List<OpperMessage>
-    {
-        OpperMessage.System("You are a helpful assistant"),
-        OpperMessage.User("What is machine learning?")
-    },
-    model: "gpt-4",
-    temperature: 0.7,
-    maxTokens: 500
-);
-
-Console.WriteLine(response.Content);
-Console.WriteLine($"Tokens used: {response.Usage?.TotalTokens}");
-
-// Even simpler with helper method:
-var answer = await client.Chat.CompleteAsync(
-    prompt: "What is machine learning?",
-    systemPrompt: "You are a helpful assistant",
-    model: "gpt-4"
-);
-```
-
-**Benefits**: Helper factory methods (System, User, Assistant), convenience methods, type-safe usage tracking.
 
 ---
 

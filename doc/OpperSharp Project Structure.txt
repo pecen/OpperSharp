@@ -5,7 +5,6 @@ OpperSharp/
 |── OpperSharp.Clients/
 |   ├-- FunctionsClient.cs                 # Function operations
 |   ├-- IndexesClient.cs                   # Vector/semantic search
-|   ├-- ChatClient.cs                      # Chat completions
 |   └-- SpansClient.cs                     # Distributed tracing
 |
 |── OpperSharp.Agents/
@@ -27,13 +26,6 @@ OpperSharp/
 |   ├-- OpperDocument.cs                   # Document input
 |   ├-- OpperIndexedDocument.cs            # Document with ID
 |   └-- OpperSearchResponse.cs             # Search results
-|
-|── OpperSharp.Models.Chat/
-|   ├-- OpperChatResponse.cs               # Chat result
-|   ├-- OpperChatStreamChunk.cs            # Streaming chunk
-|   ├-- OpperMessage.cs                    # Message model
-|   ├-- OpperChatChoice.cs                 # Response choice
-|   └-- OpperUsage.cs                      # Token usage
 |
 |── OpperSharp.Models.Spans/
 |   └-- OpperSpan.cs                       # Tracing span
