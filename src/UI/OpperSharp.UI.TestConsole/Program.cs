@@ -544,6 +544,7 @@ Framework: .NET 8.0
 			);
 
 			WriteLine($"   ✓ Alias created: {alias.Name}");
+			WriteLine($"   ID: {alias.Id}");
 			WriteLine($"   Fallback chain: {string.Join(" → ", alias.FallbackModels)}");
 			WriteLine();
 
@@ -557,7 +558,7 @@ Framework: .NET 8.0
 			WriteLine();
 
 			WriteLine("3. Deleting test alias...");
-			await _client.Models.DeleteAliasAsync(aliasName);
+			await _client.Models.DeleteAliasAsync(alias.Id);
 			WriteLine("   ✓ Alias deleted");
 		}
 
