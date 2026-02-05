@@ -467,6 +467,106 @@ namespace OpperSharp.Agents
 				}
 			}
 
+			// Try parsing inline JSON format: {"tool": "ToolName", "param": value}
+			if (toolCalls.Count == 0)
+			{
+				var jsonMatches = System.Text.RegularExpressions.Regex.Matches(
+					message,
+					@"\{""(?:tool|tool_name)""\s*:\s*""([^""]+)""[^}]+\}",
+					System.Text.RegularExpressions.RegexOptions.Singleline
+				);
+
+				foreach (System.Text.RegularExpressions.Match match in jsonMatches)
+				{
+					try
+					{
+						var json = match.Value;
+						var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+						if (parsed != null)
+						{
+							// Normalize: extract tool name and parameters
+							string? toolName = null;
+							if (parsed.ContainsKey("tool"))
+							{
+								toolName = parsed["tool"]?.ToString();
+								parsed.Remove("tool");
+							}
+							else if (parsed.ContainsKey("tool_name"))
+							{
+								toolName = parsed["tool_name"]?.ToString();
+								parsed.Remove("tool_name");
+							}
+
+							if (!string.IsNullOrEmpty(toolName))
+							{
+								// If there's a "parameters" key, use it as arguments
+								if (parsed.ContainsKey("parameters") && parsed["parameters"] is Newtonsoft.Json.Linq.JObject paramsObj)
+								{
+									toolCalls.Add(new Dictionary<string, object>
+									{
+										["name"] = toolName,
+										["arguments"] = paramsObj.ToObject<Dictionary<string, object>>() ?? new Dictionary<string, object>()
+									});
+								}
+								else
+								{
+									// Otherwise use all remaining keys as arguments
+									toolCalls.Add(new Dictionary<string, object>
+									{
+										["name"] = toolName,
+										["arguments"] = parsed
+									});
+								}
+							}
+						}
+					}
+					catch
+					{
+						// Skip invalid JSON
+					}
+				}
+			}
+
+			// Try parsing <tool>ToolName(args)</tool> format
+			if (toolCalls.Count == 0)
+			{
+				var simpleToolMatches = System.Text.RegularExpressions.Regex.Matches(
+					message,
+					@"<tool>\s*(\w+)\s*\(([^)]*)\)\s*</tool>",
+					System.Text.RegularExpressions.RegexOptions.Singleline
+				);
+
+				foreach (System.Text.RegularExpressions.Match match in simpleToolMatches)
+				{
+					var toolName = match.Groups[1].Value;
+					var argsString = match.Groups[2].Value;
+
+					var arguments = new Dictionary<string, object>();
+
+					// Try to parse arguments as comma-separated values
+					var argParts = argsString.Split(',');
+					for (int i = 0; i < argParts.Length; i++)
+					{
+						var argValue = argParts[i].Trim();
+						if (double.TryParse(argValue, out var numValue))
+						{
+							// Use generic parameter names (a, b, c, etc.)
+							var paramName = i == 0 ? "a" : i == 1 ? "b" : $"arg{i}";
+							arguments[paramName] = numValue;
+						}
+					}
+
+					if (arguments.Count > 0)
+					{
+						toolCalls.Add(new Dictionary<string, object>
+						{
+							["name"] = toolName,
+							["arguments"] = arguments
+						});
+					}
+				}
+			}
+
 			return toolCalls;
 		}
 	}
