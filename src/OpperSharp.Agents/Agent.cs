@@ -72,6 +72,7 @@ namespace OpperSharp.Agents
 				}
 
 				var currentInput = new Dictionary<string, object>(input);
+				var originalQuestion = input.ContainsKey("input") ? input["input"]?.ToString() : null;
 				var iteration = 0;
 
 				while (iteration < _options.MaxIterations)
@@ -197,10 +198,16 @@ namespace OpperSharp.Agents
 						}
 
 						// Prepare next iteration input with tool results
+						// Include original question so Claude has context
 						currentInput = new Dictionary<string, object>
 						{
 							["tool_results"] = toolResults
 						};
+
+						if (!string.IsNullOrEmpty(originalQuestion))
+						{
+							currentInput["original_question"] = originalQuestion;
+						}
 					}
 					else
 					{
