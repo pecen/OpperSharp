@@ -4,6 +4,7 @@ using OpperSharp.Models.Embeddings;
 using OpperSharp.Models.Functions;
 using OpperSharp.Models.Knowledge;
 using OpperSharp.Models.Models;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -1076,11 +1077,31 @@ Provide a ranked recommendation with clear reasoning.",
 
 			try
 			{
-				var functionPath = "math-solver";
-				WriteLine($"Attempting to GET function: {functionPath}");
+				// First, list all functions to find math-solver's UUID
+				WriteLine("Step 1: Listing all functions to find UUID...");
+				var functions = await _client!.Functions.ListAsync();
+
+				var mathSolver = functions.FirstOrDefault(f => f.Path == "math-solver" || f.Name == "math-solver");
+
+				if (mathSolver == null)
+				{
+					WriteLine("❌ math-solver not found in function list!");
+					return;
+				}
+
+				WriteLine($"✓ Found math-solver:");
+				WriteLine($"  ID (UUID): {mathSolver.Id}");
+				WriteLine($"  Path: {mathSolver.Path}");
+				WriteLine($"  Name: {mathSolver.Name}");
 				WriteLine();
 
-				var function = await _client!.Functions.GetAsync(functionPath);
+				// Try GET with UUID
+				WriteLine("═══════════════════════════════════════");
+				WriteLine("Step 2: GET function details using UUID...");
+				WriteLine("═══════════════════════════════════════");
+				WriteLine();
+
+				var function = await _client!.Functions.GetAsync(mathSolver.Id);
 
 				WriteLine("✓ Function retrieved successfully!");
 				WriteLine();
@@ -1106,8 +1127,9 @@ Provide a ranked recommendation with clear reasoning.",
 					WriteLine();
 				}
 
+				// Now try calling with UUID
 				WriteLine("═══════════════════════════════════════");
-				WriteLine("Now trying to CALL this function...");
+				WriteLine("Step 3: CALL function using UUID...");
 				WriteLine("═══════════════════════════════════════");
 				WriteLine();
 
@@ -1116,16 +1138,17 @@ Provide a ranked recommendation with clear reasoning.",
 					["problem"] = "What is 10 + 5?"
 				};
 
-				WriteLine($"Calling with input: {Newtonsoft.Json.JsonConvert.SerializeObject(input)}");
+				WriteLine($"Calling with UUID: {mathSolver.Id}");
+				WriteLine($"Input: {Newtonsoft.Json.JsonConvert.SerializeObject(input)}");
 				WriteLine();
 
 				var result = await _client!.Functions.CallAsync(
-					functionPath,
+					mathSolver.Id,  // Use UUID instead of path
 					input,
 					cancellationToken: default
 				);
 
-				WriteLine("✓ Function call succeeded!");
+				WriteLine("✓ Function call with UUID succeeded!");
 				WriteLine();
 				WriteLine($"  Message: {result.Message}");
 				WriteLine($"  Output: {result.Output}");
@@ -1134,13 +1157,39 @@ Provide a ranked recommendation with clear reasoning.",
 				{
 					WriteLine($"  Tokens: {result.Usage.TotalTokens} (prompt: {result.Usage.PromptTokens}, completion: {result.Usage.CompletionTokens})");
 				}
+
+				// Now try calling with PATH to compare
+				WriteLine();
+				WriteLine("═══════════════════════════════════════");
+				WriteLine("Step 4: CALL function using PATH (for comparison)...");
+				WriteLine("═══════════════════════════════════════");
+				WriteLine();
+
+				WriteLine($"Calling with PATH: {mathSolver.Path}");
+				WriteLine($"Input: {Newtonsoft.Json.JsonConvert.SerializeObject(input)}");
+				WriteLine();
+
+				var result2 = await _client!.Functions.CallAsync(
+					mathSolver.Path,  // Try with path
+					input,
+					cancellationToken: default
+				);
+
+				WriteLine("✓ Function call with PATH succeeded!");
+				WriteLine();
+				WriteLine($"  Message: {result2.Message}");
+				WriteLine($"  Output: {result2.Output}");
+				WriteLine($"  Cached: {result2.Cached}");
+				if (result2.Usage != null)
+				{
+					WriteLine($"  Tokens: {result2.Usage.TotalTokens} (prompt: {result2.Usage.PromptTokens}, completion: {result2.Usage.CompletionTokens})");
+				}
 			}
 			catch (OpperAPIException ex)
 			{
 				WriteLine($"❌ API Exception: {ex.StatusCode}");
 				WriteLine($"   Message: {ex.Message}");
 				WriteLine($"   Response: {ex.ResponseContent}");
-				WriteLine($"   Endpoint: {ex.Endpoint}");
 			}
 			catch (Exception ex)
 			{
