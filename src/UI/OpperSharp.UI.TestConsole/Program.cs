@@ -514,9 +514,9 @@ Framework: .NET 8.0
 				name: aliasName,
 				fallbackModels: new List<string>
 				{
-					"gpt-4",
-					"gpt-4-turbo",
-					"gpt-3.5-turbo"
+					"openai/gpt-4o",
+					"openai/gpt-4-turbo",
+					"openai/gpt-3.5-turbo"
 				},
 				description: "Test alias with GPT-4 fallback chain"
 			);
