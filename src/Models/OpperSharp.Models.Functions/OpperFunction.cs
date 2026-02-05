@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace OpperSharp.Models.Functions
 {
@@ -48,8 +49,8 @@ namespace OpperSharp.Models.Functions
 		/// Called after JSON deserialization to ensure Path is set.
 		/// If Path is empty but Name has a value, use Name as Path.
 		/// </summary>
-		[Newtonsoft.Json.Serialization.OnDeserialized]
-		internal void OnDeserializedMethod(System.Runtime.Serialization.StreamingContext context)
+		[OnDeserialized]
+		internal void OnDeserializedMethod(StreamingContext context)
 		{
 			// Fallback: if Path is empty but Name has a value, use Name as Path
 			if (string.IsNullOrEmpty(Path) && !string.IsNullOrEmpty(Name))
