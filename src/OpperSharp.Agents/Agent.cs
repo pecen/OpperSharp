@@ -121,9 +121,16 @@ namespace OpperSharp.Agents
 					}
 
 					// DEBUG: Log response
-					System.Console.WriteLine($"[DEBUG] Response has tool_calls: {functionResponse.Output.ContainsKey("tool_calls")}");
-					System.Console.WriteLine($"[DEBUG] Response Output keys: {string.Join(", ", functionResponse.Output.Properties().Select(p => p.Name))}");
-					System.Console.WriteLine($"[DEBUG] Response message: {functionResponse.Message?.Substring(0, Math.Min(100, functionResponse.Message?.Length ?? 0))}");
+					System.Console.WriteLine($"[DEBUG] Response Output is null: {functionResponse.Output == null}");
+					System.Console.WriteLine($"[DEBUG] Response Output count: {functionResponse.Output?.Count ?? 0}");
+					if (functionResponse.Output != null && functionResponse.Output.Count > 0)
+					{
+						System.Console.WriteLine($"[DEBUG] Response Output keys: {string.Join(", ", functionResponse.Output.Properties().Select(p => p.Name))}");
+						System.Console.WriteLine($"[DEBUG] Response Output JSON: {functionResponse.Output.ToString(Newtonsoft.Json.Formatting.None)}");
+					}
+					System.Console.WriteLine($"[DEBUG] Response has tool_calls in Output: {functionResponse.Output?.ContainsKey("tool_calls") ?? false}");
+					System.Console.WriteLine($"[DEBUG] Response message length: {functionResponse.Message?.Length ?? 0}");
+					System.Console.WriteLine($"[DEBUG] Response message preview: {functionResponse.Message?.Substring(0, Math.Min(200, functionResponse.Message?.Length ?? 0))}");
 
 					// Check if the response indicates tool calls
 					if (functionResponse.Output.TryGetValue("tool_calls", out var toolCallsToken)

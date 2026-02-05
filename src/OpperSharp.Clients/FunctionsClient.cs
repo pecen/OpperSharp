@@ -89,8 +89,16 @@ namespace OpperSharp.Clients
 			if (options.Tools != null && options.Tools.Count > 0)
 				requestBody["tools"] = options.Tools;
 
+			var jsonBody = JsonConvert.SerializeObject(requestBody);
+
+			// DEBUG: Log request for ad-hoc calls
+			if (isAdHocCall)
+			{
+				System.Console.WriteLine($"[DEBUG] Ad-hoc request body: {jsonBody.Substring(0, Math.Min(500, jsonBody.Length))}...");
+			}
+
 			var content = new StringContent(
-				JsonConvert.SerializeObject(requestBody),
+				jsonBody,
 				Encoding.UTF8,
 				"application/json"
 			);
@@ -107,6 +115,13 @@ namespace OpperSharp.Clients
 			);
 
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+
+			// DEBUG: Log response for ad-hoc calls
+			if (isAdHocCall)
+			{
+				System.Console.WriteLine($"[DEBUG] Ad-hoc response status: {response.StatusCode}");
+				System.Console.WriteLine($"[DEBUG] Ad-hoc response body: {responseString.Substring(0, Math.Min(500, responseString.Length))}...");
+			}
 
 			if (!response.IsSuccessStatusCode)
 			{
