@@ -1199,32 +1199,34 @@ Plats: Hybrid (Stockholm)
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "consultant-matcher-scale",
-			Instructions = @"Use these tools immediately in your first response:
+			Instructions = @"You are an AI consultant matching system. You have two tools:
 
-1. get_consultants to retrieve all consultant data
-2. calculate_match_score to score consultant C001
-3. calculate_match_score to score consultant C011
-4. calculate_match_score to score consultant C021
+1. get_consultants: Returns all 25 consultant profiles with skills, experience, rates, etc.
+2. calculate_match_score: Calculates how well a consultant matches project requirements (0-100)
 
-After tools execute, report which consultant is best.
+Your task:
+- First call get_consultants to see all available consultants
+- Analyze which consultants have the required skills (C#, .NET, Azure, Microservices)
+- Use calculate_match_score to score the promising candidates
+- Provide recommendations based on the scores
 
-DO NOT explain or describe - EXECUTE THE TOOLS NOW.",
+Work methodically through this task.",
 			MaxIterations = 15,
 			Model = "anthropic/claude-opus-4.5"
 		})
 		.WithTool(AgentTool.Create(
 			name: "get_consultants",
-			description: "Retrieves ALL 25 consultant profiles with complete information",
+			description: "Retrieves ALL 25 consultant profiles with complete information including skills, experience, rates, and availability",
 			handler: (string input) =>
 			{
-				WriteLine($"   [DEBUG] get_consultants called with input: {input}");
+				WriteLine($"   [DEBUG] get_consultants called");
 				return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions { WriteIndented = true }));
 			},
-			inputDescription: "Any query string (e.g., 'all', 'list', 'available'). The tool always returns all consultants."
+			inputDescription: "Any query string (e.g., 'all', 'list'). Always returns all consultants."
 		))
 		.WithTool(AgentTool.Create(
 			name: "calculate_match_score",
-			description: "Calculates match score (0-100) for ONE specific consultant for .NET 8 modernization project",
+			description: "Calculates match score (0-100) for a specific consultant against project requirements",
 			handler: (string consultantId) =>
 			{
 				WriteLine($"   [DEBUG] calculate_match_score called for consultant: {consultantId}");
@@ -1242,16 +1244,14 @@ DO NOT explain or describe - EXECUTE THE TOOLS NOW.",
 
 				return Task.FromResult(score.ToString());
 			},
-			inputDescription: "Consultant ID (e.g., 'C001', 'C011', 'C021')"
+			inputDescription: "Consultant ID to score (e.g., 'C001', 'C011')"
 		));
 
-		var response = await agent.RunAsync(@"I need you to:
-1. Get all consultants
-2. Score consultant C001 for .NET 8 modernization
-3. Score consultant C011 for .NET 8 modernization
-4. Score consultant C021 for .NET 8 modernization
+		var response = await agent.RunAsync($@"Find the best consultant for this .NET 8 modernization project:
 
-Then report which consultant is best.");
+{assignment}
+
+Analyze the 25 consultants and recommend the top candidates.");
 
 		WriteLine("═══════════════════════════════════════");
 		WriteLine("AGENT RECOMMENDATION:");
