@@ -91,12 +91,6 @@ namespace OpperSharp.Clients
 
 			var jsonBody = JsonConvert.SerializeObject(requestBody);
 
-			// DEBUG: Log request for ad-hoc calls
-			if (isAdHocCall)
-			{
-				System.Console.WriteLine($"[DEBUG] Ad-hoc request body: {jsonBody.Substring(0, Math.Min(500, jsonBody.Length))}...");
-			}
-
 			var content = new StringContent(
 				jsonBody,
 				Encoding.UTF8,
@@ -115,13 +109,6 @@ namespace OpperSharp.Clients
 			);
 
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
-
-			// DEBUG: Log response for ad-hoc calls
-			if (isAdHocCall)
-			{
-				System.Console.WriteLine($"[DEBUG] Ad-hoc response status: {response.StatusCode}");
-				System.Console.WriteLine($"[DEBUG] Ad-hoc response body: {responseString.Substring(0, Math.Min(500, responseString.Length))}...");
-			}
 
 			if (!response.IsSuccessStatusCode)
 			{

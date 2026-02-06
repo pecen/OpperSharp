@@ -94,15 +94,6 @@ namespace OpperSharp.Agents
 						Tools = ConvertToolsToApiFormat(_options.Tools)
 					};
 
-					// DEBUG: Log what's being sent
-					var callMode = string.IsNullOrWhiteSpace(_options.FunctionPath) ? "ad-hoc" : "named";
-					System.Console.WriteLine($"[DEBUG] Iteration {iteration}: Calling {callOptions.Name} ({callMode} mode)");
-					System.Console.WriteLine($"[DEBUG] Tools count: {callOptions.Tools?.Count ?? 0}");
-					if (callOptions.Tools != null && callOptions.Tools.Count > 0)
-					{
-						System.Console.WriteLine($"[DEBUG] First tool: {Newtonsoft.Json.JsonConvert.SerializeObject(callOptions.Tools[0])}");
-					}
-
 					OpperFunctionResponse functionResponse;
 					try
 					{
@@ -114,25 +105,11 @@ namespace OpperSharp.Agents
 							callOptions,
 							cancellationToken
 						);
-						System.Console.WriteLine($"[DEBUG] Function call succeeded");
 					}
 					catch (Exception ex)
 					{
-						System.Console.WriteLine($"[DEBUG] Function call FAILED: {ex.GetType().Name}: {ex.Message}");
 						throw;
 					}
-
-					// DEBUG: Log response
-					System.Console.WriteLine($"[DEBUG] Response Output is null: {functionResponse.Output == null}");
-					System.Console.WriteLine($"[DEBUG] Response Output count: {functionResponse.Output?.Count ?? 0}");
-					if (functionResponse.Output != null && functionResponse.Output.Count > 0)
-					{
-						System.Console.WriteLine($"[DEBUG] Response Output keys: {string.Join(", ", functionResponse.Output.Properties().Select(p => p.Name))}");
-						System.Console.WriteLine($"[DEBUG] Response Output JSON: {functionResponse.Output.ToString(Newtonsoft.Json.Formatting.None)}");
-					}
-					System.Console.WriteLine($"[DEBUG] Response has tool_calls in Output: {functionResponse.Output?.ContainsKey("tool_calls") ?? false}");
-					System.Console.WriteLine($"[DEBUG] Response message length: {functionResponse.Message?.Length ?? 0}");
-					System.Console.WriteLine($"[DEBUG] Response message preview: {functionResponse.Message?.Substring(0, Math.Min(200, functionResponse.Message?.Length ?? 0))}");
 
 					// Check if the response indicates tool calls
 					// First try structured format (Output.tool_calls)
@@ -150,7 +127,6 @@ namespace OpperSharp.Agents
 							var dict = tc.ToObject<Dictionary<string, object>>();
 							if (dict != null) toolCallsList.Add(dict);
 						}
-						System.Console.WriteLine($"[DEBUG] Found {toolCallsList.Count} tool calls in Output.tool_calls (structured format)");
 					}
 					// If not in Output, try parsing from message (Claude's native XML format)
 					else if (!string.IsNullOrEmpty(functionResponse.Message))
@@ -159,7 +135,6 @@ namespace OpperSharp.Agents
 						if (toolCallsList.Count > 0)
 						{
 							hasToolCalls = true;
-							System.Console.WriteLine($"[DEBUG] Found {toolCallsList.Count} tool calls in message (XML format)");
 						}
 					}
 
@@ -170,16 +145,11 @@ namespace OpperSharp.Agents
 
 						foreach (var toolCall in toolCallsList)
 						{
-							System.Console.WriteLine($"[DEBUG] Raw toolCall keys: {string.Join(", ", toolCall.Keys)}");
 							var toolName = toolCall.GetValueOrDefault("name")?.ToString();
 							var toolArgs = toolCall.GetValueOrDefault("arguments");
 
-							System.Console.WriteLine($"[DEBUG] Extracted tool name: '{toolName}'");
-							System.Console.WriteLine($"[DEBUG] Extracted tool args type: {toolArgs?.GetType().Name ?? "null"}");
-
 							if (string.IsNullOrEmpty(toolName))
 							{
-								System.Console.WriteLine($"[DEBUG] Skipping tool call - name is null or empty");
 								continue;
 							}
 
@@ -187,28 +157,10 @@ namespace OpperSharp.Agents
 							if (toolArgs is JObject jobj)
 							{
 								argsDict = jobj.ToObject<Dictionary<string, object?>>();
-								var keys = argsDict != null ? string.Join(", ", argsDict.Keys) : "";
-								System.Console.WriteLine($"[DEBUG] Converted JObject to dictionary with {argsDict?.Count ?? 0} keys: {keys}");
 							}
 							else if (toolArgs is Dictionary<string, object> dict)
 							{
 								argsDict = dict.ToDictionary(kv => kv.Key, kv => (object?)kv.Value);
-								System.Console.WriteLine($"[DEBUG] Using dictionary with {argsDict.Count} keys: {string.Join(", ", argsDict.Keys)}");
-							}
-
-							if (argsDict != null && argsDict.Count > 0)
-							{
-								foreach (var kvp in argsDict)
-								{
-									var valuePreview = kvp.Value?.ToString();
-									if (valuePreview != null && valuePreview.Length > 100)
-										valuePreview = valuePreview.Substring(0, 100) + "...";
-									System.Console.WriteLine($"[DEBUG]   arg '{kvp.Key}' = '{valuePreview}' (type: {kvp.Value?.GetType().Name ?? "null"})");
-								}
-							}
-							else
-							{
-								System.Console.WriteLine($"[DEBUG] No arguments extracted!");
 							}
 
 							try
@@ -218,8 +170,6 @@ namespace OpperSharp.Agents
 									argsDict ?? new Dictionary<string, object?>(),
 									response.ToolCalls
 								);
-
-								System.Console.WriteLine($"[DEBUG] Tool '{toolName}' executed successfully, result: {result}");
 
 								// Include arguments in tool results so Claude knows context (e.g., which consultant a score is for)
 								var toolResult = new Dictionary<string, object>
@@ -238,7 +188,6 @@ namespace OpperSharp.Agents
 							}
 							catch (Exception ex)
 							{
-								System.Console.WriteLine($"[DEBUG] Tool '{toolName}' execution FAILED: {ex.GetType().Name}: {ex.Message}");
 								// Add error result so Claude knows the tool failed
 								toolResults.Add(new
 								{
@@ -364,11 +313,8 @@ namespace OpperSharp.Agents
 			if (tool == null)
 			{
 				var availableTools = string.Join(", ", _options.Tools.Select(t => t.Name));
-				System.Console.WriteLine($"[DEBUG] Tool '{toolName}' not found. Available tools: {availableTools}");
 				throw new InvalidOperationException($"Tool '{toolName}' not found. Available: {availableTools}");
 			}
-
-			System.Console.WriteLine($"[DEBUG] Executing tool '{tool.Name}' with {arguments.Count} arguments");
 
 			var toolCall = new ToolCall
 			{
