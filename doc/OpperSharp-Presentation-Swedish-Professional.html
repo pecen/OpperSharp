@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpperSharp - C# SDK för Opper AI (v2 API)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <style>
+        .reveal h1 { font-size: 2.2em; margin-bottom: 0.5em; }
+        .reveal h2 { font-size: 1.6em; margin-bottom: 0.4em; }
+        .reveal h3 { font-size: 1.3em; }
+        .reveal ul { margin: 0.8em 0; }
+        .reveal li { margin: 0.4em 0; }
+        .reveal pre { font-size: 0.45em; margin: 0.8em 0; }
+        .reveal code { background: #f4f4f4; padding: 0.2em 0.4em; }
+        .reveal section img { border: none; box-shadow: none; }
+        .small-text { font-size: 0.8em; }
+        .highlight { color: #2563eb; font-weight: bold; }
+        .muted { color: #666; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Titel -->
+            <section>
+                <h1>OpperSharp</h1>
+                <h3>C# SDK för Opper AI v2 API</h3>
+                <p class="muted">En produktionsklar implementation för .NET-utvecklare</p>
+
+                <aside class="notes">
+                    Presentationen handlar om OpperSharp - en C# SDK jag har utvecklat för Opper AI v2 API.
+
+                    Opper är en AI-plattform som erbjuder Functions, RAG (Retrieval-Augmented Generation), Chat, Tracing, Agents, Embeddings, OCR och mer. De har officiella SDKs för Python och TypeScript, men ingenting för .NET-ekosystemet.
+
+                    OpperSharp fyller detta gap och ger .NET-utvecklare fullständig tillgång till v2 API:et med alla nya funktioner.
+                </aside>
+            </section>
+
+            <!-- Bakgrund -->
+            <section>
+                <h2>Bakgrund</h2>
+                <p>Opper AI erbjuder officiella SDKs för:</p>
+                <ul>
+                    <li>Python</li>
+                    <li>TypeScript/JavaScript</li>
+                </ul>
+                <p style="margin-top: 1.5em;">För .NET-utvecklare finns inget motsvarande verktyg.</p>
+
+                <aside class="notes">
+                    Opper AI är en plattform för AI-integration som tillhandahåller olika tjänster. De har byggt SDKs för Python och TypeScript, vilket täcker en stor del av utvecklarcommunity.
+
+                    Men för oss som arbetar i .NET-miljöer - vilket är vanligt inom enterprise, särskilt i finanssektorn och hos större företag - fanns det inget motsvarande verktyg.
+
+                    Alternativet var att arbeta direkt mot REST API:et, vilket innebär mycket mer arbete och mindre typsäkerhet.
+                </aside>
+            </section>
+
+            <!-- Vad är OpperSharp -->
+            <section>
+                <h2>Vad är OpperSharp?</h2>
+                <p>En komplett C# SDK som tillhandahåller:</p>
+                <ul>
+                    <li>Fullständig v2 API-täckning (11 API-endpoints)</li>
+                    <li>Typsäkerhet och IntelliSense-stöd</li>
+                    <li>Async/await-baserad implementation</li>
+                    <li>Filbaserade kunskapsbaser med PDF/CSV-stöd</li>
+                    <li>Model aliases för automatisk fallback</li>
+                    <li>OCR, Rerank, Analytics och mer</li>
+                </ul>
+
+                <aside class="notes">
+                    OpperSharp är en fullständig implementation av Opper v2 API i C#. SDK:n täcker alla 11 API-endpoints i v2, vilket ger komplett funktionalitet.
+
+                    v2 API introducerade viktiga förbättringar: filbaserade kunskapsbaser istället för document-indexing, model aliases för automatisk fallback vid fel, OCR för dokumentprocessering, och mycket mer.
+
+                    Typsäkerheten är en viktig fördel - fel upptäcks vid kompilering istället för vid runtime, och IntelliSense ger dokumentation direkt i utvecklingsmiljön.
+                </aside>
+            </section>
+
+            <!-- Arkitektur -->
+            <section>
+                <h2>Arkitektur</h2>
+                <p>Modulär struktur med fullständig v2 API-täckning:</p>
+                <ul class="small-text">
+                    <li><strong>OpperSharp.Core</strong> - HTTP-klient och grundfunktionalitet</li>
+                    <li><strong>Functions</strong> - AI-funktionsanrop</li>
+                    <li><strong>Knowledge</strong> - Filbaserade kunskapsbaser (v2)</li>
+                    <li><strong>Chat</strong> - Konversations-API</li>
+                    <li><strong>Datasets</strong> - Träningsdata (v2)</li>
+                    <li><strong>Embeddings</strong> - Vektorgenererering (v2)</li>
+                    <li><strong>Models</strong> - Model aliases med fallback (v2)</li>
+                    <li><strong>OCR</strong> - Dokumentprocessering (v2)</li>
+                    <li><strong>Rerank</strong> - Sökoptimering (v2)</li>
+                    <li><strong>Analytics</strong> - Användningsmetrik (v2)</li>
+                    <li><strong>Spans</strong> - Distributed tracing</li>
+                    <li><strong>Agents</strong> - Multi-steg AI-agenter</li>
+                </ul>
+
+                <aside class="notes">
+                    Arkitekturen är utökad för v2 API med sex nya klienter: Knowledge (ersätter Indexes), Datasets, Embeddings, Models, OCR, Rerank och Analytics.
+
+                    Knowledge-klienten är en viktig förändring - v2 använder filuppladdning (PDF, CSV, TXT) istället för document-indexing. Detta ger mer flexibilitet och bättre integrering med verkliga dokument.
+
+                    Models-klienten hanterar model aliases, vilket låter dig definiera fallback-modeller om primärmodellen är otillgänglig.
+
+                    Allt är byggt för .NET 8.0 med nullable reference types för maximal typsäkerhet.
+                </aside>
+            </section>
+
+            <!-- Grundläggande användning -->
+            <section>
+                <h2>Grundläggande användning</h2>
+                <pre><code class="language-csharp">using OpperSharp;
+
+var client = new OpperClient("api-key");
+
+var result = await client.Functions.CallAsync(
+    "function-name",
+    new { text = "input data" }
+);
+
+Console.WriteLine(result.Message);
+</code></pre>
+
+                <aside class="notes">
+                    Detta är den enklaste formen av användning. Man skapar en OpperClient med sin API-nyckel och kan sedan anropa AI-funktioner.
+
+                    Jämfört med att använda REST API direkt, där man måste hantera HTTP-klienten själv, sätta headers, serialisera JSON manuellt och hantera fel, reduceras koden med cirka 90%.
+
+                    Typsäkerheten innebär att fel i funktionsnamn eller parametrar upptäcks direkt i utvecklingsmiljön.
+                </aside>
+            </section>
+
+            <!-- Jämförelse REST vs SDK -->
+            <section>
+                <h2>Jämförelse: REST API vs OpperSharp</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1em;">
+                    <div>
+                        <h4>REST API</h4>
+                        <ul class="small-text">
+                            <li>Skapa och konfigurera HttpClient</li>
+                            <li>Sätta headers manuellt</li>
+                            <li>JSON-serialisering</li>
+                            <li>Manuell felhantering</li>
+                            <li>Deserialisering av svar</li>
+                            <li>Ca 40-50 rader kod per operation</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>OpperSharp</h4>
+                        <ul class="small-text">
+                            <li>Instantiera OpperClient</li>
+                            <li>Anropa metod</li>
+                            <li>Ca 5 rader kod per operation</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <aside class="notes">
+                    Denna jämförelse visar den praktiska fördelen med SDK:n. När man arbetar direkt mot REST API måste man hantera alla HTTP-detaljer själv.
+
+                    Detta inkluderar att skapa HttpClient, konfigurera headers för autentisering och content type, serialisera request body till JSON, skicka request, hantera HTTP-fel (404, 500 etc), och deserialisera response body.
+
+                    Med OpperSharp hanteras allt detta automatiskt. SDK:n inkluderar även retry-logik för transient errors och hantering av rate limiting.
+
+                    Den kod-reduktion på 90% innebär mindre kod att underhålla och färre möjligheter för fel.
+                </aside>
+            </section>
+
+            <!-- Functions API -->
+            <section>
+                <h2>Functions API</h2>
+                <pre><code class="language-csharp">// Enkelt anrop
+var result = await client.Functions.CallAsync(
+    "extract-entities",
+    new { text = documentText }
+);
+
+// Med RAG-context
+var ragResult = await client.Functions.CallAsync(
+    "answer-question",
+    new { question = userQuestion },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = "documentation" }
+    }
+);
+</code></pre>
+
+                <aside class="notes">
+                    Functions API är kärnan i Opper. Man definierar AI-funktioner i Opper-plattformen med prompts och konfiguration, och anropar dem sedan programmatiskt.
+
+                    Det första exemplet visar ett enkelt anrop där man skickar in text och får tillbaka ett resultat.
+
+                    Det andra exemplet visar RAG (Retrieval-Augmented Generation). Genom att ange en context med knowledge_base kommer Opper att först hämta relevant information från den angivna kunskapsbasen, och sedan använda den informationen som context när AI-funktionen körs.
+
+                    Detta är kraftfullt för att bygga Q&A-system över egen data, där svaren baseras på faktisk dokumentation istället för AI-modellens förtränade kunskap.
+                </aside>
+            </section>
+
+            <!-- Streaming -->
+            <section>
+                <h2>Streaming</h2>
+                <pre><code class="language-csharp">await foreach (var chunk in client.Functions.StreamAsync(
+    "generate-text",
+    new { topic = "AI development" }
+))
+{
+    Console.Write(chunk.Delta);
+}
+</code></pre>
+                <p class="small-text">Använder IAsyncEnumerable för idiomatisk C#-kod</p>
+
+                <aside class="notes">
+                    Streaming är viktigt för användarupplevelsen när man genererar längre texter. Istället för att vänta på hela svaret kan man visa text allt eftersom den genereras.
+
+                    OpperSharp använder IAsyncEnumerable, vilket är den idiomatiska C#-lösningen för asynkron streaming. Detta integreras naturligt med await foreach.
+
+                    Under huven använder SDK:n Server-Sent Events (SSE) för att ta emot chunks från Opper API. Varje chunk innehåller en Delta-property med nästa del av texten.
+
+                    Detta är särskilt användbart i chatbot-scenarion eller när man genererar längre dokument.
+                </aside>
+            </section>
+
+            <!-- Knowledge Bases och RAG -->
+            <section>
+                <h2>Kunskapsbaser och RAG (v2)</h2>
+                <pre><code class="language-csharp">// Skapa kunskapsbas
+await client.Knowledge.CreateAsync("documentation");
+
+// Ladda upp fil
+using var fileStream = File.OpenRead("manual.pdf");
+await client.Knowledge.UploadFileAsync(
+    "documentation",
+    "manual.pdf",
+    fileStream,
+    "application/pdf"
+);
+
+// Använd med Functions (integrerad RAG)
+var answer = await client.Functions.CallAsync(
+    "answer-question",
+    new { question = "How do I configure auth?" },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = "documentation" }
+    }
+);
+</code></pre>
+
+                <aside class="notes">
+                    v2 API introducerade Knowledge Bases som ersätter det gamla Indexes-konceptet. Den stora skillnaden är att v2 använder filuppladdning istället för document-indexing.
+
+                    Man kan ladda upp hela PDF:er, CSV-filer eller textfiler. Opper hanterar parsing, chunking och embedding-generering automatiskt.
+
+                    Integrationen med Functions är sömlös - genom att ange knowledge_base i Context kommer relevanta delar av de uppladdade filerna att användas som kontext.
+
+                    Detta är mycket mer praktiskt än det gamla systemet där man själv fick chunka dokument och indexera dem separat.
+                </aside>
+            </section>
+
+            <!-- Chat API -->
+            <section>
+                <h2>Chat API</h2>
+                <pre><code class="language-csharp">var response = await client.Chat.CreateAsync(
+    new ChatRequest
+    {
+        Messages = new List<ChatMessage>
+        {
+            new() {
+                Role = "user",
+                Content = "Explain dependency injection"
+            }
+        },
+        ParentSpanId = spanId
+    }
+);
+
+Console.WriteLine(response.Message);
+</code></pre>
+
+                <aside class="notes">
+                    Chat API används för konversationsbaserade applikationer. Till skillnad från Functions som är mer single-shot, är Chat designat för flervägsdialog.
+
+                    Man skickar in en lista av meddelanden som representerar konversationshistoriken. Varje meddelande har en Role (system, user eller assistant) och Content.
+
+                    ParentSpanId är valfritt men rekommenderat - det kopplar chat-anropet till ett span för tracing, vilket gör det möjligt att följa hela konversationsflödet i Oppers UI.
+
+                    För att fortsätta en konversation lägger man till svaret i message-listan och skickar in den uppdaterade listan vid nästa anrop.
+                </aside>
+            </section>
+
+            <!-- Datasets -->
+            <section>
+                <h2>Datasets API (v2)</h2>
+                <pre><code class="language-csharp">// Skapa träningsdata
+await client.Datasets.CreateEntryAsync(
+    "customer-support-training",
+    input: new { question = "How do I reset my password?" },
+    output: new { answer = "Click 'Forgot Password' on login page..." },
+    comment: "Common support question"
+);
+
+// Lista entries
+var entries = await client.Datasets.ListEntriesAsync(
+    "customer-support-training",
+    limit: 100
+);
+</code></pre>
+
+                <aside class="notes">
+                    Datasets API är nytt i v2 och används för att hantera träningsdata för fine-tuning av modeller.
+
+                    Man kan skapa dataset entries med input och output, samt valfria kommentarer för dokumentation.
+
+                    Detta är användbart för att bygga upp träningsdata över tid baserat på faktisk användning, för att sedan fine-tuna modeller för specifika användningsfall.
+                </aside>
+            </section>
+
+            <!-- Embeddings -->
+            <section>
+                <h2>Embeddings API (v2)</h2>
+                <pre><code class="language-csharp">// Generera embeddings
+var embeddings = await client.Embeddings.CreateAsync(
+    "Text to convert to vector",
+    model: "azure/text-embedding-3-large"
+);
+
+Console.WriteLine($"Dimensions: {embeddings.Count}");
+
+// Batch-generering
+var batchResponse = await client.Embeddings.CreateBatchAsync(
+    new[] { "First text", "Second text", "Third text" },
+    model: "azure/text-embedding-3-large"
+);
+</code></pre>
+
+                <aside class="notes">
+                    Embeddings API låter dig generera vektorrepresentationer av text.
+
+                    Detta är användbart om du vill bygga egen semantisk sökning, eller integrera med externa vektordatabaser.
+
+                    Batch-funktionen är effektiv för att generera embeddings för många texter samtidigt.
+                </aside>
+            </section>
+
+            <!-- Models -->
+            <section>
+                <h2>Models API med Aliases (v2)</h2>
+                <pre><code class="language-csharp">// Skapa model alias med fallback
+await client.Models.CreateAliasAsync(
+    "reliable-gpt4",
+    fallbackModels: new List<string>
+    {
+        "gpt-4",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo"
+    },
+    description: "GPT-4 with automatic fallback"
+);
+
+// Använd alias i Functions
+var result = await client.Functions.CallAsync(
+    "analyze-text",
+    new { text = input },
+    new OpperCallOptions { Model = "reliable-gpt4" }
+);
+</code></pre>
+
+                <aside class="notes">
+                    Models API är en kraftfull v2-funktion som låter dig skapa model aliases med automatisk fallback.
+
+                    Om den primära modellen (gpt-4) är otillgänglig eller överbelastad, faller systemet automatiskt tillbaka på nästa modell i listan.
+
+                    Detta ger mycket högre tillförlitlighet i produktionssystem utan att du behöver hantera retry-logik själv.
+                </aside>
+            </section>
+
+            <!-- OCR -->
+            <section>
+                <h2>OCR API (v2)</h2>
+                <pre><code class="language-csharp">// Processa dokument med OCR
+var ocrResult = await client.Ocr.ProcessAsync(
+    new OpperOcrRequest
+    {
+        Model = "gpt-4-vision",
+        Document = documentBytes,
+        Instructions = "Extract all text and preserve formatting"
+    }
+);
+
+Console.WriteLine(ocrResult.Text);
+
+// Lista tillgängliga OCR-modeller
+var models = await client.Ocr.ListModelsAsync();
+</code></pre>
+
+                <aside class="notes">
+                    OCR API är nytt i v2 och använder vision-modeller för att extrahera text från dokument och bilder.
+
+                    Man kan ge instruktioner för hur texten ska extraheras, till exempel att bevara formatering eller extrahera specifika fält.
+
+                    Detta är användbart för att processa skannade dokument, fakturor, kvitton eller handskrivna anteckningar.
+                </aside>
+            </section>
+
+            <!-- Rerank -->
+            <section>
+                <h2>Rerank API (v2)</h2>
+                <pre><code class="language-csharp">// Rerank sökresultat baserat på relevans
+var reranked = await client.Rerank.RerankAsync(
+    query: "best practices for authentication",
+    documents: searchResults,
+    model: "rerank-model",
+    topK: 5
+);
+
+foreach (var result in reranked.Results)
+{
+    Console.WriteLine($"Score: {result.Score}, Doc: {result.Document}");
+}
+</code></pre>
+
+                <aside class="notes">
+                    Rerank API används för att optimera sökresultat.
+
+                    Efter en initial sökning kan man använda Rerank för att omrangordna resultaten baserat på semantisk relevans till query.
+
+                    topK-parametern låter dig begränsa antalet resultat till de mest relevanta.
+
+                    Detta förbättrar kvaliteten på RAG-system avsevärt genom att säkerställa att de mest relevanta dokumenten används som kontext.
+                </aside>
+            </section>
+
+            <!-- Analytics -->
+            <section>
+                <h2>Analytics API (v2)</h2>
+                <pre><code class="language-csharp">// Hämta användningsstatistik
+var usage = await client.Analytics.GetUsageAsync(
+    fromDate: DateTime.Now.AddDays(-30),
+    toDate: DateTime.Now,
+    granularity: "day",
+    fields: new List<string> { "tokens", "cost", "requests" },
+    groupBy: new List<string> { "function", "model" }
+);
+
+foreach (var entry in usage.Data)
+{
+    Console.WriteLine($"{entry.Date}: {entry.Requests} requests");
+}
+</code></pre>
+
+                <aside class="notes">
+                    Analytics API ger insikt i användning och kostnader.
+
+                    Man kan hämta statistik över tokens, kostnad, antal requests, grupperat per funktion eller modell.
+
+                    Granulariteten kan sättas till dag, vecka eller månad.
+
+                    Detta är kritiskt för cost tracking och för att förstå användningsmönster i produktionssystem.
+                </aside>
+            </section>
+
+            <!-- Spans -->
+            <section>
+                <h2>Spans för tracing</h2>
+                <pre><code class="language-csharp">var span = await client.Spans.CreateAsync(
+    "user-query-flow",
+    new { query = userInput }
+);
+
+try
+{
+    var result = await ProcessQuery(userInput, span.Id);
+    await client.Spans.UpdateAsync(span.Id, new { result });
+}
+catch (Exception ex)
+{
+    await client.Spans.UpdateAsync(span.Id, new { error = ex.Message });
+}
+</code></pre>
+
+                <aside class="notes">
+                    Spans är Oppers implementation av distributed tracing. Konceptet kommer från OpenTelemetry och distributed systems.
+
+                    Man skapar ett parent span när en operation börjar, och kan sedan skapa child spans för varje delsteg. Detta bygger upp en träd-struktur av operationer.
+
+                    När operationen är klar uppdaterar man spanet med resultatet. Vid fel uppdaterar man med felinformation.
+
+                    I Oppers UI kan man sedan se hela flödet av spans, vilket är ovärderligt för debugging och för att förstå vad som händer i komplexa AI-operationer.
+
+                    Spans kan också användas för cost tracking - varje AI-anrop kan kopplas till ett span och kostnaden aggregeras.
+                </aside>
+            </section>
+
+            <!-- Agents -->
+            <section>
+                <h2>Agents</h2>
+                <pre><code class="language-csharp">public class DatabaseTools
+{
+    [Tool("Query the user database")]
+    public async Task<string> QueryUsers(string criteria)
+    {
+        // Implementation
+        return JsonSerializer.Serialize(users);
+    }
+}
+
+var agent = new Agent(client, new AgentOptions
+{
+    FunctionPath = "customer-service-agent",
+    Tools = Agent.DiscoverTools<DatabaseTools>()
+});
+
+var result = await agent.RunAsync(
+    new { request = "Find all premium users" }
+);
+</code></pre>
+
+                <aside class="notes">
+                    Agents är den mest avancerade funktionen. En agent är en AI som kan använda verktyg (tools) för att lösa uppgifter.
+
+                    Man definierar verktyg som C#-metoder och markerar dem med Tool-attributet. Attributet innehåller en beskrivning som AI:n använder för att förstå vad verktyget gör.
+
+                    Agent.DiscoverTools använder reflection för att hitta alla metoder med Tool-attributet och registrerar dem automatiskt.
+
+                    När agenten körs analyserar AI:n uppgiften, bestämmer vilka verktyg som behövs, anropar dem, och använder resultatet för att fortsätta. Detta kan ske i flera steg.
+
+                    MaxIterations i AgentOptions förhindrar oändliga loopar. Agenten har också inbyggd integration med Spans för att tracka vad som händer.
+                </aside>
+            </section>
+
+            <!-- Felhantering -->
+            <section>
+                <h2>Felhantering</h2>
+                <pre><code class="language-csharp">try
+{
+    var result = await client.Functions.CallAsync(...);
+}
+catch (OpperException ex)
+{
+    // API-specifika fel (4xx, 5xx)
+    Console.WriteLine($"API error: {ex.StatusCode}");
+    Console.WriteLine(ex.Message);
+}
+catch (HttpRequestException ex)
+{
+    // Nätverksproblem
+}
+</code></pre>
+
+                <aside class="notes">
+                    SDK:n har strukturerad felhantering. OpperException kastas för API-fel och innehåller HTTP-statuskoden och response body.
+
+                    För transient errors (429 Rate Limit, 5xx Server Errors) har SDK:n inbyggd retry-logik med exponential backoff. Detta hanteras automatiskt och är transparent för användaren.
+
+                    HttpRequestException kastas för nätverksproblem som timeout eller connection failures.
+
+                    För production-kod rekommenderas att implementera ytterligare error handling och logging runt SDK-anrop.
+                </aside>
+            </section>
+
+            <!-- v2 Migration -->
+            <section>
+                <h2>v2 Migration & Backwards Compatibility</h2>
+                <pre><code class="language-csharp">// Deprecated (v1) - fungerar fortfarande
+await client.Indexes.IndexAsync("my-index", content);
+
+// Rekommenderat (v2) - filbaserad approach
+await client.Knowledge.CreateAsync("my-kb");
+using var file = File.OpenRead("doc.pdf");
+await client.Knowledge.UploadFileAsync("my-kb", "doc.pdf", file, "application/pdf");
+</code></pre>
+                <p class="small-text">IndexesClient är deprecated men fungerar för backwards compatibility</p>
+
+                <aside class="notes">
+                    OpperSharp hanterar v2-migrationen smidigt.
+
+                    Det gamla Indexes API är markerat som deprecated men fungerar fortfarande för backwards compatibility. Man får compiler warnings om man använder det.
+
+                    För ny kod rekommenderas Knowledge API som använder v2:s filbaserade approach.
+
+                    Detta ger en mjuk migreringsväg - befintlig kod fungerar medan ny kod kan använda v2-funktionalitet.
+                </aside>
+            </section>
+
+            <!-- Praktiskt exempel -->
+            <section>
+                <h2>Komplett exempel: RAG-baserad kunskapsbas (v2)</h2>
+                <pre><code class="language-csharp">// 1. Skapa kunskapsbas och ladda upp dokumentation
+await client.Knowledge.CreateAsync("docs");
+
+using var fileStream = File.OpenRead("documentation.pdf");
+await client.Knowledge.UploadFileAsync(
+    "docs",
+    "documentation.pdf",
+    fileStream,
+    "application/pdf"
+);
+
+// 2. Användare ställer fråga
+var answer = await client.Functions.CallAsync(
+    "answer-from-docs",
+    new { question = "How do I configure the agent?" },
+    new OpperCallOptions
+    {
+        Context = new() { ["knowledge_base"] = "docs" }
+    }
+);
+
+// 3. Svar baserat på faktisk dokumentation
+Console.WriteLine(answer.Message);
+</code></pre>
+
+                <aside class="notes">
+                    Detta är ett typiskt användningsfall för RAG med v2 API - en kunskapsbas över egen dokumentation.
+
+                    Först skapar man en kunskapsbas och laddar upp PDF-filer. Opper hanterar parsing, chunking och embedding-generering automatiskt.
+
+                    När en användare ställer en fråga anropas en AI-funktion med knowledge_base i context. Opper hämtar då relevanta delar från de uppladdade filerna.
+
+                    De hämtade dokumentdelarna används som context för AI-funktionen, som ger svar baserat på faktisk dokumentation.
+
+                    v2:s filbaserade approach är mycket enklare än v1:s document-indexing.
+                </aside>
+            </section>
+
+            <!-- Installation -->
+            <section>
+                <h2>Installation och användning</h2>
+                <p>Projektet finns på GitHub:</p>
+                <pre><code class="language-bash">git clone https://github.com/user/OpperSharp.git
+dotnet build
+dotnet add reference path/to/OpperSharp.Core.csproj
+</code></pre>
+                <p class="small-text muted">NuGet-paket planeras beroende på intresse</p>
+
+                <aside class="notes">
+                    Just nu distribueras OpperSharp via GitHub. Man klonar repot, bygger projekten, och refererar dem i sitt eget projekt.
+
+                    Alternativt kan man kopiera in projekten i sin egen solution för tätare integration.
+
+                    NuGet-publicering är något jag överväger om det finns tillräckligt intresse. Det innebär ett åtagande att underhålla paketet över tid.
+
+                    Projektet är MIT-licensierat så det är fritt att använda och modifiera.
+                </aside>
+            </section>
+
+            <!-- Best practices -->
+            <section>
+                <h2>Rekommendationer</h2>
+                <ul>
+                    <li>Använd <code>using</code>-statements för OpperClient (IDisposable)</li>
+                    <li>Konfigurera timeouts för långvariga operationer</li>
+                    <li>Implementera spans för observability</li>
+                    <li>Använd Oppers cache-funktion där det är relevant</li>
+                    <li>Bygg gränssnitt för testbarhet</li>
+                </ul>
+
+                <aside class="notes">
+                    OpperClient implementerar IDisposable för att hantera HTTP-connections korrekt. Använd using-statements eller dependency injection med scoped lifetime.
+
+                    För streaming-operationer eller långsamma AI-anrop kan man behöva sätta högre timeout än standard.
+
+                    Spans bör implementeras från början. Det är svårare att lägga till i efterhand, och observability är kritiskt för produktionssystem.
+
+                    Opper har caching på serversidan. Genom att sätta Cache = true i OpperCallOptions kan identiska anrop returnera cachade resultat, vilket sparar både tid och kostnad.
+
+                    För unit testing rekommenderas att skapa ett interface för OpperClient och injicera det, så att man kan mocka API-anrop i tester.
+                </aside>
+            </section>
+
+            <!-- Jämförelse med Python -->
+            <section>
+                <h2>Komplett v2 API-täckning</h2>
+                <div style="font-size: 0.75em;">
+                    <table>
+                        <tr>
+                            <th>Feature</th>
+                            <th>v2 API</th>
+                            <th>OpperSharp</th>
+                        </tr>
+                        <tr>
+                            <td>Functions API</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Knowledge Bases (filbaserad RAG)</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Chat API</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Datasets (träningsdata)</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Embeddings</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Models & Aliases</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>OCR</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Rerank</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Analytics</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Agents</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Streaming</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Spans (tracing)</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <aside class="notes">
+                    OpperSharp ger fullständig täckning av Opper v2 API - alla 11 endpoints är implementerade.
+
+                    Detta inkluderar alla nya v2-funktioner som filbaserade kunskapsbaser, datasets för träningsdata, embeddings-generering, model aliases, OCR, rerank och analytics.
+
+                    SDK:n är uppdaterad för v2 och innehåller backwards compatibility för äldre Indexes-API genom deprecated properties.
+
+                    Detta ger .NET-utvecklare samma möjligheter som Python och TypeScript-utvecklare har.
+                </aside>
+            </section>
+
+            <!-- Use cases -->
+            <section>
+                <h2>Användningsområden med v2 API</h2>
+                <ul>
+                    <li>Filbaserade kunskapsbaser (PDF, CSV) med RAG</li>
+                    <li>OCR-driven dokumentprocessering och extraktion</li>
+                    <li>Automatiserad kundsupport med reranking</li>
+                    <li>Content generation med model fallbacks</li>
+                    <li>Semantisk sökning med custom embeddings</li>
+                    <li>Fine-tuning datasets från produktionsdata</li>
+                    <li>Cost tracking och usage analytics</li>
+                    <li>Automatisering av arbetsflöden med agents</li>
+                </ul>
+
+                <aside class="notes">
+                    v2 API öppnar upp för nya användningsområden.
+
+                    Filbaserade kunskapsbaser gör det enkelt att ladda upp hela PDF:er eller CSV-filer direkt, utan att behöva chunka och indexera manuellt.
+
+                    OCR API möjliggör extraktion av text från skannade dokument, fakturor och handskrivna anteckningar.
+
+                    Rerank API förbättrar sökresultat genom att omrangordna baserat på relevans, vilket ger bättre RAG-resultat.
+
+                    Model aliases med fallbacks ger högre tillförlitlighet - om GPT-4 är otillgänglig faller systemet automatiskt tillbaka.
+
+                    Datasets API låter dig samla träningsdata från produktion för fine-tuning.
+
+                    Analytics API ger cost tracking och usage insights som är kritiska för produktionssystem.
+                </aside>
+            </section>
+
+            <!-- Teknisk stack -->
+            <section>
+                <h2>Teknisk implementation</h2>
+                <ul>
+                    <li>.NET 8.0 med nullable reference types</li>
+                    <li>Newtonsoft.Json för serialisering</li>
+                    <li>HttpClient med retry-logik</li>
+                    <li>IAsyncEnumerable för streaming</li>
+                    <li>Reflection för tool discovery</li>
+                    <li>Fullständig v2 API-implementation (11 endpoints)</li>
+                    <li>Modulär arkitektur med separata Models-projekt</li>
+                </ul>
+
+                <aside class="notes">
+                    OpperSharp är byggt för .NET 8.0, som är en Long Term Support-version.
+
+                    Nullable reference types är aktiverat i alla projekt för att fånga null-relaterade fel vid kompilering.
+
+                    Newtonsoft.Json används för serialisering med flexibel hantering av JSON-properties.
+
+                    Retry-logiken hanterar transient errors automatiskt med exponential backoff.
+
+                    IAsyncEnumerable är .NET:s idiomatiska sätt att hantera asynkron streaming.
+
+                    Alla 11 v2 API-endpoints är implementerade, inklusive nya funktioner som Knowledge, Datasets, Embeddings, Models, OCR, Rerank och Analytics.
+                </aside>
+            </section>
+
+            <!-- Begränsningar -->
+            <section>
+                <h2>Begränsningar</h2>
+                <ul>
+                    <li>Kräver Opper API-konto och API-nyckel</li>
+                    <li>Inte officiellt supportad av Opper</li>
+                    <li>Ännu inte publicerad på NuGet</li>
+                    <li>Dokumentation finns primärt i kodkommentarer</li>
+                    <li>Test coverage kunde vara mer omfattande</li>
+                </ul>
+
+                <aside class="notes">
+                    För transparensens skull finns det några begränsningar att vara medveten om.
+
+                    OpperSharp kräver ett Opper-konto. Opper har en free tier för utveckling och testning, men production-användning medför kostnader baserat på användning.
+
+                    Detta är inte en officiell SDK från Opper, vilket innebär att supporten kommer från mig och eventuell community, inte från Oppers team.
+
+                    SDK:n är inte på NuGet än, vilket innebär manuell hantering av projektreferenser.
+
+                    Dokumentation finns i form av XML-kommentarer i koden som ger IntelliSense, men mer omfattande guides och tutorials skulle vara värdefulla.
+
+                    Test coverage finns för huvudfunktionaliteten men inte för alla edge cases.
+                </aside>
+            </section>
+
+            <!-- Open source -->
+            <section>
+                <h2>Open source</h2>
+                <p>Projektet är MIT-licensierat på GitHub</p>
+                <ul>
+                    <li>Pull requests välkomnas</li>
+                    <li>Issues för bugrapporter och feature requests</li>
+                    <li>Öppet för diskussion om arkitektur och design</li>
+                </ul>
+
+                <aside class="notes">
+                    OpperSharp är open source under MIT-licens, vilket innebär fri användning även i kommersiella projekt.
+
+                    Bidrag i form av pull requests är välkomna. Om någon hittar buggar eller har förbättringar är det uppskattat.
+
+                    GitHub Issues är rätt plats för buggrapporter och för att diskutera nya features.
+
+                    Jag är öppen för diskussioner om arkitekturbeslut och designval. Det finns säkert förbättringar som kan göras.
+                </aside>
+            </section>
+
+            <!-- Framtida utveckling -->
+            <section>
+                <h2>Status och framtida utveckling</h2>
+                <ul>
+                    <li><strong>✓ Klart:</strong> Komplett v2 API-implementation (11 endpoints)</li>
+                    <li><strong>✓ Klart:</strong> Backwards compatibility med v1 Indexes</li>
+                    <li><strong>Nästa:</strong> NuGet-publicering vid tillräckligt intresse</li>
+                    <li><strong>Nästa:</strong> Utökade exempel med v2-funktioner</li>
+                    <li><strong>Framtid:</strong> Source Generators för optimerad tool discovery</li>
+                </ul>
+
+                <aside class="notes">
+                    v2 API-migrationen är komplett - alla 11 endpoints är implementerade och testade.
+
+                    Backwards compatibility säkerställs genom att behålla IndexesClient som deprecated, så befintlig kod fungerar.
+
+                    NuGet-publicering är nästa stora steg, vilket skulle förenkla distribution.
+
+                    Exempel-applikationer som visar v2-funktioner (OCR, Rerank, Model Aliases etc) skulle hjälpa utvecklare att komma igång.
+
+                    Source Generators skulle optimera agent tool discovery vid compile-time istället för runtime reflection.
+                </aside>
+            </section>
+
+            <!-- Dokumentation -->
+            <section>
+                <h2>Dokumentation</h2>
+                <ul>
+                    <li><strong>GitHub Repository:</strong> Källkod och projekt-struktur</li>
+                    <li><strong>SDK-Usage-Examples.md:</strong> Jämförelser REST API vs SDK</li>
+                    <li><strong>QuickStart-Guide.md:</strong> Praktiska exempel för vanliga scenarion</li>
+                    <li><strong>OpperSharp-Complete-Overview.md:</strong> Teknisk djupdykning</li>
+                </ul>
+
+                <aside class="notes">
+                    Dokumentationen finns i flera delar.
+
+                    GitHub-repot innehåller all källkod med XML-kommentarer som ger IntelliSense-dokumentation.
+
+                    SDK-Usage-Examples visar konkreta jämförelser mellan att använda REST API direkt och att använda OpperSharp. Detta illustrerar värdet av SDK:n.
+
+                    QuickStart-Guide innehåller tio praktiska exempel för vanliga scenarion som RAG, streaming, agents osv.
+
+                    Complete Overview-dokumentet går djupare in på arkitektur, designbeslut och jämförelser med Python SDK.
+                </aside>
+            </section>
+
+            <!-- Resurser -->
+            <section>
+                <h2>Resurser</h2>
+                <ul>
+                    <li><strong>OpperSharp GitHub:</strong> github.com/user/OpperSharp</li>
+                    <li><strong>Opper Documentation:</strong> docs.opper.ai</li>
+                    <li><strong>Opper Platform:</strong> opper.ai</li>
+                </ul>
+
+                <aside class="notes">
+                    För mer information finns flera resurser tillgängliga.
+
+                    OpperSharp GitHub-repot innehåller källkod, dokumentation och exempel.
+
+                    Oppers officiella dokumentation är nödvändig för att förstå plattformen och API:et i detalj. SDK:n är ett verktyg för att använda API:et, men förståelse för underliggande funktionalitet är viktig.
+
+                    Opper-plattformen själv är där man skapar konto, definierar functions, skapar indexes och hanterar projekt.
+                </aside>
+            </section>
+
+            <!-- Frågor -->
+            <section>
+                <h2>Frågor</h2>
+
+                <aside class="notes">
+                    Vanliga frågor som kan komma upp:
+
+                    <strong>Q: Varför inte bara använda OpenAI API direkt?</strong>
+                    A: Opper tillhandahåller mer än bara LLM-anrop. Det inkluderar RAG-infrastruktur, tracing, agent framework och hantering av prompts. Detta är värdefulla funktioner för produktionssystem.
+
+                    <strong>Q: Vad kostar Opper?</strong>
+                    A: Opper har usage-baserad prissättning. Det finns en free tier för utveckling. För production beror kostnaden på användning och vilka AI-modeller man använder.
+
+                    <strong>Q: Kan jag self-hosta?</strong>
+                    A: Nej, Opper är en managed cloud service. För vissa företag kan detta vara en begränsning, men det innebär också att man slipper hantera infrastruktur.
+
+                    <strong>Q: Prestanda?</strong>
+                    A: Prestanda beror på Opper API och underliggande AI-modeller. Typiska function calls tar 200-1000ms beroende på komplexitet. Streaming ger lägre perceived latency.
+
+                    <strong>Q: Stöd för äldre .NET-versioner?</strong>
+                    A: SDK:n är byggd för .NET 8, men bör fungera på .NET 6 och 7 med mindre justeringar. .NET Framework stöds inte.
+                </aside>
+            </section>
+
+            <!-- Avslutning -->
+            <section>
+                <h1>Tack</h1>
+                <p>Frågor och feedback välkomnas</p>
+
+                <aside class="notes">
+                    Tack för uppmärksamheten.
+
+                    Jag tar gärna emot frågor, feedback eller diskussioner om användningsområden.
+
+                    För de som är intresserade av att testa OpperSharp finns all information på GitHub.
+                </aside>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/notes/notes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: true,
+            plugins: [ RevealNotes, RevealHighlight ],
+            width: 1200,
+            height: 700
+        });
+    </script>
+</body>
+</html>

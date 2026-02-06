@@ -2,6 +2,8 @@
 using OpperSharp.Exceptions;
 using OpperSharp.Models.Common;
 using OpperSharp.Models.Functions;
+using OpperSharp.Utilities.Enums;
+using OpperSharp.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,30 +22,51 @@ namespace OpperSharp.Clients
 	public class FunctionsClient
 	{
 		private readonly HttpClient _httpClient;
+		private readonly string _callEndpoint;
+		private readonly string _functionsEndpoint;
 
 		public FunctionsClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
+
+			_callEndpoint = _httpClient.BaseAddress + EndPoints.Calls.GetDescription();
+			_functionsEndpoint = _httpClient.BaseAddress + EndPoints.Functions.GetDescription();
 		}
 
 		/// <summary>
 		/// Call a function with the given input.
+		/// Supports both named functions (with path) and ad-hoc calls (with options.Name and options.Instructions).
 		/// </summary>
 		public async Task<OpperFunctionResponse> CallAsync(
-			string path,
+			string? path,
 			Dictionary<string, object> input,
 			OpperCallOptions? options = null,
 			CancellationToken cancellationToken = default)
 		{
-			if (string.IsNullOrWhiteSpace(path))
-				throw new ArgumentException("Function path cannot be null or empty", nameof(path));
-
 			options ??= new OpperCallOptions();
+
+			// Determine if this is an ad-hoc call or a named function call
+			bool isAdHocCall = string.IsNullOrWhiteSpace(path) && !string.IsNullOrWhiteSpace(options.Name);
 
 			var requestBody = new Dictionary<string, object>
 			{
 				["input"] = input
 			};
+
+			// For ad-hoc calls, include name and instructions in the request body
+			if (isAdHocCall)
+			{
+				requestBody["name"] = options.Name!;
+
+				if (!string.IsNullOrWhiteSpace(options.Instructions))
+					requestBody["instructions"] = options.Instructions;
+			}
+			else if (string.IsNullOrWhiteSpace(path))
+			{
+				throw new ArgumentException(
+					"Either path must be provided (for named function calls) or options.Name must be set (for ad-hoc calls)",
+					nameof(path));
+			}
 
 			if (options.Context != null)
 				requestBody["context"] = options.Context;
@@ -63,14 +86,24 @@ namespace OpperSharp.Clients
 			if (options.Metadata != null)
 				requestBody["metadata"] = options.Metadata;
 
+			if (options.Tools != null && options.Tools.Count > 0)
+				requestBody["tools"] = options.Tools;
+
+			var jsonBody = JsonConvert.SerializeObject(requestBody);
+
 			var content = new StringContent(
-				JsonConvert.SerializeObject(requestBody),
+				jsonBody,
 				Encoding.UTF8,
 				"application/json"
 			);
 
+			// Choose endpoint based on call type
+			string endpoint = isAdHocCall
+				? _callEndpoint  // POST /v2/call (ad-hoc)
+				: $"{_callEndpoint}/{path}";  // POST /v2/call/{path} (named function)
+
 			var response = await _httpClient.PostAsync(
-				$"/v1/call/{path}",
+				endpoint,
 				content,
 				cancellationToken
 			);
@@ -83,7 +116,7 @@ namespace OpperSharp.Clients
 					$"Function call failed: {response.StatusCode}",
 					responseString,
 					(int)response.StatusCode,
-					$"/v1/call/{path}"
+					endpoint
 				);
 			}
 
@@ -95,15 +128,22 @@ namespace OpperSharp.Clients
 		/// Call a function with streaming response.
 		/// </summary>
 		public async IAsyncEnumerable<OpperStreamChunk> CallStreamAsync(
-			string path,
+			string? path,
 			Dictionary<string, object> input,
 			OpperCallOptions? options = null,
 			[EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
-			if (string.IsNullOrWhiteSpace(path))
-				throw new ArgumentException("Function path cannot be null or empty", nameof(path));
-
 			options ??= new OpperCallOptions();
+
+			// Determine if this is an ad-hoc call (no path, but has Name)
+			bool isAdHocCall = string.IsNullOrWhiteSpace(path) && !string.IsNullOrWhiteSpace(options.Name);
+
+			// Validate: either path or (Name + Instructions) must be provided
+			if (string.IsNullOrWhiteSpace(path) && string.IsNullOrWhiteSpace(options.Name))
+				throw new ArgumentException("Either function path or Name (for ad-hoc calls) must be provided");
+
+			if (isAdHocCall && string.IsNullOrWhiteSpace(options.Instructions))
+				throw new ArgumentException("Instructions are required for ad-hoc function calls");
 
 			var requestBody = new Dictionary<string, object>
 			{
@@ -111,11 +151,31 @@ namespace OpperSharp.Clients
 				["stream"] = true
 			};
 
+			// For ad-hoc calls, include name and instructions in request body
+			if (isAdHocCall)
+			{
+				requestBody["name"] = options.Name!;
+				if (!string.IsNullOrWhiteSpace(options.Instructions))
+					requestBody["instructions"] = options.Instructions;
+			}
+
 			if (options.Context != null)
 				requestBody["context"] = options.Context;
 
 			if (options.ParentSpanId != null)
 				requestBody["parent_span_id"] = options.ParentSpanId;
+
+			if (options.Model != null)
+				requestBody["model"] = options.Model;
+
+			if (options.Temperature.HasValue)
+				requestBody["temperature"] = options.Temperature.Value;
+
+			if (options.Metadata != null)
+				requestBody["metadata"] = options.Metadata;
+
+			if (options.Tools != null && options.Tools.Count > 0)
+				requestBody["tools"] = options.Tools;
 
 			var content = new StringContent(
 				JsonConvert.SerializeObject(requestBody),
@@ -123,7 +183,12 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var request = new HttpRequestMessage(HttpMethod.Post, $"/v1/call/{path}")
+			// Choose endpoint based on call type
+			string endpoint = isAdHocCall
+				? _callEndpoint  // POST /v2/call (ad-hoc)
+				: $"{_callEndpoint}/{path}";  // POST /v2/call/{path} (named function)
+
+			var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
 			{
 				Content = content
 			};
@@ -198,7 +263,7 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var response = await _httpClient.PostAsync("/v1/functions", content, cancellationToken);
+			var response = await _httpClient.PostAsync(_functionsEndpoint, content, cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -207,7 +272,7 @@ namespace OpperSharp.Clients
 					$"Failed to create function: {response.StatusCode}",
 					responseString,
 					(int)response.StatusCode,
-					"/v1/functions"
+					_functionsEndpoint
 				);
 			}
 
@@ -233,7 +298,7 @@ namespace OpperSharp.Clients
 			);
 
 			var response = await _httpClient.PutAsync(
-				$"/v1/functions/{path}",
+				$"{_functionsEndpoint}/{path}",
 				content,
 				cancellationToken
 			);
@@ -260,7 +325,7 @@ namespace OpperSharp.Clients
 			string path,
 			CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.GetAsync($"/v1/functions/{path}", cancellationToken);
+			var response = await _httpClient.GetAsync($"{_functionsEndpoint}/{path}", cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -281,7 +346,7 @@ namespace OpperSharp.Clients
 		/// </summary>
 		public async Task<List<OpperFunction>> ListAsync(CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.GetAsync("/v1/functions", cancellationToken);
+			var response = await _httpClient.GetAsync(_functionsEndpoint, cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -302,7 +367,7 @@ namespace OpperSharp.Clients
 		/// </summary>
 		public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.DeleteAsync($"/v1/functions/{path}", cancellationToken);
+			var response = await _httpClient.DeleteAsync($"{_functionsEndpoint}/{path}", cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
 			{
