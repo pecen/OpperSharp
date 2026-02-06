@@ -392,11 +392,12 @@ Then calculate what 18% employer tax on that total would be.";
 			var topic = ReadLine() ?? "a robot learning to paint";
 			WriteLine();
 
-			WriteLine("AI: ");
-			Write("    ");
+			WriteLine("Generating story...");
+			WriteLine();
 
 			// Use ad-hoc mode (no named function required)
-			await foreach (var chunk in _client!.Functions.CallStreamAsync(
+			// Note: Streaming doesn't appear to work with ad-hoc calls, using regular CallAsync instead
+			var response = await _client!.Functions.CallAsync(
 				path: null,  // Ad-hoc mode
 				input: new Dictionary<string, object>
 				{
@@ -409,15 +410,12 @@ Then calculate what 18% employer tax on that total would be.";
 					Model = "anthropic/claude-sonnet-4.5",
 					Temperature = 0.8
 				}
-			))
-			{
-				if (chunk.Delta != null)
-				{
-					Write(chunk.Delta);
-				}
-			}
+			);
 
+			WriteLine("AI: ");
+			WriteLine(response.Message);
 			WriteLine();
+			WriteLine($"Tokens: {response.Usage?.TotalTokens}");
 		}
 
 		static async Task TestChatAPI()
