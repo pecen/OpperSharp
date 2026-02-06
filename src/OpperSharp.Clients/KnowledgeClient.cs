@@ -302,6 +302,11 @@ namespace OpperSharp.Clients
 				);
 			}
 
+			// DEBUG: Log raw response to see what API is actually returning
+			Console.WriteLine("DEBUG - ListFiles raw response:");
+			Console.WriteLine(responseString);
+			Console.WriteLine("---");
+
 			var result = JsonConvert.DeserializeObject<OpperListResponse<OpperKnowledgeFile>>(responseString);
 			return result?.Data ?? new List<OpperKnowledgeFile>();
 		}
