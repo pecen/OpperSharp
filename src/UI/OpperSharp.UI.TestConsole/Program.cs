@@ -1199,24 +1199,21 @@ Plats: Hybrid (Stockholm)
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "consultant-matcher-scale",
-			Instructions = @"Match consultants to .NET 8 modernization project. Requirements: C#, .NET, Azure, Microservices, 8+ years.
+			Instructions = @"Call these 9 tools immediately in your first response:
 
-FIRST RESPONSE: Call get_consultants with input: ""all""
+1. get_consultants with input: ""all""
+2. calculate_match_score with input: {""consultantId"": ""C001"", ""requirements"": ""C# .NET Azure Microservices""}
+3. calculate_match_score with input: {""consultantId"": ""C003"", ""requirements"": ""C# .NET Azure Microservices""}
+4. calculate_match_score with input: {""consultantId"": ""C006"", ""requirements"": ""C# .NET Azure Microservices""}
+5. calculate_match_score with input: {""consultantId"": ""C010"", ""requirements"": ""C# .NET Azure Microservices""}
+6. calculate_match_score with input: {""consultantId"": ""C011"", ""requirements"": ""C# .NET Azure Microservices""}
+7. calculate_match_score with input: {""consultantId"": ""C016"", ""requirements"": ""C# .NET Azure Microservices""}
+8. calculate_match_score with input: {""consultantId"": ""C021"", ""requirements"": ""C# .NET Azure Microservices""}
+9. calculate_match_score with input: {""consultantId"": ""C022"", ""requirements"": ""C# .NET Azure Microservices""}
 
-SECOND RESPONSE: After receiving consultant data, call these 8 tools immediately:
+After tools execute, use the consultant data and scores to provide recommendations.
 
-1. calculate_match_score with input: {""consultantId"": ""C001"", ""requirements"": ""C# .NET Azure Microservices""}
-2. calculate_match_score with input: {""consultantId"": ""C003"", ""requirements"": ""C# .NET Azure Microservices""}
-3. calculate_match_score with input: {""consultantId"": ""C006"", ""requirements"": ""C# .NET Azure Microservices""}
-4. calculate_match_score with input: {""consultantId"": ""C010"", ""requirements"": ""C# .NET Azure Microservices""}
-5. calculate_match_score with input: {""consultantId"": ""C011"", ""requirements"": ""C# .NET Azure Microservices""}
-6. calculate_match_score with input: {""consultantId"": ""C016"", ""requirements"": ""C# .NET Azure Microservices""}
-7. calculate_match_score with input: {""consultantId"": ""C021"", ""requirements"": ""C# .NET Azure Microservices""}
-8. calculate_match_score with input: {""consultantId"": ""C022"", ""requirements"": ""C# .NET Azure Microservices""}
-
-DO NOT describe or explain - JUST CALL THE 8 TOOLS NOW.
-
-THIRD RESPONSE: After receiving scores, provide recommendations.",
+DO NOT explain or describe - JUST CALL THE 9 TOOLS NOW.",
 			MaxIterations = 15,
 			Model = "anthropic/claude-opus-4.5"
 		})
