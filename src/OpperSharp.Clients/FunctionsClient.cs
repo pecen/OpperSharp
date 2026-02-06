@@ -128,21 +128,36 @@ namespace OpperSharp.Clients
 		/// Call a function with streaming response.
 		/// </summary>
 		public async IAsyncEnumerable<OpperStreamChunk> CallStreamAsync(
-			string path,
+			string? path,
 			Dictionary<string, object> input,
 			OpperCallOptions? options = null,
 			[EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
-			if (string.IsNullOrWhiteSpace(path))
-				throw new ArgumentException("Function path cannot be null or empty", nameof(path));
-
 			options ??= new OpperCallOptions();
+
+			// Determine if this is an ad-hoc call (no path, but has Name)
+			bool isAdHocCall = string.IsNullOrWhiteSpace(path) && !string.IsNullOrWhiteSpace(options.Name);
+
+			// Validate: either path or (Name + Instructions) must be provided
+			if (string.IsNullOrWhiteSpace(path) && string.IsNullOrWhiteSpace(options.Name))
+				throw new ArgumentException("Either function path or Name (for ad-hoc calls) must be provided");
+
+			if (isAdHocCall && string.IsNullOrWhiteSpace(options.Instructions))
+				throw new ArgumentException("Instructions are required for ad-hoc function calls");
 
 			var requestBody = new Dictionary<string, object>
 			{
 				["input"] = input,
 				["stream"] = true
 			};
+
+			// For ad-hoc calls, include name and instructions in request body
+			if (isAdHocCall)
+			{
+				requestBody["name"] = options.Name!;
+				if (!string.IsNullOrWhiteSpace(options.Instructions))
+					requestBody["instructions"] = options.Instructions;
+			}
 
 			if (options.Context != null)
 				requestBody["context"] = options.Context;
@@ -168,7 +183,12 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var request = new HttpRequestMessage(HttpMethod.Post, $"{_callEndpoint}/{path}")
+			// Choose endpoint based on call type
+			string endpoint = isAdHocCall
+				? _callEndpoint  // POST /v2/call (ad-hoc)
+				: $"{_callEndpoint}/{path}";  // POST /v2/call/{path} (named function)
+
+			var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
 			{
 				Content = content
 			};

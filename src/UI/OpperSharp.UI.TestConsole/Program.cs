@@ -359,15 +359,18 @@ Then calculate what 18% employer tax on that total would be.";
 
 			WriteLine("Calling Opper function...");
 
+			// Use ad-hoc mode (no named function required)
 			var response = await _client!.Functions.CallAsync(
-				path: "general-qa", // You need to create this function in Opper
+				path: null,  // Ad-hoc mode
 				input: new Dictionary<string, object>
 				{
 					["question"] = question
 				},
 				options: new OpperCallOptions
 				{
-					Model = "gpt-4",
+					Name = "general-qa",
+					Instructions = "You are a helpful assistant that answers general questions clearly and concisely.",
+					Model = "anthropic/claude-sonnet-4",
 					Temperature = 0.7
 				}
 			);
@@ -392,11 +395,19 @@ Then calculate what 18% employer tax on that total would be.";
 			WriteLine("AI: ");
 			Write("    ");
 
+			// Use ad-hoc mode (no named function required)
 			await foreach (var chunk in _client!.Functions.CallStreamAsync(
-				path: "story-generator", // You need to create this in Opper
+				path: null,  // Ad-hoc mode
 				input: new Dictionary<string, object>
 				{
 					["topic"] = topic
+				},
+				options: new OpperCallOptions
+				{
+					Name = "story-generator",
+					Instructions = "You are a creative writer. Generate engaging short stories based on the given topic. Keep the story concise (2-3 paragraphs).",
+					Model = "anthropic/claude-sonnet-4.5",
+					Temperature = 0.8
 				}
 			))
 			{
@@ -416,7 +427,6 @@ Then calculate what 18% employer tax on that total would be.";
 			WriteLine("═══════════════════════════════════════");
 			WriteLine();
 			WriteLine("Simple conversational chat. Type 'quit' to exit.");
-			WriteLine("NOTE: This uses a 'chat-assistant' function in Opper.");
 			WriteLine();
 
 			var conversationHistory = new List<string>();
@@ -430,8 +440,9 @@ Then calculate what 18% employer tax on that total would be.";
 
 				conversationHistory.Add($"User: {input}");
 
+				// Use ad-hoc mode (no named function required)
 				var response = await _client!.Functions.CallAsync(
-					path: "chat-assistant",
+					path: null,  // Ad-hoc mode
 					input: new Dictionary<string, object>
 					{
 						["message"] = input,
@@ -439,7 +450,22 @@ Then calculate what 18% employer tax on that total would be.";
 					},
 					options: new OpperCallOptions
 					{
-						Model = "gpt-4",
+						Name = "chat-assistant",
+						Instructions = @"You are a helpful AI assistant for conversational chat.
+
+Guidelines:
+- Be friendly and concise
+- Consider the conversation history when responding
+- Ask clarifying questions when needed
+- Provide helpful, relevant answers
+- Maintain context throughout the conversation
+
+The user will provide:
+- ""message"": Their current message
+- ""history"": Previous conversation (if any)
+
+Respond naturally and conversationally.",
+						Model = "anthropic/claude-sonnet-4.5",
 						Temperature = 0.8
 					}
 				);
