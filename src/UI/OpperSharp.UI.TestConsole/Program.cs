@@ -1199,18 +1199,20 @@ Plats: Hybrid (Stockholm)
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "consultant-matcher-scale",
-			Instructions = @"STEP 1: Call get_consultants with input ""all""
+			Instructions = @"Your task: Find best consultants for a .NET 8 modernization project.
 
-STEP 2: After receiving the 25 consultant profiles, analyze which ones match the requirements (C#, .NET 8, Azure, Microservices).
+ITERATION 1: Call get_consultants with input: ""all""
 
-STEP 3: In your NEXT response, call calculate_match_score for ALL promising candidates at once. Examples:
-- calculate_match_score with input: {""consultantId"": ""C001"", ""requirements"": ""C# .NET Azure Microservices""}
-- calculate_match_score with input: {""consultantId"": ""C011"", ""requirements"": ""C# .NET Azure Microservices""}
-(Make ALL scoring calls together in ONE response)
+ITERATION 2: After you receive the consultant data, IMMEDIATELY call calculate_match_score for the top 6 matching candidates. Call them ALL in the SAME response:
 
-STEP 4: After receiving scores, provide recommendations.
+calculate_match_score with input: {""consultantId"": ""C001"", ""requirements"": ""C# .NET Azure Microservices""}
+calculate_match_score with input: {""consultantId"": ""C003"", ""requirements"": ""C# .NET Azure Microservices""}
+calculate_match_score with input: {""consultantId"": ""C011"", ""requirements"": ""C# .NET Azure Microservices""}
+(... and so on for all 6 candidates)
 
-DO NOT estimate scores - ONLY use the calculate_match_score tool.",
+DO NOT write JSON as text - CALL THE TOOL. DO NOT describe - EXECUTE NOW.
+
+ITERATION 3: After receiving scores, provide final recommendations.",
 			MaxIterations = 15,
 			Model = "anthropic/claude-opus-4.5"
 		})
