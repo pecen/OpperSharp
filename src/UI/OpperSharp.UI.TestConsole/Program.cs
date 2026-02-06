@@ -775,6 +775,21 @@ Plats: Hybrid (Stockholm)
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "consultant-matcher",
+			OnProgress = (update) =>
+			{
+				WriteLine($"\n[Iteration {update.Iteration}]");
+				if (update.ToolCallCount > 0)
+				{
+					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+				}
+				if (!string.IsNullOrWhiteSpace(update.Message))
+				{
+					var preview = update.Message.Length > 150
+						? update.Message.Substring(0, 150) + "..."
+						: update.Message;
+					WriteLine($"  🤔 Agent: {preview}\n");
+				}
+			},
 				Instructions = @"You are an AI consultant matching system. You MUST use the provided tools to get data.
 
 CRITICAL RULES:
