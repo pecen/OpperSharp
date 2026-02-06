@@ -32,6 +32,7 @@
     <File Path="../doc/SDK-Usage-Examples.md" />
     <File Path="../doc/Setup-Functions-Guide-Swedish.md" />
     <File Path="../doc/v2-API-Migration-Analysis.md" />
+    <File Path="../doc/v2-Migration-Documentation-Updates.md" />
     <File Path="../README.md" />
   </Folder>
   <Project Path="OpperSharp.Agents/OpperSharp.Agents.csproj" Id="0de0bf97-b970-4638-acda-b7dbec0bb718" />
