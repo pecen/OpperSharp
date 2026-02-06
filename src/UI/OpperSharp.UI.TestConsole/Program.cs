@@ -1225,7 +1225,8 @@ This approach is much faster than scoring all 25 consultants.",
 			handler: (string _) =>
 			{
 				return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions { WriteIndented = true }));
-			}
+			},
+			inputDescription: "Any query string (e.g., 'all', 'list', 'available'). The tool always returns all consultants."
 		))
 		.WithTool(AgentTool.Create(
 			name: "calculate_match_score",
@@ -1248,7 +1249,7 @@ This approach is much faster than scoring all 25 consultants.",
 
 				return Task.FromResult(score.ToString());
 			},
-			inputDescription: "JSON: {\"consultantId\": \"C001\", \"requirements\": \"...\"}"
+			inputDescription: "JSON string with format: {\"consultantId\": \"C001\", \"requirements\": \"description of requirements\"}"
 		));
 
 		var response = await agent.RunAsync($@"Find the best consultants for this assignment:
@@ -1300,7 +1301,8 @@ When a tool fails: Try alternatives, use partial data, or explain what you could
 				if (random.Next(100) < 20)
 					return Task.FromResult($"{{\"status\":\"partial\",\"data\":\"Incomplete: {query}\"}}");
 				return Task.FromResult($"{{\"status\":\"success\",\"data\":\"Results for {query}\"}}");
-			}
+			},
+			inputDescription: "Search query for data retrieval (e.g., 'customer_12345', 'user data')"
 		))
 		.WithTool(AgentTool.Create(
 			name: "flaky_calculation",
@@ -1311,7 +1313,8 @@ When a tool fails: Try alternatives, use partial data, or explain what you could
 				if (random.Next(100) < 25)
 					throw new InvalidOperationException($"Service unavailable (attempt #{callCount})");
 				return Task.FromResult($"Result: {random.Next(100, 1000)}");
-			}
+			},
+			inputDescription: "Mathematical expression or calculation request (e.g., 'account balance', '100 + 200')"
 		))
 		.WithTool(AgentTool.Create(
 			name: "slow_service",
@@ -1323,7 +1326,8 @@ When a tool fails: Try alternatives, use partial data, or explain what you could
 				if (random.Next(100) < 20)
 					throw new TimeoutException($"Timeout after 30s (attempt #{callCount})");
 				return $"{{\"status\":\"ok\",\"data\":\"Info for {request}\"}}";
-			}
+			},
+			inputDescription: "Information request for slow service (e.g., 'transaction history', 'account details')"
 		));
 
 		var question = @"I need you to:
