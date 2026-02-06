@@ -735,8 +735,10 @@ CRITICAL RULES:
 WORKFLOW:
 1. Call get_consultants with input=""all"" to retrieve the consultant list
 2. Wait for the tool result (you will receive the actual consultant data)
-3. For each consultant in the result, call calculate_match_score with proper JSON
-4. Analyze the scores and provide recommendations
+3. In the SAME response, call calculate_match_score for ALL consultants at once (make multiple tool calls in one message)
+4. After receiving all scores, analyze and provide recommendations
+
+IMPORTANT: After step 2, you must call calculate_match_score for EVERY consultant in the list within the SAME iteration. Do NOT call them one at a time across multiple iterations.
 
 TOOL DETAILS:
 
