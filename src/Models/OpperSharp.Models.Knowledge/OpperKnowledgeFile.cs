@@ -12,7 +12,7 @@ namespace OpperSharp.Models.Knowledge
 		[JsonProperty("id")]
 		public string Id { get; set; } = string.Empty;
 
-		[JsonProperty("filename")]
+		[JsonProperty("original_filename")]
 		public string Filename { get; set; } = string.Empty;
 
 		[JsonProperty("content_type")]
@@ -23,6 +23,9 @@ namespace OpperSharp.Models.Knowledge
 
 		[JsonProperty("status")]
 		public string? Status { get; set; }
+
+		[JsonProperty("document_id")]
+		public long? DocumentId { get; set; }
 
 		[JsonProperty("metadata")]
 		public Dictionary<string, object>? Metadata { get; set; }
