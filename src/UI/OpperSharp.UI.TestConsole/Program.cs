@@ -97,6 +97,8 @@ namespace OpperSharp.UI.TestConsole
 
 						// CONSULTANT MATCHING (End goal)
 						case "10": await TestConsultantMatching(); break;
+					case "11": await TestScaleConsultantMatching(); break;
+					case "12": await TestErrorHandling(); break;
 
 						case "94": await TestAdHocFunctionCall(); break;
 						case "95": await DebugGetFunction(); break;
@@ -155,6 +157,8 @@ namespace OpperSharp.UI.TestConsole
 			WriteLine();
 			WriteLine("  CONSULTANT MATCHING:");
 			WriteLine("  10) Match Consultant to Assignment");
+			WriteLine("  11) Scale Test: 25 Consultants with Rich CV Data");
+			WriteLine("  12) Error Handling: Tools with Failures");
 			WriteLine();
 			WriteLine("  DEBUG:");
 			WriteLine("  94) Test Ad-Hoc Function Call (inline/unnamed)");
@@ -849,7 +853,504 @@ Provide a ranked recommendation with reasoning.";
 			WriteLine();
 			WriteLine($"Analysis completed in {response.Iterations} iterations using {response.ToolCalls.Count} tool calls.");
 		}
+	static async Task TestScaleConsultantMatching()
+	{
+		WriteLine("═══════════════════════════════════════");
+		WriteLine("SCALE TEST: 25 Consultants with Rich CV Data");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+		WriteLine("This tests the agent's ability to handle a realistic number of consultants");
+		WriteLine("with complex CV data including skills, projects, certifications, etc.");
+		WriteLine();
 
+		// Generate 25 realistic consultant profiles
+		var consultants = new[]
+		{
+			new {
+				Id = "C001", Name = "Anna Andersson", Title = "Senior .NET Developer",
+				Skills = new[] { "C#", ".NET 8", "Azure", "Microservices", "REST API", "SQL Server", "Docker" },
+				Experience = "10 years", Rate = "1200 SEK/h", Availability = "Immediate",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"E-commerce platform migration to .NET 8 (2023-2024)",
+					"Azure microservices architecture (2022-2023)",
+					"Banking API development (2020-2022)"
+				},
+				Certifications = new[] { "Azure Solutions Architect", "Microsoft Certified: Azure Developer" }
+			},
+			new {
+				Id = "C002", Name = "Erik Bergström", Title = "Full Stack Developer",
+				Skills = new[] { "React", "Node.js", "TypeScript", "MongoDB", "AWS", "Docker", "GraphQL" },
+				Experience = "7 years", Rate = "1050 SEK/h", Availability = "2 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"SaaS dashboard development (2023-2024)",
+					"E-learning platform (2021-2023)",
+					"Mobile app backend (2020-2021)"
+				},
+				Certifications = new[] { "AWS Certified Developer" }
+			},
+			new {
+				Id = "C003", Name = "Maria Carlsson", Title = "Solutions Architect",
+				Skills = new[] { "Architecture", "Cloud Design", "Azure", "AWS", "Kubernetes", "DevOps", "C#", "Python" },
+				Experience = "15 years", Rate = "1500 SEK/h", Availability = "1 month",
+				Languages = new[] { "Swedish", "English", "German" },
+				Projects = new[] {
+					"Multi-cloud strategy design (2023-2024)",
+					"Enterprise architecture modernization (2021-2023)",
+					"DevOps transformation (2019-2021)"
+				},
+				Certifications = new[] { "TOGAF 9", "AWS Solutions Architect Professional", "Azure Solutions Architect Expert" }
+			},
+			new {
+				Id = "C004", Name = "Lars Danielsson", Title = "Backend Developer",
+				Skills = new[] { "Java", "Spring Boot", "PostgreSQL", "Kafka", "Kubernetes", "REST API" },
+				Experience = "8 years", Rate = "1100 SEK/h", Availability = "3 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Payment processing system (2022-2024)",
+					"Event-driven microservices (2020-2022)",
+					"Legacy system modernization (2018-2020)"
+				},
+				Certifications = new[] { "Oracle Certified Professional" }
+			},
+			new {
+				Id = "C005", Name = "Sofia Eriksson", Title = "Frontend Developer",
+				Skills = new[] { "Vue.js", "React", "TypeScript", "CSS", "Webpack", "Jest" },
+				Experience = "5 years", Rate = "950 SEK/h", Availability = "Immediate",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Design system implementation (2023-2024)",
+					"Progressive web app (2022-2023)",
+					"Component library (2021-2022)"
+				},
+				Certifications = new[] { "Google UX Design Professional" }
+			},
+			new {
+				Id = "C006", Name = "Johan Fransson", Title = "DevOps Engineer",
+				Skills = new[] { "Kubernetes", "Docker", "Jenkins", "Terraform", "Azure", "GitLab CI/CD", "Python" },
+				Experience = "9 years", Rate = "1250 SEK/h", Availability = "2 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"CI/CD pipeline automation (2023-2024)",
+					"Infrastructure as Code migration (2021-2023)",
+					"Container orchestration (2019-2021)"
+				},
+				Certifications = new[] { "Certified Kubernetes Administrator", "Azure DevOps Engineer" }
+			},
+			new {
+				Id = "C007", Name = "Emma Gustafsson", Title = "Data Engineer",
+				Skills = new[] { "Python", "Spark", "Databricks", "Azure Data Factory", "SQL", "Power BI" },
+				Experience = "6 years", Rate = "1150 SEK/h", Availability = "1 week",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Data lake implementation (2023-2024)",
+					"ETL pipeline development (2021-2023)",
+					"Data warehouse migration (2020-2021)"
+				},
+				Certifications = new[] { "Databricks Certified Data Engineer" }
+			},
+			new {
+				Id = "C008", Name = "Oscar Hansen", Title = "Mobile Developer",
+				Skills = new[] { "Swift", "Kotlin", "React Native", "Flutter", "Firebase", "REST API" },
+				Experience = "7 years", Rate = "1100 SEK/h", Availability = "3 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Cross-platform mobile app (2023-2024)",
+					"iOS banking app (2021-2023)",
+					"Android e-commerce app (2019-2021)"
+				},
+				Certifications = new[] { "Google Mobile Web Specialist" }
+			},
+			new {
+				Id = "C009", Name = "Linnea Isaksson", Title = "Cloud Architect",
+				Skills = new[] { "Azure", "AWS", "GCP", "Cloud Security", "Networking", "Terraform", "ARM Templates" },
+				Experience = "12 years", Rate = "1400 SEK/h", Availability = "1 month",
+				Languages = new[] { "Swedish", "English", "French" },
+				Projects = new[] {
+					"Multi-cloud governance (2022-2024)",
+					"Cloud security framework (2020-2022)",
+					"Hybrid cloud architecture (2018-2020)"
+				},
+				Certifications = new[] { "Azure Solutions Architect Expert", "AWS Solutions Architect Professional", "CCSP" }
+			},
+			new {
+				Id = "C010", Name = "Viktor Johansson", Title = "QA Automation Engineer",
+				Skills = new[] { "Selenium", "Cypress", "JUnit", "TestNG", "Jenkins", "C#", "Java" },
+				Experience = "8 years", Rate = "1050 SEK/h", Availability = "2 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Test automation framework (2022-2024)",
+					"CI/CD test integration (2020-2022)",
+					"Performance testing (2018-2020)"
+				},
+				Certifications = new[] { "ISTQB Advanced Test Automation Engineer" }
+			},
+			new {
+				Id = "C011", Name = "Klara Karlsson", Title = ".NET Architect",
+				Skills = new[] { "C#", ".NET", "Azure", "Microservices", "DDD", "Event Sourcing", "CQRS" },
+				Experience = "14 years", Rate = "1450 SEK/h", Availability = "6 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Enterprise architecture redesign (2022-2024)",
+					"Domain-driven design implementation (2020-2022)",
+					"Microservices migration (2018-2020)"
+				},
+				Certifications = new[] { "Microsoft Certified: Azure Solutions Architect Expert" }
+			},
+			new {
+				Id = "C012", Name = "Nils Larsson", Title = "Security Engineer",
+				Skills = new[] { "Security", "Penetration Testing", "OWASP", "Azure Security", "Python", "PowerShell" },
+				Experience = "10 years", Rate = "1350 SEK/h", Availability = "4 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Security audit and remediation (2023-2024)",
+					"Zero trust architecture (2021-2023)",
+					"Threat modeling (2019-2021)"
+				},
+				Certifications = new[] { "CISSP", "CEH", "OSCP" }
+			},
+			new {
+				Id = "C013", Name = "Olivia Lindström", Title = "Scrum Master",
+				Skills = new[] { "Scrum", "Agile", "Jira", "Confluence", "Facilitation", "Coaching" },
+				Experience = "6 years", Rate = "1000 SEK/h", Availability = "Immediate",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Agile transformation (2022-2024)",
+					"Multi-team coordination (2020-2022)",
+					"Process improvement (2019-2020)"
+				},
+				Certifications = new[] { "Certified Scrum Master", "SAFe Agilist" }
+			},
+			new {
+				Id = "C014", Name = "Filip Magnusson", Title = "AI/ML Engineer",
+				Skills = new[] { "Python", "TensorFlow", "PyTorch", "Azure ML", "MLOps", "NLP", "Computer Vision" },
+				Experience = "5 years", Rate = "1300 SEK/h", Availability = "2 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Predictive maintenance ML model (2023-2024)",
+					"NLP chatbot development (2022-2023)",
+					"Image classification system (2021-2022)"
+				},
+				Certifications = new[] { "Azure AI Engineer Associate", "TensorFlow Developer" }
+			},
+			new {
+				Id = "C015", Name = "Elin Nilsson", Title = "Product Owner",
+				Skills = new[] { "Product Management", "Roadmapping", "Stakeholder Management", "Agile", "Data Analysis" },
+				Experience = "8 years", Rate = "1150 SEK/h", Availability = "1 month",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Product strategy and execution (2022-2024)",
+					"Feature prioritization (2020-2022)",
+					"User research and validation (2018-2020)"
+				},
+				Certifications = new[] { "Certified Scrum Product Owner", "Product Management Certificate" }
+			},
+			new {
+				Id = "C016", Name = "Gustav Olsson", Title = "Integration Specialist",
+				Skills = new[] { "Azure Integration Services", "Logic Apps", "Service Bus", "API Management", "BizTalk", "C#" },
+				Experience = "11 years", Rate = "1250 SEK/h", Availability = "3 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Enterprise integration platform (2022-2024)",
+					"Legacy system integration (2020-2022)",
+					"API gateway implementation (2018-2020)"
+				},
+				Certifications = new[] { "Microsoft Certified: Azure Integration Services" }
+			},
+			new {
+				Id = "C017", Name = "Ida Persson", Title = "UX Designer",
+				Skills = new[] { "UX Design", "UI Design", "Figma", "User Research", "Prototyping", "Accessibility" },
+				Experience = "7 years", Rate = "1100 SEK/h", Availability = "2 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Design system creation (2023-2024)",
+					"Mobile app redesign (2021-2023)",
+					"Usability testing (2019-2021)"
+				},
+				Certifications = new[] { "Nielsen Norman Group UX Certification" }
+			},
+			new {
+				Id = "C018", Name = "Alexander Pettersson", Title = "Site Reliability Engineer",
+				Skills = new[] { "Kubernetes", "Prometheus", "Grafana", "Linux", "Python", "Go", "Incident Management" },
+				Experience = "9 years", Rate = "1300 SEK/h", Availability = "4 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"SRE practices implementation (2022-2024)",
+					"Observability platform (2020-2022)",
+					"High availability design (2018-2020)"
+				},
+				Certifications = new[] { "Google Cloud Professional Cloud Architect" }
+			},
+			new {
+				Id = "C019", Name = "Maja Svensson", Title = "Business Analyst",
+				Skills = new[] { "Requirements Analysis", "Process Modeling", "SQL", "Power BI", "Stakeholder Management" },
+				Experience = "10 years", Rate = "1050 SEK/h", Availability = "Immediate",
+				Languages = new[] { "Swedish", "English", "Spanish" },
+				Projects = new[] {
+					"Business process optimization (2022-2024)",
+					"Requirements elicitation (2020-2022)",
+					"System integration analysis (2018-2020)"
+				},
+				Certifications = new[] { "CBAP", "PMI-PBA" }
+			},
+			new {
+				Id = "C020", Name = "Anton Söderberg", Title = "Platform Engineer",
+				Skills = new[] { "Kubernetes", "Terraform", "AWS", "Azure", "GitOps", "Helm", "Prometheus" },
+				Experience = "6 years", Rate = "1200 SEK/h", Availability = "1 week",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Internal developer platform (2023-2024)",
+					"Multi-tenant architecture (2021-2023)",
+					"Infrastructure automation (2020-2021)"
+				},
+				Certifications = new[] { "CKA", "AWS Solutions Architect" }
+			},
+			new {
+				Id = "C021", Name = "Ebba Strömberg", Title = "Tech Lead",
+				Skills = new[] { "Leadership", "C#", ".NET", "Azure", "Mentoring", "Architecture", "Agile" },
+				Experience = "13 years", Rate = "1400 SEK/h", Availability = "2 months",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Team leadership and mentoring (2021-2024)",
+					"Technical strategy (2019-2021)",
+					"Architecture decisions (2017-2019)"
+				},
+				Certifications = new[] { "Microsoft Certified: Azure Solutions Architect Expert" }
+			},
+			new {
+				Id = "C022", Name = "Hugo Wallin", Title = "Database Administrator",
+				Skills = new[] { "SQL Server", "PostgreSQL", "MySQL", "Database Tuning", "Backup & Recovery", "Azure SQL" },
+				Experience = "12 years", Rate = "1150 SEK/h", Availability = "3 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Database migration to Azure (2022-2024)",
+					"Performance optimization (2020-2022)",
+					"High availability setup (2018-2020)"
+				},
+				Certifications = new[] { "Microsoft Certified: Azure Database Administrator" }
+			},
+			new {
+				Id = "C023", Name = "Alice Wikström", Title = "Blockchain Developer",
+				Skills = new[] { "Solidity", "Ethereum", "Smart Contracts", "Web3", "Node.js", "React" },
+				Experience = "4 years", Rate = "1250 SEK/h", Availability = "2 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"DeFi platform development (2023-2024)",
+					"NFT marketplace (2022-2023)",
+					"Smart contract auditing (2021-2022)"
+				},
+				Certifications = new[] { "Certified Blockchain Developer" }
+			},
+			new {
+				Id = "C024", Name = "Elias Öberg", Title = "Game Developer",
+				Skills = new[] { "Unity", "C#", "Unreal Engine", "3D Graphics", "Game Design", "Multiplayer" },
+				Experience = "8 years", Rate = "1100 SEK/h", Availability = "4 weeks",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"Multiplayer game development (2022-2024)",
+					"VR experience (2020-2022)",
+					"Mobile game (2018-2020)"
+				},
+				Certifications = new[] { "Unity Certified Developer" }
+			},
+			new {
+				Id = "C025", Name = "Stella Åström", Title = "API Developer",
+				Skills = new[] { "REST API", "GraphQL", "Node.js", "Express", "MongoDB", "API Security", "Swagger" },
+				Experience = "6 years", Rate = "1050 SEK/h", Availability = "1 week",
+				Languages = new[] { "Swedish", "English" },
+				Projects = new[] {
+					"API gateway implementation (2023-2024)",
+					"Microservices API (2021-2023)",
+					"Third-party integrations (2019-2021)"
+				},
+				Certifications = new[] { "API Security Certified" }
+			}
+		};
+
+		var assignment = @"
+Vi söker en senior utvecklare för ett 6 månaders uppdrag.
+
+Projekt: Modernisering av befintligt .NET Framework system till .NET 8
+Krav:
+- Minst 8 års erfarenhet av C# och .NET
+- Erfarenhet av Azure
+- Erfarenhet av microservices-arkitektur
+- Goda kunskaper i svenska
+
+Önskemål:
+- Erfarenhet av REST API design
+- Kännedom om SQL Server
+- Kan börja inom 2 veckor
+
+Budget: Max 1300 SEK/timme
+Startdatum: Så snart som möjligt
+Längd: 6 månader
+Plats: Hybrid (Stockholm)
+";
+
+		WriteLine("ASSIGNMENT:");
+		WriteLine(assignment);
+		WriteLine();
+		WriteLine($"Searching through {consultants.Length} consultants...");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+
+		var agent = new Agent(_client!, new AgentOptions
+		{
+			Name = "consultant-matcher-scale",
+			Instructions = @"You are an AI consultant matching system working with a LARGE database.
+
+TOOLS AVAILABLE:
+1. get_consultants - Returns ALL consultants (there are 25 of them)
+2. calculate_match_score - Scores ONE consultant at a time
+
+EFFICIENT WORKFLOW (Important for performance):
+1. Call get_consultants to retrieve all 25 consultant profiles
+2. ANALYZE the data yourself - identify the top 5-7 most relevant candidates based on:
+   - Required skills (C#, .NET, Azure, Microservices)
+   - Experience level (8+ years)
+   - Rate (max 1300 SEK/h)
+   - Availability
+3. Call calculate_match_score ONLY for those top candidates (not all 25!)
+4. Rank and recommend
+
+This approach is much faster than scoring all 25 consultants.",
+			MaxIterations = 15,
+			Model = "anthropic/claude-opus-4.5"
+		})
+		.WithTool(AgentTool.Create(
+			name: "get_consultants",
+			description: "Retrieves ALL 25 consultant profiles with complete information",
+			handler: (string _) =>
+			{
+				return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions { WriteIndented = true }));
+			}
+		))
+		.WithTool(AgentTool.Create(
+			name: "calculate_match_score",
+			description: "Calculates match score (0-100) for ONE specific consultant",
+			handler: (string input) =>
+			{
+				var inputObj = JsonSerializer.Deserialize<Dictionary<string, string>>(input);
+				var consultantId = inputObj?.GetValueOrDefault("consultantId") ?? "";
+
+				var consultant = consultants.FirstOrDefault(c => c.Id == consultantId);
+				if (consultant == null) return Task.FromResult("0");
+
+				int score = 50;
+				if (consultant.Skills.Contains("C#")) score += 10;
+				if (consultant.Skills.Any(s => s.Contains(".NET"))) score += 10;
+				if (consultant.Skills.Contains("Azure")) score += 10;
+				if (consultant.Skills.Contains("Microservices")) score += 10;
+				if (int.TryParse(consultant.Experience.Split(' ')[0], out int years) && years >= 8) score += 5;
+				if (int.TryParse(consultant.Rate.Split(' ')[0], out int rate) && rate <= 1300) score += 5;
+
+				return Task.FromResult(score.ToString());
+			},
+			inputDescription: "JSON: {\"consultantId\": \"C001\", \"requirements\": \"...\"}"
+		));
+
+		var response = await agent.RunAsync($@"Find the best consultants for this assignment:
+
+{assignment}
+
+Remember: Get all consultants first, then score only the most promising ones.");
+
+		WriteLine("═══════════════════════════════════════");
+		WriteLine("AGENT RECOMMENDATION:");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine(response.Output);
+		WriteLine();
+		WriteLine($"Performance: {response.Iterations} iterations, {response.ToolCalls.Count} tool calls for {consultants.Length} consultants");
+	}
+
+	static async Task TestErrorHandling()
+	{
+		WriteLine("═══════════════════════════════════════");
+		WriteLine("ERROR HANDLING TEST: Tools with Failures");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine();
+		WriteLine("Tests agent resilience when tools fail, throw exceptions, or return errors.");
+		WriteLine();
+
+		var callCount = 0;
+		var random = new Random();
+
+		var agent = new Agent(_client!, new AgentOptions
+		{
+			Name = "error-handler",
+			Instructions = @"You are a resilient assistant. You have 3 unreliable tools:
+- unreliable_data_fetch: Sometimes fails with network errors
+- flaky_calculation: May throw exceptions
+- slow_service: Sometimes times out
+
+When a tool fails: Try alternatives, use partial data, or explain what you couldn't do.",
+			MaxIterations = 10,
+			Model = "anthropic/claude-opus-4.5"
+		})
+		.WithTool(AgentTool.Create(
+			name: "unreliable_data_fetch",
+			description: "Fetches data but may fail (30% failure rate)",
+			handler: (string query) =>
+			{
+				callCount++;
+				if (random.Next(100) < 30)
+					throw new Exception($"Network timeout (attempt #{callCount})");
+				if (random.Next(100) < 20)
+					return Task.FromResult($"{{\"status\":\"partial\",\"data\":\"Incomplete: {query}\"}}");
+				return Task.FromResult($"{{\"status\":\"success\",\"data\":\"Results for {query}\"}}");
+			}
+		))
+		.WithTool(AgentTool.Create(
+			name: "flaky_calculation",
+			description: "Performs calculations but may fail (25% failure rate)",
+			handler: (string expression) =>
+			{
+				callCount++;
+				if (random.Next(100) < 25)
+					throw new InvalidOperationException($"Service unavailable (attempt #{callCount})");
+				return Task.FromResult($"Result: {random.Next(100, 1000)}");
+			}
+		))
+		.WithTool(AgentTool.Create(
+			name: "slow_service",
+			description: "Slow service with 20% timeout rate",
+			handler: async (string request) =>
+			{
+				callCount++;
+				await Task.Delay(50);
+				if (random.Next(100) < 20)
+					throw new TimeoutException($"Timeout after 30s (attempt #{callCount})");
+				return $"{{\"status\":\"ok\",\"data\":\"Info for {request}\"}}";
+			}
+		));
+
+		var question = @"I need you to:
+1. Fetch user data for 'customer_12345'
+2. Calculate their account balance
+3. Get transaction history
+
+Handle any failures gracefully.";
+
+		WriteLine($"Question: {question}");
+		WriteLine();
+
+		var response = await agent.RunAsync(question);
+
+		WriteLine("═══════════════════════════════════════");
+		WriteLine("AGENT RESPONSE:");
+		WriteLine("═══════════════════════════════════════");
+		WriteLine(response.Output);
+		WriteLine();
+		WriteLine($"Stats: {response.Iterations} iterations, {response.ToolCalls.Count} tool calls, {callCount} total attempts");
+
+		var failures = response.ToolCalls.Count(c => {
+			var r = c.Result?.ToString() ?? "";
+			return r.Contains("ERROR") || r.Contains("timeout") || r.Contains("Failed");
+		});
+		WriteLine($"Success rate: {response.ToolCalls.Count - failures}/{response.ToolCalls.Count}");
+	}
 		// ═══════════════════════════════════════════════════════════════
 
 		// ═══════════════════════════════════════════════════════════════
