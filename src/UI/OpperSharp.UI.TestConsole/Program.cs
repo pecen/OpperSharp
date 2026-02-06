@@ -190,6 +190,14 @@ namespace OpperSharp.UI.TestConsole
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "math-solver",
+			OnProgress = (update) =>
+			{
+				Write($"\r   Working (iteration {update.Iteration})");
+				if (update.ToolCallCount > 0)
+				{
+					Write($" - Calling {string.Join(", ", update.ToolNames)}");
+				}
+			},
 				Instructions = "You are a helpful math solver. You have access to calculation tools (Add, Multiply, Percentage, Divide, Subtract). Use them to solve mathematical problems step by step. Always use the tools instead of calculating manually.",
 				MaxIterations = 10,
 				EnableTracing = true,
@@ -241,6 +249,14 @@ namespace OpperSharp.UI.TestConsole
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "research-agent",
+			OnProgress = (update) =>
+			{
+				WriteLine($"\n[Iteration {update.Iteration}]");
+				if (update.ToolCallCount > 0)
+				{
+					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+				}
+			},
 				Instructions = @"You are a research assistant with access to EXACTLY TWO tools:
 
 1. query_database - Returns ALL users in the database with their roles and skills. Pass any search query (e.g., 'developers', 'Python skills', or just 'all users'). Returns JSON array of user objects.
@@ -313,6 +329,14 @@ IMPORTANT: These are the ONLY tools available. Do NOT try to call any other tool
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "problem-solver",
+			OnProgress = (update) =>
+			{
+				WriteLine($"\n[Iteration {update.Iteration}]");
+				if (update.ToolCallCount > 0)
+				{
+					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+				}
+			},
 				Instructions = "You are a problem solver that can break down complex problems into steps and use mathematical tools to solve them. Always use the available calculation tools.",
 				MaxIterations = 15,
 				EnableTracing = true,
