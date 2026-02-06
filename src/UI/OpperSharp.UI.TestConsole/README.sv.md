@@ -54,6 +54,7 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 - Verktyg upptäcks automatiskt via `[Tool]` attribute
 - Testar 4 matematiska problem automatiskt
 - Visar execution trace med tool calls
+- Visar realtidsuppdateringar med iterationsnummer och anropade verktyg
 
 **2) Agent: Custom Tools**
 - Demonstrerar anpassade verktyg skapade med `AgentTool.Create()`
@@ -61,6 +62,7 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 - `get_weather` - Simulerat väder-API
 - Visar hur man skapar verktyg med lambda-funktioner
 - Case-insensitive tool name matching
+- Realtidsvisning av vilka verktyg som anropas
 
 **3) Agent: Multi-step**
 - Demonstrerar komplex problemlösning med flera steg
@@ -68,6 +70,7 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 - Kräver flera verktygsanrop i sekvens
 - Visar execution trace för att följa agentens resonemang
 - Demonstrerar hur agenten bryter ner komplexa problem
+- Realtidsuppdateringar visar iteration och använda verktyg
 
 ### BASIC API TESTS
 
@@ -121,6 +124,7 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 - Beräknar matchningspoäng baserat på skills, experience, rate
 - Ger rankad rekommendation med motivering
 - **Fungerar med 4 tool calls i 3 iterations**
+- Visar realtidsuppdateringar med agentens tankegång
 
 **11) Scale Test: 25 Consultants with Rich CV Data**
 - Test av agent-prestanda med realistisk datamängd
@@ -133,6 +137,7 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 - Agent analyserar och väljer de mest lovande kandidaterna
 - **Optimerad: 6 tool calls i 3 iterations** (får data → analyserar → scorar top 5)
 - Demonstrerar skalbarhet för produktionsmiljö
+- Realtidsvisning av iteration, verktyg och agentens resonemang
 
 **12) Error Handling: Tools with Failures**
 - Testar agent-resiliens när verktyg misslyckas
@@ -143,6 +148,8 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 - Agenten hanterar exceptions gracefully
 - Visar hur man bygger robusta agenter
 - **Fungerar perfekt med 3 tool calls**
+- Konsekvent beteende med Temperature = 0.0
+- Realtidsuppdateringar under exekvering
 
 ### DEBUG UTILITIES
 
@@ -182,6 +189,18 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 var agent = new Agent(client, new AgentOptions
 {
     Name = "consultant-matcher",
+    OnProgress = (update) =>
+    {
+        WriteLine($"\n[Iteration {update.Iteration}]");
+        if (update.ToolCallCount > 0)
+        {
+            WriteLine($"  💡 Anropar {update.ToolCallCount} verktyg: {string.Join(", ", update.ToolNames)}");
+        }
+        if (!string.IsNullOrWhiteSpace(update.Message))
+        {
+            WriteLine($"  🤔 Agent: {update.Message.Substring(0, 150)}...");
+        }
+    },
     Instructions = "You are an AI consultant matching system...",
     MaxIterations = 10,
     Model = "anthropic/claude-opus-4.5"
@@ -230,6 +249,32 @@ var response = await agent.RunAsync("Analyze this assignment...");
 - Använda "Call tool_name with input X" i user query (triggar description mode)
 - För aggressiva "EXECUTE NOW" instruktioner
 - Försöka efterlikna Menu 12's pattern när uppgiften är fundamentalt annorlunda
+
+## Realtidsvisning av Agentens Tankegång
+
+Alla agenttester (Menu 1-3, 10-12) visar nu realtidsuppdateringar under exekvering:
+
+**OnProgress Callback:**
+```csharp
+OnProgress = (update) =>
+{
+    WriteLine($"[Iteration {update.Iteration}]");
+    if (update.ToolCallCount > 0)
+    {
+        WriteLine($"💡 Anropar {update.ToolCallCount} verktyg: {string.Join(", ", update.ToolNames)}");
+    }
+    if (!string.IsNullOrWhiteSpace(update.Message))
+    {
+        WriteLine($"🤔 Agent: {update.Message.Substring(0, 150)}...");
+    }
+}
+```
+
+**Fördelar:**
+- Användare ser vad AI:n tänker i realtid
+- Visar vilka verktyg som anropas
+- Ger interaktiv feedback under långvariga operationer
+- Hjälper till att förstå agentens problemlösningsprocess
 
 ## Exempel: Production Integration
 
@@ -332,6 +377,13 @@ foreach (var assignment in assignments)
 - XML examples i instructions är kritiska för att undvika hallucination
 - JSON input format fungerar bättre än simple strings för complex data
 
+### Menu 12 Konsistens
+
+- **Temperature = 0.0** säkerställer deterministiskt beteende
+- Utan Temperature = 0.0 hade Menu 12 endast 25% framgångsfrekvens (0 tool calls 3 av 4 gånger)
+- XML examples i instructions förhindrar hallucination
+- CRITICAL RULES och WORKFLOW sektioner ger tydlig vägledning
+
 ### General Best Practices
 
 1. **MaxIterations**: Sätt till 10-15 för komplexa uppgifter
@@ -339,6 +391,8 @@ foreach (var assignment in assignments)
 3. **Instructions**: Inkludera CRITICAL RULES och XML examples
 4. **Error Handling**: Se Menu 12 för resilient tool design
 5. **Tool Descriptions**: Var specifik om input/output format
+6. **Temperature**: Använd 0.0 för konsekvent, deterministiskt beteende
+7. **OnProgress**: Lägg till callback för realtidsfeedback till användare
 
 ## Felsökning
 
@@ -351,6 +405,8 @@ foreach (var assignment in assignments)
 - Kontrollera att instructions innehåller XML examples
 - Se till att tool inputDescription matchar handler signature
 - Menu 10 och 12 är working examples att kopiera från
+- För Menu 12: Säkerställ att Temperature = 0.0 är satt
+- Undvik att använda "Call tool_name with input X" språk i user queries
 
 ### "Tool 'xxx' not found"
 - Case-insensitive matching är aktiverat
@@ -361,6 +417,11 @@ foreach (var assignment in assignments)
 - För många consultants? Implementera server-side filtering
 - Too many iterations? Justera MaxIterations eller instruktioner
 - Se Menu 11 för exempel på effektiv large-scale matching
+
+### Inkonsekvent beteende
+- Sätt Temperature = 0.0 för deterministiskt beteende
+- LLM:er är stokastiska - utan Temperature = 0.0 kan samma input ge olika outputs
+- Menu 12 demonstrerade detta: 0 tool calls 75% av tiden tills Temperature sattes till 0.0
 
 ## Nästa Steg
 
@@ -377,3 +438,7 @@ foreach (var assignment in assignments)
 - **Agent Framework**: Se Menu 1-3, 10-12 för examples
 - **Opper API Docs**: https://docs.opper.ai
 - **Claude Models**: https://docs.anthropic.com/claude/docs
+
+---
+
+**English version available**: [README.md](README.md)
