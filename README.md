@@ -423,6 +423,7 @@ Console.WriteLine(response.Output);
 - 📚 **[API Comparison](doc/SDK-Usage-Examples.md)** - Detailed comparison: REST API vs OpperSharp
 - 🏗️ **[Architecture](doc/OpperSharp-Complete-Overview.md)** - Complete SDK overview and design
 - 🔄 **[v2 Migration Analysis](doc/v2-API-Migration-Analysis.md)** - Complete v2 API migration details
+- 🔄 **[v2 Migration Analysis Amendment](doc/v2-Migration-Documentation-Updates.md)** - Amendments discovered for the v2 API migration details
 
 ### Key Concepts
 
@@ -736,7 +737,7 @@ Contributions welcome! Please open an issue or pull request.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/OpperSharp/issues)
+- **Issues**: [GitHub Issues](https://github.com/pecen/OpperSharp/issues)
 - **Documentation**: [docs/](doc/)
 - **Opper API Docs**: https://docs.opper.ai
 
