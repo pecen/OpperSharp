@@ -2,6 +2,8 @@
 using OpperSharp.Exceptions;
 using OpperSharp.Models.Common;
 using OpperSharp.Models.Indexes;
+using OpperSharp.Utilities.Enums;
+using OpperSharp.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -17,10 +19,13 @@ namespace OpperSharp.Clients
 	public class IndexesClient
 	{
 		private readonly HttpClient _httpClient;
+		private readonly string _indexesEndpoint;
 
 		public IndexesClient(HttpClient httpClient)
 		{
 			_httpClient = httpClient;
+
+			_indexesEndpoint = EndPoints.Indexes.GetDescription();
 		}
 
 		/// <summary>
@@ -48,7 +53,7 @@ namespace OpperSharp.Clients
 				"application/json"
 			);
 
-			var response = await _httpClient.PostAsync("/v1/indexes", content, cancellationToken);
+			var response = await _httpClient.PostAsync(_indexesEndpoint, content, cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -57,7 +62,7 @@ namespace OpperSharp.Clients
 					$"Failed to create index: {response.StatusCode}",
 					responseString,
 					(int)response.StatusCode,
-					"/v1/indexes"
+					_indexesEndpoint
 				);
 			}
 
@@ -72,7 +77,7 @@ namespace OpperSharp.Clients
 			string name,
 			CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.GetAsync($"/v1/indexes/{name}", cancellationToken);
+			var response = await _httpClient.GetAsync($"{_indexesEndpoint}/{name}", cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -93,7 +98,7 @@ namespace OpperSharp.Clients
 		/// </summary>
 		public async Task<List<OpperIndex>> ListAsync(CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.GetAsync("/v1/indexes", cancellationToken);
+			var response = await _httpClient.GetAsync(_indexesEndpoint, cancellationToken);
 			var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
@@ -114,7 +119,7 @@ namespace OpperSharp.Clients
 		/// </summary>
 		public async Task DeleteAsync(string name, CancellationToken cancellationToken = default)
 		{
-			var response = await _httpClient.DeleteAsync($"/v1/indexes/{name}", cancellationToken);
+			var response = await _httpClient.DeleteAsync($"{_indexesEndpoint}/{name}", cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
 			{
@@ -161,7 +166,7 @@ namespace OpperSharp.Clients
 			);
 
 			var response = await _httpClient.PostAsync(
-				$"/v1/indexes/{indexName}/index",
+				$"{_indexesEndpoint}/{indexName}/index",
 				jsonContent,
 				cancellationToken
 			);
@@ -204,7 +209,7 @@ namespace OpperSharp.Clients
 			);
 
 			var response = await _httpClient.PostAsync(
-				$"/v1/indexes/{indexName}/index/bulk",
+				$"{_indexesEndpoint}/{indexName}/index/bulk",
 				content,
 				cancellationToken
 			);
@@ -256,7 +261,7 @@ namespace OpperSharp.Clients
 			);
 
 			var response = await _httpClient.PostAsync(
-				$"/v1/indexes/{indexName}/query",
+				$"{_indexesEndpoint}/{indexName}/query",
 				content,
 				cancellationToken
 			);
@@ -285,7 +290,7 @@ namespace OpperSharp.Clients
 			CancellationToken cancellationToken = default)
 		{
 			var response = await _httpClient.GetAsync(
-				$"/v1/indexes/{indexName}/documents/{documentId}",
+				$"{_indexesEndpoint}/{indexName}/documents/{documentId}",
 				cancellationToken
 			);
 
@@ -313,7 +318,7 @@ namespace OpperSharp.Clients
 			CancellationToken cancellationToken = default)
 		{
 			var response = await _httpClient.DeleteAsync(
-				$"/v1/indexes/{indexName}/documents/{documentId}",
+				$"{_indexesEndpoint}/{indexName}/documents/{documentId}",
 				cancellationToken
 			);
 

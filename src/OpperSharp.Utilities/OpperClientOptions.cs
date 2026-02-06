@@ -8,7 +8,7 @@ namespace OpperSharp.Utilities
 	/// </summary>
 	public class OpperClientOptions
 	{
-		private static string _baseUrl = "https://api.opper.ai";
+		private static string _baseUrl = "https://api.opper.ai/v2";
 
 		/// <summary>
 		/// Opper AI API key.
@@ -16,9 +16,9 @@ namespace OpperSharp.Utilities
 		public string ApiKey { get; set; } = string.Empty;
 
 		/// <summary>
-		/// Base URL for the API (default: https://api.opper.ai).
+		/// Base URL for the API (default: https://api.opper.ai/v2).
 		/// </summary>
-		public string BaseUrl { get; set; } = _baseUrl;
+		public string BaseUrl { get; set; } = string.Empty; // _baseUrl;
 
 		/// <summary>
 		/// HTTP request timeout (default: 120 seconds).
@@ -53,7 +53,7 @@ namespace OpperSharp.Utilities
 			return new OpperClientOptions
 			{
 				ApiKey = Environment.GetEnvironmentVariable("OPPER_API_KEY") ?? string.Empty,
-				BaseUrl = Environment.GetEnvironmentVariable("OPPER_BASE_URL") ?? "https://api.opper.ai"
+				BaseUrl = Environment.GetEnvironmentVariable("OPPER_BASE_URL") ?? "https://api.opper.ai/v2"
 			};
 		}
 	}

@@ -1,7 +1,7 @@
-﻿using OpperSharp.Clients;
+﻿using OpperSharp.Utilities;
 using OpperSharp.Models.Common;
 using OpperSharp.Models.Functions;
-using OpperSharp.Utilities;
+using OpperSharp.Clients;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -23,7 +23,7 @@ namespace OpperSharp.Core
 		/// <summary>
 		/// Default base URL for Opper AI API.
 		/// </summary>
-		public const string DefaultBaseUrl = "https://api.opper.ai";
+		public const string DefaultBaseUrl = "https://api.opper.ai/v2";
 
 		/// <summary>
 		/// Creates a new instance of OpperClient with an API key.
@@ -56,7 +56,6 @@ namespace OpperSharp.Core
 				new AuthenticationHeaderValue("Bearer", options.ApiKey);
 			_httpClient.DefaultRequestHeaders.Accept.Add(
 				new MediaTypeWithQualityHeaderValue("application/json"));
-			_httpClient.DefaultRequestHeaders.Add("X-OPPER-API-KEY", options.ApiKey);
 
 			if (options.CustomHeaders != null)
 			{
@@ -98,9 +97,17 @@ namespace OpperSharp.Core
 		private void InitializeClients()
 		{
 			Functions = new FunctionsClient(_httpClient);
-			Indexes = new IndexesClient(_httpClient);
-			Chat = new ChatClient(_httpClient);
+			Knowledge = new KnowledgeClient(_httpClient);
 			Spans = new SpansClient(_httpClient);
+			Datasets = new DatasetsClient(_httpClient);
+			Embeddings = new EmbeddingsClient(_httpClient);
+			Models = new ModelsClient(_httpClient);
+			Ocr = new OcrClient(_httpClient);
+			Rerank = new RerankClient(_httpClient);
+			Analytics = new AnalyticsClient(_httpClient);
+
+			// Keep Indexes for backwards compatibility (deprecated)
+			Indexes = new IndexesClient(_httpClient);
 		}
 
 		/// <summary>
@@ -109,19 +116,50 @@ namespace OpperSharp.Core
 		public FunctionsClient Functions { get; private set; } = null!;
 
 		/// <summary>
-		/// Client for index operations.
+		/// Client for knowledge base operations (v2 API - file-based RAG).
 		/// </summary>
-		public IndexesClient Indexes { get; private set; } = null!;
+		public KnowledgeClient Knowledge { get; private set; } = null!;
 
 		/// <summary>
-		/// Client for chat completions.
+		/// Client for index operations (DEPRECATED - use Knowledge for v2 API).
 		/// </summary>
-		public ChatClient Chat { get; private set; } = null!;
+		[Obsolete("Use Knowledge property instead. Indexes is deprecated in v2 API.")]
+		public IndexesClient Indexes { get; private set; } = null!;
 
 		/// <summary>
 		/// Client for span/tracing operations.
 		/// </summary>
 		public SpansClient Spans { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for dataset operations (v2 API).
+		/// </summary>
+		public DatasetsClient Datasets { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for embeddings operations (v2 API).
+		/// </summary>
+		public EmbeddingsClient Embeddings { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for model and alias operations (v2 API).
+		/// </summary>
+		public ModelsClient Models { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for OCR operations (v2 API).
+		/// </summary>
+		public OcrClient Ocr { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for document reranking operations (v2 API).
+		/// </summary>
+		public RerankClient Rerank { get; private set; } = null!;
+
+		/// <summary>
+		/// Client for analytics operations (v2 API).
+		/// </summary>
+		public AnalyticsClient Analytics { get; private set; } = null!;
 
 		/// <summary>
 		/// Shorthand for calling a function with automatic retries.

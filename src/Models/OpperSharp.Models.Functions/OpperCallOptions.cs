@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace OpperSharp.Models.Functions
 {
@@ -11,6 +7,16 @@ namespace OpperSharp.Models.Functions
 	/// </summary>
 	public class OpperCallOptions
 	{
+		/// <summary>
+		/// Function name for ad-hoc calls (when not using a pre-created function).
+		/// </summary>
+		public string? Name { get; set; }
+
+		/// <summary>
+		/// Instructions for ad-hoc calls (when not using a pre-created function).
+		/// </summary>
+		public string? Instructions { get; set; }
+
 		/// <summary>
 		/// Additional context to pass to the function.
 		/// </summary>
@@ -40,5 +46,11 @@ namespace OpperSharp.Models.Functions
 		/// Custom metadata to attach to this call.
 		/// </summary>
 		public Dictionary<string, object>? Metadata { get; set; }
+
+		/// <summary>
+		/// Tools available for the function to use during this call.
+		/// Each tool should have 'name', 'description', and 'parameters' (JSON Schema).
+		/// </summary>
+		public List<object>? Tools { get; set; }
 	}
 }
