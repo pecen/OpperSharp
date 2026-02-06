@@ -1199,16 +1199,16 @@ Plats: Hybrid (Stockholm)
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "consultant-matcher-scale",
-			Instructions = @"Call these 4 tools immediately in your first response:
+			Instructions = @"Use these tools immediately in your first response:
 
-1. get_consultants with input: ""all""
-2. calculate_match_score with input: ""C001""
-3. calculate_match_score with input: ""C011""
-4. calculate_match_score with input: ""C021""
+1. get_consultants to retrieve all consultant data
+2. calculate_match_score to score consultant C001
+3. calculate_match_score to score consultant C011
+4. calculate_match_score to score consultant C021
 
-After the tools execute, report which consultant is best for .NET 8 modernization.
+After tools execute, report which consultant is best.
 
-DO NOT explain or describe - JUST CALL THE 4 TOOLS NOW.",
+DO NOT explain or describe - EXECUTE THE TOOLS NOW.",
 			MaxIterations = 15,
 			Model = "anthropic/claude-opus-4.5"
 		})
