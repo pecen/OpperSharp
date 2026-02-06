@@ -170,11 +170,12 @@ namespace OpperSharp.Agents
 
 						foreach (var toolCall in toolCallsList)
 						{
+							System.Console.WriteLine($"[DEBUG] Raw toolCall keys: {string.Join(", ", toolCall.Keys)}");
 							var toolName = toolCall.GetValueOrDefault("name")?.ToString();
 							var toolArgs = toolCall.GetValueOrDefault("arguments");
 
 							System.Console.WriteLine($"[DEBUG] Extracted tool name: '{toolName}'");
-							System.Console.WriteLine($"[DEBUG] Extracted tool args: {toolArgs?.GetType().Name ?? "null"}");
+							System.Console.WriteLine($"[DEBUG] Extracted tool args type: {toolArgs?.GetType().Name ?? "null"}");
 
 							if (string.IsNullOrEmpty(toolName))
 							{
@@ -186,10 +187,27 @@ namespace OpperSharp.Agents
 							if (toolArgs is JObject jobj)
 							{
 								argsDict = jobj.ToObject<Dictionary<string, object?>>();
+								System.Console.WriteLine($"[DEBUG] Converted JObject to dictionary with {argsDict?.Count ?? 0} keys: {string.Join(", ", argsDict?.Keys ?? Array.Empty<string>())}");
 							}
 							else if (toolArgs is Dictionary<string, object> dict)
 							{
 								argsDict = dict.ToDictionary(kv => kv.Key, kv => (object?)kv.Value);
+								System.Console.WriteLine($"[DEBUG] Using dictionary with {argsDict.Count} keys: {string.Join(", ", argsDict.Keys)}");
+							}
+
+							if (argsDict != null && argsDict.Count > 0)
+							{
+								foreach (var kvp in argsDict)
+								{
+									var valuePreview = kvp.Value?.ToString();
+									if (valuePreview != null && valuePreview.Length > 100)
+										valuePreview = valuePreview.Substring(0, 100) + "...";
+									System.Console.WriteLine($"[DEBUG]   arg '{kvp.Key}' = '{valuePreview}' (type: {kvp.Value?.GetType().Name ?? "null"})");
+								}
+							}
+							else
+							{
+								System.Console.WriteLine($"[DEBUG] No arguments extracted!");
 							}
 
 							try
