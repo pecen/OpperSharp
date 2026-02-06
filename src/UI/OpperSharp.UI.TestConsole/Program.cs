@@ -190,6 +190,14 @@ namespace OpperSharp.UI.TestConsole
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "math-solver",
+			OnProgress = (update) =>
+			{
+				Write($"\r   Working (iteration {update.Iteration})");
+				if (update.ToolCallCount > 0)
+				{
+					Write($" - Calling {string.Join(", ", update.ToolNames)}");
+				}
+			},
 				Instructions = "You are a helpful math solver. You have access to calculation tools (Add, Multiply, Percentage, Divide, Subtract). Use them to solve mathematical problems step by step. Always use the tools instead of calculating manually.",
 				MaxIterations = 10,
 				EnableTracing = true,
@@ -241,6 +249,14 @@ namespace OpperSharp.UI.TestConsole
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "research-agent",
+			OnProgress = (update) =>
+			{
+				WriteLine($"\n[Iteration {update.Iteration}]");
+				if (update.ToolCallCount > 0)
+				{
+					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+				}
+			},
 				Instructions = @"You are a research assistant with access to EXACTLY TWO tools:
 
 1. query_database - Returns ALL users in the database with their roles and skills. Pass any search query (e.g., 'developers', 'Python skills', or just 'all users'). Returns JSON array of user objects.
@@ -313,6 +329,14 @@ IMPORTANT: These are the ONLY tools available. Do NOT try to call any other tool
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "problem-solver",
+			OnProgress = (update) =>
+			{
+				WriteLine($"\n[Iteration {update.Iteration}]");
+				if (update.ToolCallCount > 0)
+				{
+					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+				}
+			},
 				Instructions = "You are a problem solver that can break down complex problems into steps and use mathematical tools to solve them. Always use the available calculation tools.",
 				MaxIterations = 15,
 				EnableTracing = true,
@@ -751,6 +775,21 @@ Plats: Hybrid (Stockholm)
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "consultant-matcher",
+			OnProgress = (update) =>
+			{
+				WriteLine($"\n[Iteration {update.Iteration}]");
+				if (update.ToolCallCount > 0)
+				{
+					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+				}
+				if (!string.IsNullOrWhiteSpace(update.Message))
+				{
+					var preview = update.Message.Length > 150
+						? update.Message.Substring(0, 150) + "..."
+						: update.Message;
+					WriteLine($"  🤔 Agent: {preview}\n");
+				}
+			},
 				Instructions = @"You are an AI consultant matching system. You MUST use the provided tools to get data.
 
 CRITICAL RULES:
@@ -1199,6 +1238,24 @@ Plats: Hybrid (Stockholm)
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "consultant-matcher-scale",
+			OnProgress = (update) =>
+			{
+				WriteLine();
+				WriteLine($"[Iteration {update.Iteration}]");
+				if (update.ToolCallCount > 0)
+				{
+					WriteLine($"  ? Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+				}
+				if (!string.IsNullOrWhiteSpace(update.Message))
+				{
+					// Show first 200 chars of the agent's message/thoughts
+					var preview = update.Message.Length > 200
+						? update.Message.Substring(0, 200) + "..."
+						: update.Message;
+					WriteLine($"  ? Agent: {preview}");
+				}
+				WriteLine();
+			},
 			Instructions = @"You are an AI consultant matching system. You MUST use the provided tools to get data.
 
 CRITICAL RULES:
@@ -1300,17 +1357,51 @@ Provide a ranked recommendation with reasoning.");
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "error-handler",
-			Instructions = @"Call these 3 tools immediately in your first response:
+			OnProgress = (update) =>
+			{
+				WriteLine($"\n[Iteration {update.Iteration}]");
+				if (update.ToolCallCount > 0)
+				{
+					WriteLine($"  ? Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+				}
+				if (!string.IsNullOrWhiteSpace(update.Message))
+				{
+					var preview = update.Message.Length > 150
+						? update.Message.Substring(0, 150) + "..."
+						: update.Message;
+					WriteLine($"  ? Agent: {preview}\n");
+				}
+			},
+			Instructions = @"You are testing error handling. You MUST use the provided tools to execute the task.
 
-1. unreliable_data_fetch with input: ""customer_12345""
-2. flaky_calculation with input: ""account balance for customer_12345""
-3. slow_service with input: ""transaction history for customer_12345""
+CRITICAL RULES:
+- You have EXACTLY THREE tools: unreliable_data_fetch, flaky_calculation, slow_service
+- You MUST call ALL THREE tools in your first response
+- DO NOT describe or explain - EXECUTE the tools immediately
+- Some tools may fail - this is expected and part of the test
 
-After the tools execute (some may fail), report what happened.
+WORKFLOW:
+1. Call all 3 tools immediately (batch them in one response)
+2. After receiving results (some may be errors), report what happened
 
-DO NOT explain or describe - JUST CALL THE 3 TOOLS NOW.",
+TOOL DETAILS:
+
+unreliable_data_fetch:
+- Input: customer ID or query string
+- Example: <function_calls><invoke name=""unreliable_data_fetch""><parameter name=""input"">customer_12345</parameter></invoke></function_calls>
+
+flaky_calculation:
+- Input: calculation description
+- Example: <function_calls><invoke name=""flaky_calculation""><parameter name=""input"">account balance for customer_12345</parameter></invoke></function_calls>
+
+slow_service:
+- Input: request description
+- Example: <function_calls><invoke name=""slow_service""><parameter name=""input"">transaction history for customer_12345</parameter></invoke></function_calls>
+
+Remember: Call all 3 tools NOW. Handle any errors gracefully.",
 			MaxIterations = 10,
-			Model = "anthropic/claude-opus-4.5"
+			Model = "anthropic/claude-opus-4.5",
+			Temperature = 0.0
 		})
 		.WithTool(AgentTool.Create(
 			name: "unreliable_data_fetch",

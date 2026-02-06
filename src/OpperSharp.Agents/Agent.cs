@@ -111,6 +111,35 @@ namespace OpperSharp.Agents
 						throw;
 					}
 
+					// Report progress if callback is configured
+					if (_options.OnProgress != null && !string.IsNullOrEmpty(functionResponse.Message))
+					{
+						var toolNames = new List<string>();
+						var toolCallsCount = 0;
+
+						// Try to detect tool calls from message
+						var detectedToolCalls = ParseToolCallsFromMessage(functionResponse.Message);
+						if (detectedToolCalls.Count > 0)
+						{
+							toolCallsCount = detectedToolCalls.Count;
+							foreach (var tc in detectedToolCalls)
+							{
+								if (tc.TryGetValue("name", out var nameObj))
+								{
+									toolNames.Add(nameObj?.ToString() ?? "unknown");
+								}
+							}
+						}
+
+						_options.OnProgress(new AgentProgressUpdate
+						{
+							Iteration = iteration,
+							Message = functionResponse.Message,
+							ToolCallCount = toolCallsCount,
+							ToolNames = toolNames
+						});
+					}
+
 					// Check if the response indicates tool calls
 					// First try structured format (Output.tool_calls)
 					bool hasToolCalls = false;

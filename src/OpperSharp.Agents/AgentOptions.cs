@@ -63,5 +63,37 @@ namespace OpperSharp.Agents
 		/// List of tools available to the agent.
 		/// </summary>
 		public List<AgentTool> Tools { get; set; } = new();
+
+		/// <summary>
+		/// Optional callback for progress updates during agent execution.
+		/// Called on each iteration with the agent's intermediate thoughts/messages.
+		/// </summary>
+		public Action<AgentProgressUpdate>? OnProgress { get; set; }
+	}
+
+	/// <summary>
+	/// Progress update from agent execution.
+	/// </summary>
+	public class AgentProgressUpdate
+	{
+		/// <summary>
+		/// Current iteration number.
+		/// </summary>
+		public int Iteration { get; set; }
+
+		/// <summary>
+		/// The agent's message/thoughts at this iteration.
+		/// </summary>
+		public string Message { get; set; } = string.Empty;
+
+		/// <summary>
+		/// Number of tool calls detected in this iteration.
+		/// </summary>
+		public int ToolCallCount { get; set; }
+
+		/// <summary>
+		/// Names of tools being called in this iteration.
+		/// </summary>
+		public List<string> ToolNames { get; set; } = new();
 	}
 }
