@@ -187,7 +187,8 @@ namespace OpperSharp.Agents
 							if (toolArgs is JObject jobj)
 							{
 								argsDict = jobj.ToObject<Dictionary<string, object?>>();
-								System.Console.WriteLine($"[DEBUG] Converted JObject to dictionary with {argsDict?.Count ?? 0} keys: {string.Join(", ", argsDict?.Keys ?? Array.Empty<string>())}");
+								var keys = argsDict != null ? string.Join(", ", argsDict.Keys) : "";
+								System.Console.WriteLine($"[DEBUG] Converted JObject to dictionary with {argsDict?.Count ?? 0} keys: {keys}");
 							}
 							else if (toolArgs is Dictionary<string, object> dict)
 							{
