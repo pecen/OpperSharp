@@ -221,11 +221,20 @@ namespace OpperSharp.Agents
 
 								System.Console.WriteLine($"[DEBUG] Tool '{toolName}' executed successfully, result: {result}");
 
-								toolResults.Add(new
+								// Include arguments in tool results so Claude knows context (e.g., which consultant a score is for)
+								var toolResult = new Dictionary<string, object>
 								{
-									tool_name = toolName,
-									result = result
-								});
+									["tool_name"] = toolName,
+									["result"] = result
+								};
+
+								// Add arguments to help Claude correlate results with inputs
+								if (argsDict != null && argsDict.Count > 0)
+								{
+									toolResult["arguments"] = argsDict;
+								}
+
+								toolResults.Add(toolResult);
 							}
 							catch (Exception ex)
 							{
