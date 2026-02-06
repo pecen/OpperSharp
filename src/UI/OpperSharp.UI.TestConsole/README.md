@@ -1,21 +1,27 @@
 # OpperSharp TestConsole
 
-Ett komplett testprogram för att testa alla funktioner i OpperSharp SDK v2 API.
+Ett komplett testprogram för att testa alla funktioner i OpperSharp SDK v2 API med fokus på Agent-ramverket.
 
 ## Förberedelser
 
 ### 1. Sätt API-nyckel
 
-Programmet läser API-nyckeln från miljövariabeln `OPPER_API_KEY`:
+Programmet läser API-nyckeln från **User Secrets** (rekommenderat) eller miljövariabel `OPPER_API_KEY`:
+
+**User Secrets (Visual Studio):**
+1. Högerklicka på projektet → "Manage User Secrets"
+2. Lägg till:
+   ```json
+   {
+     "OPPER_API_KEY": "din-api-nyckel-här"
+   }
+   ```
+
+**Miljövariabel (alternativ):**
 
 **Windows (PowerShell):**
 ```powershell
 $env:OPPER_API_KEY="din-api-nyckel-här"
-```
-
-**Windows (CMD):**
-```cmd
-set OPPER_API_KEY=din-api-nyckel-här
 ```
 
 **Linux/Mac:**
@@ -23,34 +29,18 @@ set OPPER_API_KEY=din-api-nyckel-här
 export OPPER_API_KEY="din-api-nyckel-här"
 ```
 
-### 2. Skapa nödvändiga Functions i Opper
-
-För att vissa tester ska fungera behöver du skapa följande functions i Opper-plattformen:
-
-**Required Functions (för Agent-tester):**
-- `math-solver` - En funktion för matematiska problem
-- `research-agent` - En funktion för research/queries
-- `problem-solver` - En funktion för komplex problemlösning
-- `consultant-matcher` - En funktion för konsultmatchning
-
-**Optional Functions (för övriga tester):**
-- `general-qa` - En Q&A funktion (används i menyval 4)
-- `story-generator` - En berättelse-generator (används i menyval 5)
-- `chat-assistant` - En konversationsassistent (används i menyval 6)
-
-**Tips för Function-skapande i Opper:**
-1. Gå till Opper Dashboard
-2. Skapa en ny Function
-3. Sätt `path` enligt ovan (t.ex. "math-solver")
-4. Lägg till en enkel prompt, t.ex: "You are a helpful assistant that solves math problems."
-5. Välj modell (rekommenderat: gpt-4)
-
-### 3. Bygg och kör
+### 2. Bygg och kör
 
 ```bash
 cd src/UI/OpperSharp.UI.TestConsole
 dotnet run
 ```
+
+## Viktigt: Ad-hoc Function Calls
+
+**OpperSharp använder nu ad-hoc function calls** - du behöver INTE skapa några named functions i Opper Dashboard!
+
+Alla funktioner (name, instructions, model) skickas i request body. Detta gör SDK:n enklare att använda och mer flexibel.
 
 ## Funktioner i Menyn
 
@@ -59,150 +49,329 @@ dotnet run
 **1) Agent: Basic Math**
 - Demonstrerar Agent-ramverket med matematik-verktyg
 - Agenten kan använda Add, Multiply, Percentage, Divide, Subtract
-- Testar flera matematiska problem automatiskt
-- Visar hur verktyg anropas och används
+- Verktyg upptäcks automatiskt via `[Tool]` attribute
+- Testar 4 matematiska problem automatiskt
+- Visar execution trace med tool calls
 
 **2) Agent: Custom Tools**
-- Demonstrerar anpassade verktyg
-- Simulerad databas-query (get_consultants)
-- Simulerat väder-API (get_weather)
-- Visar hur man skapar egna verktyg med `AgentTool.Create()`
+- Demonstrerar anpassade verktyg skapade med `AgentTool.Create()`
+- `query_database` - Simulerad databas som returnerar användarprofiler
+- `get_weather` - Simulerat väder-API
+- Visar hur man skapar verktyg med lambda-funktioner
+- Case-insensitive tool name matching
 
 **3) Agent: Multi-step**
 - Demonstrerar komplex problemlösning med flera steg
-- Löser ett problem som kräver flera verktygsanrop
+- Beräknar totala lönekostnader för 3 avdelningar + arbetsgivaravgift
+- Kräver flera verktygsanrop i sekvens
 - Visar execution trace för att följa agentens resonemang
+- Demonstrerar hur agenten bryter ner komplexa problem
 
 ### BASIC API TESTS
 
 **4) Simple Function Call**
-- Testar grundläggande function-anrop
+- Testar grundläggande ad-hoc function call
 - Du kan ställa en fråga interaktivt
 - Visar token-användning och caching
+- Använder claude-sonnet-4 model
 
 **5) Streaming Response**
-- Demonstrerar streaming av svar
 - Genererar en kort berättelse baserat på ditt ämne
-- Visar text allt eftersom den genereras
+- OBS: Streaming fungerar inte med ad-hoc calls i nuvarande implementation
+- Använder istället standard CallAsync
+- Visar creative writing med temperature 0.8
 
 **6) Conversational Chat**
-- Interaktiv konversation via Functions
-- Använder 'chat-assistant' function i Opper
+- Interaktiv konversation via ad-hoc function calls
 - Bygger upp en konversationshistorik
 - Skriv 'quit' för att avsluta
+- Demonstrerar stateful multi-turn conversations
 
 ### v2 API TESTS
 
 **7) Knowledge Base**
-- Skapar en kunskapsbas
-- Laddar upp en testfil
-- Listar uppladdade filer
-- Demonstrerar den filbaserade RAG-funktionen i v2
+- Skapar en kunskapsbas med unique timestamp name
+- Skapar och laddar upp en testfil (oppersharp-info.txt)
+- Listar uppladdade filer med storlek
+- Demonstrerar filbaserad RAG-funktion
+- Visar korrekt hantering av `original_filename` från API
 
 **8) Embeddings**
 - Genererar vector embeddings för 3 texter
-- Visar dimensioner och värden
-- Beräknar likhet mellan texter
+- Använder azure/text-embedding-3-large model
+- Visar dimensioner (typiskt 3072)
+- Beräknar similarity mellan första två texterna (dot product)
+- Demonstrerar batch embedding generation
 
 **9) Model Aliases**
-- Skapar ett model alias med fallback-kedja
-- Listar alla aliases
-- Raderar test-alias
+- Listar tillgängliga modeller
+- Skapar model alias med fallback-kedja (Opus → Sonnet → Haiku)
+- Listar alla aliases i kontot
+- Raderar test-aliases automatiskt (cleanup)
+- Demonstrerar reliability via automatic fallbacks
 
-### CONSULTANT MATCHING
+### CONSULTANT MATCHING (Slutmål)
 
-**C) Match Consultant to Assignment**
-- **Detta är ditt slutmål!**
-- Demonstrerar en komplett konsultmatchningslösning
-- Agenten analyserar ett uppdrag
-- Agenten använder verktyg för att hämta konsultprofiler
-- Agenten beräknar matchningspoäng
-- Ger en rankad rekommendation med motivering
+**10) Match Consultant to Assignment**
+- Grundläggande konsultmatchning med 3 konsulter
+- Agent med två verktyg: `get_consultants` och `calculate_match_score`
+- Analyserar svenskt uppdrag (.NET 8 modernisering)
+- Beräknar matchningspoäng baserat på skills, experience, rate
+- Ger rankad rekommendation med motivering
+- **Fungerar med 4 tool calls i 3 iterations**
 
-## Exempel: Konsultmatchning
+**11) Scale Test: 25 Consultants with Rich CV Data**
+- Test av agent-prestanda med realistisk datamängd
+- 25 konsultprofiler med:
+  - Detaljerade skills (7+ per konsult)
+  - Projekt-historik (3 projekt per konsult)
+  - Certifieringar
+  - Språkkunskaper
+  - Availability och rates
+- Agent analyserar och väljer de mest lovande kandidaterna
+- **Optimerad: 6 tool calls i 3 iterations** (får data → analyserar → scorar top 5)
+- Demonstrerar skalbarhet för produktionsmiljö
 
-Konsultmatchningen fungerar så här:
+**12) Error Handling: Tools with Failures**
+- Testar agent-resiliens när verktyg misslyckas
+- Tre unreliable tools med olika failure rates:
+  - `unreliable_data_fetch` - 30% failure rate
+  - `flaky_calculation` - 25% failure rate
+  - `slow_service` - 20% timeout rate
+- Agenten hanterar exceptions gracefully
+- Visar hur man bygger robusta agenter
+- **Fungerar perfekt med 3 tool calls**
 
-1. **Uppdragsbeskrivning** definieras (hårdkodad i exemplet)
-2. **Konsultprofiler** finns tillgängliga (3 st i exemplet)
-3. **Agent skapas** med två verktyg:
-   - `get_consultants` - Hämtar alla konsultprofiler
-   - `calculate_match_score` - Beräknar hur väl en konsult passar
-4. **Agenten analyserar** uppdraget och kör verktyg
-5. **Resultat** presenteras med motivering
+### DEBUG UTILITIES
 
-### Utöka för produktion
+**94) Test Ad-Hoc Function Call**
+- Direkt HTTP POST till /v2/call
+- Demonstrerar ad-hoc mode (ingen named function)
+- Raw request/response inspection
 
-För att använda detta i produktion:
+**95) Get Function Details**
+- Hämtar detaljer för en specifik function
+- Visar UUID, path, name, instructions, model
+- Demonstrerar både UUID och path-baserat anrop
 
-1. **Byt ut hårdkodade konsulter** mot databas-query:
-   ```csharp
-   .WithTool(AgentTool.Create(
-       name: "get_consultants",
-       description: "Query database for available consultants",
-       handler: async () =>
-       {
-           using var dbContext = new YourDbContext();
-           var consultants = await dbContext.Consultants
-               .Where(c => c.Available)
-               .ToListAsync();
-           return JsonSerializer.Serialize(consultants);
-       }
-   ))
-   ```
+**96) Delete all 7 Functions**
+- Cleanup utility (om du ändå skapade named functions)
+- Raderar: math-solver, research-agent, problem-solver, general-qa, story-generator, chat-assistant, consultant-matcher
 
-2. **Förbättra matchningslogik** med vektorbaserad sökning:
-   ```csharp
-   // Använd Embeddings API för semantisk matchning
-   var assignmentEmbedding = await _client.Embeddings.CreateAsync(assignment);
-   var consultantEmbedding = await _client.Embeddings.CreateAsync(consultantProfile);
-   // Beräkna cosine similarity
-   ```
+**97) Create all 7 Functions via API**
+- Skapar named functions programmatiskt
+- OBS: Inte nödvändigt för ad-hoc mode!
+- Använd endast om du vill testa named function mode
 
-3. **Lägg till fler verktyg:**
-   - `check_availability` - Kolla konsultkalender
-   - `get_previous_assignments` - Hämta tidigare uppdrag
-   - `calculate_travel_distance` - Beräkna reseavstånd
-   - `estimate_project_cost` - Beräkna totalkostnad
+**98) Initialize/Activate all 7 Functions**
+- Anropar varje function en gång för att aktivera
+- OBS: Inte nödvändigt för ad-hoc mode!
 
-4. **Använd Knowledge Base** för uppdragsbeskrivningar:
-   ```csharp
-   // Ladda upp alla uppdragsbeskrivningar till en knowledge base
-   // Använd RAG för att hitta liknande tidigare uppdrag
-   ```
+**99) List all Functions**
+- Listar alla functions i ditt Opper-konto
+- Visar raw JSON response
+- Debug utility för att inspektera function state
+
+## Arkitektur: Konsultmatchning
+
+### Grundläggande (Menu 10)
+
+```csharp
+var agent = new Agent(client, new AgentOptions
+{
+    Name = "consultant-matcher",
+    Instructions = "You are an AI consultant matching system...",
+    MaxIterations = 10,
+    Model = "anthropic/claude-opus-4.5"
+})
+.WithTool(AgentTool.Create(
+    name: "get_consultants",
+    description: "Retrieves consultant profiles",
+    handler: (string _) => {
+        return Task.FromResult(JsonSerializer.Serialize(consultants));
+    },
+    inputDescription: "Any query string"
+))
+.WithTool(AgentTool.Create(
+    name: "calculate_match_score",
+    description: "Calculates match score (0-100)",
+    handler: (string input) => {
+        var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(input);
+        var consultantName = obj["consultantName"];
+        // Scoring logic...
+        return Task.FromResult(score.ToString());
+    },
+    inputDescription: "JSON: {\"consultantName\": \"Name\", \"requirements\": \"...\"}"
+));
+
+var response = await agent.RunAsync("Analyze this assignment...");
+```
+
+### Scale Test (Menu 11)
+
+- 25 konsulter med IDs (C001-C025)
+- Använder `consultantId` istället för `consultantName`
+- Agenten analyserar och väljer top 5-6 kandidater att scora
+- Optimerad för att undvika onödiga tool calls
+
+### Viktiga Lärdomar från Menu 11 Optimization
+
+**Vad som fungerar:**
+- XML examples i instructions: `<function_calls><invoke name="tool"><parameter>...</parameter></invoke></function_calls>`
+- CRITICAL RULES sektion som varnar mot hallucination
+- WORKFLOW med numbered steps
+- JSON input för tools som behöver flera parametrar
+- Ge agenten autonomi att välja vilka konsulter som ska scoras
+
+**Vad som INTE fungerar:**
+- Försöka tvinga agenten att kalla specific verktyg med hard-coded inputs
+- Använda "Call tool_name with input X" i user query (triggar description mode)
+- För aggressiva "EXECUTE NOW" instruktioner
+- Försöka efterlikna Menu 12's pattern när uppgiften är fundamentalt annorlunda
+
+## Exempel: Production Integration
+
+### 1. Integrera med databas
+
+```csharp
+.WithTool(AgentTool.Create(
+    name: "get_consultants",
+    description: "Query CINode API for available consultants",
+    handler: async (string query) =>
+    {
+        using var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", cinodeApiKey);
+
+        var response = await httpClient.GetAsync(
+            "https://api.cinode.com/v1/consultants?available=true"
+        );
+        var consultants = await response.Content.ReadAsStringAsync();
+        return consultants;
+    },
+    inputDescription: "Search query for consultants (e.g., 'available', 'C# developers')"
+))
+```
+
+### 2. Förbättrad matchningslogik
+
+```csharp
+handler: async (string input) =>
+{
+    var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(input);
+    var consultantId = obj["consultantId"];
+    var requirements = obj["requirements"];
+
+    // Använd Embeddings för semantisk matchning
+    var reqEmbedding = await client.Embeddings.CreateAsync(requirements);
+    var consultantProfile = await GetConsultantProfile(consultantId);
+    var conEmbedding = await client.Embeddings.CreateAsync(consultantProfile);
+
+    // Cosine similarity
+    var similarity = CalculateCosineSimilarity(reqEmbedding, conEmbedding);
+
+    // Kombinera med regelbaserad scoring
+    var score = (similarity * 50) + RuleBasedScore(consultant, requirements);
+
+    return score.ToString();
+}
+```
+
+### 3. Lägg till fler verktyg
+
+```csharp
+.WithTool(AgentTool.Create(
+    name: "check_availability",
+    description: "Check consultant's calendar availability",
+    handler: async (string consultantId) => { /* ... */ }
+))
+.WithTool(AgentTool.Create(
+    name: "get_previous_assignments",
+    description: "Get consultant's assignment history",
+    handler: async (string consultantId) => { /* ... */ }
+))
+.WithTool(AgentTool.Create(
+    name: "calculate_travel_distance",
+    description: "Calculate distance between consultant and assignment location",
+    handler: async (string input) => { /* ... */ }
+))
+```
+
+### 4. Använd Knowledge Base för RAG
+
+```csharp
+// Ladda upp alla uppdragsbeskrivningar
+var kb = await client.Knowledge.CreateAsync("assignments-kb");
+foreach (var assignment in assignments)
+{
+    await client.Knowledge.UploadFileAsync(kb.Id, assignment.Title, content);
+}
+
+// Använd i agent
+.WithTool(AgentTool.Create(
+    name: "search_similar_assignments",
+    description: "Find similar past assignments using RAG",
+    handler: async (string query) =>
+    {
+        // RAG query mot knowledge base
+        var results = await client.Knowledge.QueryAsync(kb.Id, query);
+        return JsonSerializer.Serialize(results);
+    }
+))
+```
+
+## Performance Tips
+
+### Menu 11 Optimization Insights
+
+- **6 tool calls är optimalt** för 25 konsulter (1 get + 5 score)
+- Agenten gör naturlig pre-filtering baserat på requirements
+- Tvinga inte specifika tool call patterns - ge agenten autonomi
+- XML examples i instructions är kritiska för att undvika hallucination
+- JSON input format fungerar bättre än simple strings för complex data
+
+### General Best Practices
+
+1. **MaxIterations**: Sätt till 10-15 för komplexa uppgifter
+2. **Model**: Använd claude-opus-4.5 för agents (bättre reasoning)
+3. **Instructions**: Inkludera CRITICAL RULES och XML examples
+4. **Error Handling**: Se Menu 12 för resilient tool design
+5. **Tool Descriptions**: Var specifik om input/output format
 
 ## Felsökning
 
 ### "Could not initialize OpperClient"
-- Kontrollera att `OPPER_API_KEY` är satt som miljövariabel
-- Kör `echo $env:OPPER_API_KEY` (PowerShell) för att verifiera
+- Kontrollera User Secrets eller OPPER_API_KEY miljövariabel
+- Visual Studio: Högerklicka projekt → Manage User Secrets
+- Verify: `dotnet user-secrets list`
 
-### "Function 'xxx' not found"
-- Logga in på Opper Dashboard
-- Skapa function med rätt path
-- Kontrollera att path:en matchar exakt (case-sensitive)
+### Agent hallucination (0 tool calls)
+- Kontrollera att instructions innehåller XML examples
+- Se till att tool inputDescription matchar handler signature
+- Menu 10 och 12 är working examples att kopiera från
 
-### Agent-test fungerar inte
-- Kontrollera att du har skapat motsvarande function i Opper
-- Funktionen måste ha samma `path` som anges i koden
-- Funktionen måste ha en grundläggande prompt
+### "Tool 'xxx' not found"
+- Case-insensitive matching är aktiverat
+- Kontrollera stavning i WithTool() och tool name i handler
+- Use AgentTool.Create() för simple tools
 
-### Network errors
-- Kontrollera internetanslutning
-- Kontrollera att Opper API är tillgängligt
-- Vissa företagsnätverk kan blockera AI-tjänster
+### Performance issues
+- För många consultants? Implementera server-side filtering
+- Too many iterations? Justera MaxIterations eller instruktioner
+- Se Menu 11 för exempel på effektiv large-scale matching
 
-## Nästa steg
+## Nästa Steg
 
-1. **Testa alla funktioner** - Gå igenom menyn systematiskt
-2. **Modifiera konsultmatchning** - Anpassa till dina behov
-3. **Lägg till verktyg** - Skapa egna verktyg för dina use cases
-4. **Integrera med databas** - Koppla till din konsultdatabas
-5. **Bygg GUI** - Skapa ett användargränssnitt ovanpå detta
+1. ✅ **Testa alla funktioner** - Gå igenom meny 1-12 systematiskt
+2. ✅ **Förstå Agent patterns** - Menu 10 (basic), 11 (scale), 12 (errors)
+3. 🔄 **Anpassa Menu 11** - Byt ut hårdkodade konsulter mot CINode API
+4. 🔄 **Förbättra scoring** - Lägg till embeddings för semantisk matchning
+5. 🔄 **Lägg till verktyg** - Availability, history, distance, etc.
+6. 🔄 **Bygg GUI** - Skapa användargränssnitt för konsultmatchning
 
 ## Resurser
 
 - **OpperSharp Documentation**: `../../doc/`
-- **QuickStart Guide**: `../../doc/QuickStart-Guide.md`
-- **SDK Examples**: `../../doc/SDK-Usage-Examples.md`
+- **Agent Framework**: Se Menu 1-3, 10-12 för examples
 - **Opper API Docs**: https://docs.opper.ai
+- **Claude Models**: https://docs.anthropic.com/claude/docs
