@@ -723,21 +723,34 @@ Plats: Hybrid (Stockholm)
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "consultant-matcher",
-				Instructions = @"You are an AI consultant matching system that helps match consultants with job assignments.
+				Instructions = @"You are an AI consultant matching system. You MUST use the provided tools to get data.
 
-You have access to TWO tools:
+CRITICAL RULES:
+- You have EXACTLY TWO tools: get_consultants and calculate_match_score
+- You MUST call get_consultants FIRST to retrieve consultant data
+- DO NOT make up or generate consultant data yourself
+- DO NOT create fake tool calls with consultant names
+- ONLY call the actual tool names: get_consultants and calculate_match_score
 
-1. get_consultants - Returns a JSON array of all available consultants with their profiles (name, title, skills, experience, availability, rate, languages). Call this with any input (e.g., 'all' or 'list').
+WORKFLOW:
+1. Call get_consultants with input=""all"" to retrieve the consultant list
+2. Wait for the tool result (you will receive the actual consultant data)
+3. For each consultant in the result, call calculate_match_score with proper JSON
+4. Analyze the scores and provide recommendations
 
-2. calculate_match_score - Calculates a match score (0-100) for a specific consultant against requirements. Input must be JSON with 'consultantName' and 'requirements' fields.
+TOOL DETAILS:
 
-Your task:
-1. First, get all consultants using get_consultants
-2. For each consultant, calculate their match score using calculate_match_score
-3. Analyze the scores and consultant profiles
-4. Provide a ranked recommendation with clear reasoning explaining why each consultant is or isn't a good fit
+get_consultants:
+- Call this FIRST with any input (e.g., ""all"")
+- Returns: JSON array with consultant profiles
+- Example: <function_calls><invoke name=""get_consultants""><parameter name=""input"">all</parameter></invoke></function_calls>
 
-Be thorough in your analysis and consider all factors: skills, experience, availability, rate, and language requirements.",
+calculate_match_score:
+- Call AFTER you have consultant data from get_consultants
+- Requires: JSON string with 'consultantName' and 'requirements'
+- Example: <function_calls><invoke name=""calculate_match_score""><parameter name=""input"">{""consultantName"": ""John Doe"", ""requirements"": ""C# developer""}</parameter></invoke></function_calls>
+
+Remember: ALWAYS use the actual tools. NEVER generate fake data.",
 				MaxIterations = 10,
 				Model = "anthropic/claude-opus-4.5"
 			})
