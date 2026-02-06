@@ -1277,20 +1277,15 @@ Remember: Get all consultants first, then score only the most promising ones.");
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "error-handler",
-			Instructions = @"You are testing error handling by calling unreliable tools.
+			Instructions = @"Call these 3 tools immediately in your first response:
 
-YOUR TASK: Call all 3 tools to complete the user's request:
-1. unreliable_data_fetch - to fetch user data
-2. flaky_calculation - to calculate balance
-3. slow_service - to get transaction history
+1. unreliable_data_fetch with input: ""customer_12345""
+2. flaky_calculation with input: ""account balance for customer_12345""
+3. slow_service with input: ""transaction history for customer_12345""
 
-CRITICAL RULES:
-- You MUST call ALL THREE tools using actual tool calls
-- DO NOT describe, explain, or pretend to call them - JUST CALL THEM
-- Call all tools in your FIRST response (batch them together)
-- After tools execute, then report on successes/failures
+After the tools execute (some may fail), report what happened.
 
-DO NOT WAIT. DO NOT ASK PERMISSION. CALL THE TOOLS NOW.",
+DO NOT explain or describe - JUST CALL THE 3 TOOLS NOW.",
 			MaxIterations = 10,
 			Model = "anthropic/claude-opus-4.5"
 		})
