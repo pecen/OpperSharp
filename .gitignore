@@ -23,6 +23,8 @@ bld/
 [Ll]og/
 [Ll]ib/
 [Bb]uild/
+[Ss]etup/
+[Ii]nternal/
 
 # Visual Studio 2015 cache/options directory
 .vs/

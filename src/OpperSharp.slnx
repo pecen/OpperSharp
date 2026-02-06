@@ -14,11 +14,13 @@
     <Project Path="Models/OpperSharp.Models.Spans/OpperSharp.Models.Spans.csproj" Id="2c3fe6b6-200a-4002-ac84-d68cadd33bd4" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path="../.gitignore" />
     <File Path="../doc/Agents-Explained-Swedish.md" />
     <File Path="../doc/Bidirectional Repo Mirror Guide.md" />
     <File Path="../doc/Embeddings-Explained-Swedish.md" />
     <File Path="../doc/How-To-Delete-Model-Aliases-Swedish.md" />
     <File Path="../doc/KnowledgeBase-and-ModelAliases-Explained-Swedish.md" />
+    <File Path="../doc/OpperSharp Project Structure.txt" />
     <File Path="../doc/OpperSharp-Complete-Overview.md" />
     <File Path="../doc/OpperSharp-Presentation-Natural.html" />
     <File Path="../doc/OpperSharp-Presentation-Swedish-Notes.html" />
