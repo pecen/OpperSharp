@@ -1199,21 +1199,16 @@ Plats: Hybrid (Stockholm)
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "consultant-matcher-scale",
-			Instructions = @"EXECUTE THESE TOOLS NOW (do not write text, only make tool calls):
+			Instructions = @"Call these 4 tools immediately in your first response:
 
-get_consultants: all
-calculate_match_score: C001
-calculate_match_score: C003
-calculate_match_score: C006
-calculate_match_score: C010
-calculate_match_score: C011
-calculate_match_score: C016
-calculate_match_score: C021
-calculate_match_score: C022
+1. get_consultants with input: ""all""
+2. calculate_match_score with input: ""C001""
+3. calculate_match_score with input: ""C011""
+4. calculate_match_score with input: ""C021""
 
-After tools finish, provide recommendations.
+After the tools execute, report which consultant is best for .NET 8 modernization.
 
-NO TEXT. ONLY TOOL CALLS. NOW.",
+DO NOT explain or describe - JUST CALL THE 4 TOOLS NOW.",
 			MaxIterations = 15,
 			Model = "anthropic/claude-opus-4.5"
 		})
@@ -1229,11 +1224,9 @@ NO TEXT. ONLY TOOL CALLS. NOW.",
 		))
 		.WithTool(AgentTool.Create(
 			name: "calculate_match_score",
-			description: "Calculates match score (0-100) for ONE specific consultant",
-			handler: (string input) =>
+			description: "Calculates match score (0-100) for ONE specific consultant for .NET 8 modernization project",
+			handler: (string consultantId) =>
 			{
-				var inputObj = JsonSerializer.Deserialize<Dictionary<string, string>>(input);
-				var consultantId = inputObj?.GetValueOrDefault("consultantId") ?? "";
 				WriteLine($"   [DEBUG] calculate_match_score called for consultant: {consultantId}");
 
 				var consultant = consultants.FirstOrDefault(c => c.Id == consultantId);
@@ -1249,7 +1242,7 @@ NO TEXT. ONLY TOOL CALLS. NOW.",
 
 				return Task.FromResult(score.ToString());
 			},
-			inputDescription: "JSON string with format: {\"consultantId\": \"C001\", \"requirements\": \"description of requirements\"}"
+			inputDescription: "Consultant ID (e.g., 'C001', 'C011', 'C021')"
 		));
 
 		var response = await agent.RunAsync($@"Find the best consultants for this assignment:
