@@ -1246,10 +1246,10 @@ DO NOT explain or describe - JUST CALL THE 4 TOOLS NOW.",
 		));
 
 		var response = await agent.RunAsync(@"I need you to:
-1. Call get_consultants with input 'all'
-2. Call calculate_match_score with input 'C001'
-3. Call calculate_match_score with input 'C011'
-4. Call calculate_match_score with input 'C021'
+1. Get all consultants
+2. Score consultant C001 for .NET 8 modernization
+3. Score consultant C011 for .NET 8 modernization
+4. Score consultant C021 for .NET 8 modernization
 
 Then report which consultant is best.");
 
