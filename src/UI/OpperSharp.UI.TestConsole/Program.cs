@@ -1245,9 +1245,12 @@ DO NOT explain or describe - JUST CALL THE 4 TOOLS NOW.",
 			inputDescription: "Consultant ID (e.g., 'C001', 'C011', 'C021')"
 		));
 
-		var response = await agent.RunAsync($@"Find the best consultant for this assignment:
+		var response = await agent.RunAsync(@"Execute these steps:
+1. Get all consultants
+2. Score consultants C001, C011, and C021
+3. Report which one is best for .NET 8 modernization
 
-{assignment}");
+Execute now.");
 
 		WriteLine("═══════════════════════════════════════");
 		WriteLine("AGENT RECOMMENDATION:");
