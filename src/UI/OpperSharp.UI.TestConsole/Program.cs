@@ -1199,35 +1199,56 @@ Plats: Hybrid (Stockholm)
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "consultant-matcher-scale",
-			Instructions = @"You are an AI consultant matching system. You have two tools:
+			Instructions = @"You are an AI consultant matching system. You MUST use the provided tools to get data.
 
-1. get_consultants: Returns all 25 consultant profiles with skills, experience, rates, etc.
-2. calculate_match_score: Calculates how well a consultant matches project requirements (0-100)
+CRITICAL RULES:
+- You have EXACTLY TWO tools: get_consultants and calculate_match_score
+- You MUST call get_consultants FIRST to retrieve consultant data
+- DO NOT make up or generate consultant data yourself
+- DO NOT create fake tool calls with consultant names
+- ONLY call the actual tool names: get_consultants and calculate_match_score
 
-Your task:
-- First call get_consultants to see all available consultants
-- Analyze which consultants have the required skills (C#, .NET, Azure, Microservices)
-- Use calculate_match_score to score the promising candidates
-- Provide recommendations based on the scores
+WORKFLOW:
+1. Call get_consultants with input=""all"" to retrieve the consultant list
+2. Wait for the tool result (you will receive the actual consultant data)
+3. Analyze which consultants match the requirements (C#, .NET, Azure, Microservices, 8+ years)
+4. Call calculate_match_score for the promising candidates (make multiple tool calls in one message)
+5. After receiving all scores, analyze and provide recommendations
 
-Work methodically through this task.",
+TOOL DETAILS:
+
+get_consultants:
+- Call this FIRST with any input (e.g., ""all"")
+- Returns: JSON array with consultant profiles
+- Example: <function_calls><invoke name=""get_consultants""><parameter name=""input"">all</parameter></invoke></function_calls>
+
+calculate_match_score:
+- Call AFTER you have consultant data from get_consultants
+- Requires: JSON string with 'consultantId' and 'requirements'
+- Example: <function_calls><invoke name=""calculate_match_score""><parameter name=""input"">{""consultantId"": ""C001"", ""requirements"": ""C# .NET Azure Microservices""}</parameter></invoke></function_calls>
+
+Remember: ALWAYS use the actual tools. NEVER generate fake data.",
 			MaxIterations = 15,
 			Model = "anthropic/claude-opus-4.5"
 		})
 		.WithTool(AgentTool.Create(
 			name: "get_consultants",
-			description: "Retrieves ALL 25 consultant profiles with complete information including skills, experience, rates, and availability",
-			handler: (string input) =>
+			description: "Retrieves the complete list of available consultants with their full profiles including skills, experience, availability, rate, and languages. Returns JSON array.",
+			handler: (string _) =>
 			{
 				return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions { WriteIndented = true }));
 			},
-			inputDescription: "Any query string (e.g., 'all', 'list'). Always returns all consultants."
+			inputDescription: "Any query string (e.g., 'all', 'list', 'available'). The tool always returns all consultants."
 		))
 		.WithTool(AgentTool.Create(
 			name: "calculate_match_score",
-			description: "Calculates match score (0-100) for a specific consultant against project requirements",
-			handler: (string consultantId) =>
+			description: "Calculates how well a specific consultant matches the job requirements. Returns a score from 0-100. Input must be valid JSON string with 'consultantId' and 'requirements' fields.",
+			handler: (string input) =>
 			{
+				// Parse input JSON
+				var inputObj = JsonSerializer.Deserialize<Dictionary<string, string>>(input);
+				var consultantId = inputObj?.GetValueOrDefault("consultantId") ?? "";
+
 				var consultant = consultants.FirstOrDefault(c => c.Id == consultantId);
 				if (consultant == null) return Task.FromResult("0");
 
@@ -1241,14 +1262,20 @@ Work methodically through this task.",
 
 				return Task.FromResult(score.ToString());
 			},
-			inputDescription: "Consultant ID to score (e.g., 'C001', 'C011')"
+			inputDescription: "JSON string with format: {\"consultantId\": \"C001\", \"requirements\": \"description of requirements\"}"
 		));
 
-		var response = await agent.RunAsync($@"Find the best consultant for this .NET 8 modernization project:
+		var response = await agent.RunAsync($@"
+Analyze this assignment and find the best matching consultant:
 
 {assignment}
 
-Analyze the 25 consultants and recommend the top candidates.");
+For each promising consultant:
+1. Get their profile
+2. Calculate match score
+3. Explain why they are or aren't a good fit
+
+Provide a ranked recommendation with reasoning.");
 
 		WriteLine("═══════════════════════════════════════");
 		WriteLine("AGENT RECOMMENDATION:");
