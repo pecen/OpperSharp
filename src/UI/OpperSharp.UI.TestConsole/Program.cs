@@ -1245,12 +1245,13 @@ DO NOT explain or describe - JUST CALL THE 4 TOOLS NOW.",
 			inputDescription: "Consultant ID (e.g., 'C001', 'C011', 'C021')"
 		));
 
-		var response = await agent.RunAsync(@"Execute these steps:
-1. Get all consultants
-2. Score consultants C001, C011, and C021
-3. Report which one is best for .NET 8 modernization
+		var response = await agent.RunAsync(@"I need you to:
+1. Call get_consultants with input 'all'
+2. Call calculate_match_score with input 'C001'
+3. Call calculate_match_score with input 'C011'
+4. Call calculate_match_score with input 'C021'
 
-Execute now.");
+Then report which consultant is best.");
 
 		WriteLine("═══════════════════════════════════════");
 		WriteLine("AGENT RECOMMENDATION:");
