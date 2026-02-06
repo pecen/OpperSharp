@@ -722,24 +722,40 @@ Plats: Hybrid (Stockholm)
 			// Create agent with consultant database tool
 			var agent = new Agent(_client!, new AgentOptions
 			{
-				FunctionPath = "consultant-matcher",
+				Name = "consultant-matcher",
+				Instructions = @"You are an AI consultant matching system that helps match consultants with job assignments.
+
+You have access to TWO tools:
+
+1. get_consultants - Returns a JSON array of all available consultants with their profiles (name, title, skills, experience, availability, rate, languages). Call this with any input (e.g., 'all' or 'list').
+
+2. calculate_match_score - Calculates a match score (0-100) for a specific consultant against requirements. Input must be JSON with 'consultantName' and 'requirements' fields.
+
+Your task:
+1. First, get all consultants using get_consultants
+2. For each consultant, calculate their match score using calculate_match_score
+3. Analyze the scores and consultant profiles
+4. Provide a ranked recommendation with clear reasoning explaining why each consultant is or isn't a good fit
+
+Be thorough in your analysis and consider all factors: skills, experience, availability, rate, and language requirements.",
 				MaxIterations = 10,
-				Model = "gpt-4"
+				Model = "anthropic/claude-opus-4.5"
 			})
 			.WithTool(AgentTool.Create(
 				name: "get_consultants",
-				description: "Retrieves list of available consultants with their profiles",
+				description: "Retrieves the complete list of available consultants with their full profiles including skills, experience, availability, rate, and languages. Returns JSON array.",
 				handler: (string _) => // Takes a string parameter but we ignore it
 				{
 					return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions
 					{
 						WriteIndented = true
 					}));
-				}
+				},
+				inputDescription: "Any query string (e.g., 'all', 'list', 'available'). The tool always returns all consultants."
 			))
 			.WithTool(AgentTool.Create(
 				name: "calculate_match_score",
-				description: "Calculate how well a consultant matches the requirements (0-100). Input should be JSON with consultantName and requirements fields.",
+				description: "Calculates how well a specific consultant matches the job requirements. Returns a score from 0-100. Input must be valid JSON string with 'consultantName' and 'requirements' fields.",
 				handler: (string input) =>
 				{
 					// Parse input JSON
@@ -766,7 +782,8 @@ Plats: Hybrid (Stockholm)
 					if (int.TryParse(consultant.Rate.Split(' ')[0], out int rate) && rate <= 1300) score += 5;
 
 					return Task.FromResult(score.ToString());
-				}
+				},
+				inputDescription: "JSON string with format: {\"consultantName\": \"Full Name\", \"requirements\": \"description of requirements\"}"
 			));
 
 			WriteLine("Agent analyzing assignment and matching consultants...");
