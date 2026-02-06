@@ -173,7 +173,14 @@ namespace OpperSharp.Agents
 							var toolName = toolCall.GetValueOrDefault("name")?.ToString();
 							var toolArgs = toolCall.GetValueOrDefault("arguments");
 
-							if (string.IsNullOrEmpty(toolName)) continue;
+							System.Console.WriteLine($"[DEBUG] Extracted tool name: '{toolName}'");
+							System.Console.WriteLine($"[DEBUG] Extracted tool args: {toolArgs?.GetType().Name ?? "null"}");
+
+							if (string.IsNullOrEmpty(toolName))
+							{
+								System.Console.WriteLine($"[DEBUG] Skipping tool call - name is null or empty");
+								continue;
+							}
 
 							Dictionary<string, object?>? argsDict = null;
 							if (toolArgs is JObject jobj)
@@ -185,17 +192,32 @@ namespace OpperSharp.Agents
 								argsDict = dict.ToDictionary(kv => kv.Key, kv => (object?)kv.Value);
 							}
 
-							var result = await ExecuteToolAsync(
-								toolName,
-								argsDict ?? new Dictionary<string, object?>(),
-								response.ToolCalls
-							);
-
-							toolResults.Add(new
+							try
 							{
-								tool_name = toolName,
-								result = result
-							});
+								var result = await ExecuteToolAsync(
+									toolName,
+									argsDict ?? new Dictionary<string, object?>(),
+									response.ToolCalls
+								);
+
+								System.Console.WriteLine($"[DEBUG] Tool '{toolName}' executed successfully, result: {result}");
+
+								toolResults.Add(new
+								{
+									tool_name = toolName,
+									result = result
+								});
+							}
+							catch (Exception ex)
+							{
+								System.Console.WriteLine($"[DEBUG] Tool '{toolName}' execution FAILED: {ex.GetType().Name}: {ex.Message}");
+								// Add error result so Claude knows the tool failed
+								toolResults.Add(new
+								{
+									tool_name = toolName,
+									error = ex.Message
+								});
+							}
 						}
 
 						// Prepare next iteration input with tool results
@@ -307,11 +329,18 @@ namespace OpperSharp.Agents
 			Dictionary<string, object?> arguments,
 			List<ToolCall> toolCallHistory)
 		{
-			var tool = _options.Tools.FirstOrDefault(t => t.Name == toolName);
+			// Try exact match first, then case-insensitive
+			var tool = _options.Tools.FirstOrDefault(t => t.Name == toolName)
+				?? _options.Tools.FirstOrDefault(t => string.Equals(t.Name, toolName, StringComparison.OrdinalIgnoreCase));
+
 			if (tool == null)
 			{
-				throw new InvalidOperationException($"Tool '{toolName}' not found");
+				var availableTools = string.Join(", ", _options.Tools.Select(t => t.Name));
+				System.Console.WriteLine($"[DEBUG] Tool '{toolName}' not found. Available tools: {availableTools}");
+				throw new InvalidOperationException($"Tool '{toolName}' not found. Available: {availableTools}");
 			}
+
+			System.Console.WriteLine($"[DEBUG] Executing tool '{tool.Name}' with {arguments.Count} arguments");
 
 			var toolCall = new ToolCall
 			{
