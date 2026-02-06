@@ -1219,7 +1219,6 @@ Work methodically through this task.",
 			description: "Retrieves ALL 25 consultant profiles with complete information including skills, experience, rates, and availability",
 			handler: (string input) =>
 			{
-				WriteLine($"   [DEBUG] get_consultants called");
 				return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions { WriteIndented = true }));
 			},
 			inputDescription: "Any query string (e.g., 'all', 'list'). Always returns all consultants."
@@ -1229,8 +1228,6 @@ Work methodically through this task.",
 			description: "Calculates match score (0-100) for a specific consultant against project requirements",
 			handler: (string consultantId) =>
 			{
-				WriteLine($"   [DEBUG] calculate_match_score called for consultant: {consultantId}");
-
 				var consultant = consultants.FirstOrDefault(c => c.Id == consultantId);
 				if (consultant == null) return Task.FromResult("0");
 
