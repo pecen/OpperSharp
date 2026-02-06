@@ -1199,20 +1199,18 @@ Plats: Hybrid (Stockholm)
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "consultant-matcher-scale",
-			Instructions = @"Your task: Find best consultants for a .NET 8 modernization project.
+			Instructions = @"Match consultants to a .NET 8 modernization project.
 
-ITERATION 1: Call get_consultants with input: ""all""
+FIRST: Call get_consultants with input: ""all""
 
-ITERATION 2: After you receive the consultant data, IMMEDIATELY call calculate_match_score for the top 6 matching candidates. Call them ALL in the SAME response:
+SECOND: When you receive the 25 consultants, your response must be ONLY tool calls (no other text).
+Look at the consultant data and call calculate_match_score for the 6-8 best matching consultants.
+Requirements: C#, .NET 8, Azure, Microservices, 8+ years experience, Swedish, under 1300 SEK/h.
 
-calculate_match_score with input: {""consultantId"": ""C001"", ""requirements"": ""C# .NET Azure Microservices""}
-calculate_match_score with input: {""consultantId"": ""C003"", ""requirements"": ""C# .NET Azure Microservices""}
-calculate_match_score with input: {""consultantId"": ""C011"", ""requirements"": ""C# .NET Azure Microservices""}
-(... and so on for all 6 candidates)
+DO NOT write descriptions. DO NOT write ""[Calling..."". ONLY make actual tool calls.
+Your entire second response = just tool calls, nothing else.
 
-DO NOT write JSON as text - CALL THE TOOL. DO NOT describe - EXECUTE NOW.
-
-ITERATION 3: After receiving scores, provide final recommendations.",
+THIRD: After receiving scores, provide recommendations.",
 			MaxIterations = 15,
 			Model = "anthropic/claude-opus-4.5"
 		})
