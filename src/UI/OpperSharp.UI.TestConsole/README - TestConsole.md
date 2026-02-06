@@ -1,14 +1,14 @@
 # OpperSharp TestConsole
 
-Ett komplett testprogram för att testa alla funktioner i OpperSharp SDK v2 API med fokus på Agent-ramverket.
+Ett komplett testprogram för att testa alla funktioner i OpperSharp SDK v2 API med fokus på Agent-ramverket. Framförallt är test 1 - 3, samt 10 - 12 designade för att demonstrera och testa Agent-funktionaliteten i olika scenarier, inklusive en realistisk konsultmatchningsuse case.
 
 ## Förberedelser
 
 ### 1. Sätt API-nyckel
 
-Programmet läser API-nyckeln från **User Secrets** (rekommenderat) eller miljövariabel `OPPER_API_KEY`:
+Programmet läser API-nyckeln från **User Secrets** (rekommenderat om man kör från Visual Studio) eller miljövariabel `OPPER_API_KEY`:
 
-**User Secrets (Visual Studio):**
+**User Secrets (när projektet öppnats i Visual Studio):**
 1. Högerklicka på projektet → "Manage User Secrets"
 2. Lägg till:
    ```json
@@ -23,6 +23,8 @@ Programmet läser API-nyckeln från **User Secrets** (rekommenderat) eller milj�
 ```powershell
 $env:OPPER_API_KEY="din-api-nyckel-här"
 ```
+
+eller öppna "Environment Variables" i Windows (klicka på Start eller använd Windows-tangenten, och skriv 'env', klicka sedan på 'Edit environment variables for your account') och lägg till `OPPER_API_KEY` där.
 
 **Linux/Mac:**
 ```bash
@@ -44,7 +46,7 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 
 ## Funktioner i Menyn
 
-### AGENT TESTS (Prioritet)
+### AGENT TESTS
 
 **1) Agent: Basic Math**
 - Demonstrerar Agent-ramverket med matematik-verktyg
@@ -110,7 +112,7 @@ Alla funktioner (name, instructions, model) skickas i request body. Detta gör S
 - Raderar test-aliases automatiskt (cleanup)
 - Demonstrerar reliability via automatic fallbacks
 
-### CONSULTANT MATCHING (Slutmål)
+### CONSULTANT MATCHING
 
 **10) Match Consultant to Assignment**
 - Grundläggande konsultmatchning med 3 konsulter
