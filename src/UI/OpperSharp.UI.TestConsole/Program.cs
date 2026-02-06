@@ -1277,12 +1277,19 @@ Remember: Get all consultants first, then score only the most promising ones.");
 		var agent = new Agent(_client!, new AgentOptions
 		{
 			Name = "error-handler",
-			Instructions = @"You are a resilient assistant. You have 3 unreliable tools:
-- unreliable_data_fetch: Sometimes fails with network errors
-- flaky_calculation: May throw exceptions
-- slow_service: Sometimes times out
+			Instructions = @"You are a resilient assistant testing error handling.
 
-When a tool fails: Try alternatives, use partial data, or explain what you couldn't do.",
+AVAILABLE TOOLS:
+1. unreliable_data_fetch - May fail with network errors (30% failure rate)
+2. flaky_calculation - May throw exceptions (25% failure rate)
+3. slow_service - May timeout (20% failure rate)
+
+CRITICAL: You MUST actually call these tools using the tool calling mechanism. DO NOT just describe or pretend to call them.
+
+When a tool fails (throws exception): Document the failure and try to continue with remaining tasks.
+When a tool returns partial data: Use what you got and note the limitation.
+
+Your job is to attempt all requested operations and report on successes/failures.",
 			MaxIterations = 10,
 			Model = "anthropic/claude-opus-4.5"
 		})
