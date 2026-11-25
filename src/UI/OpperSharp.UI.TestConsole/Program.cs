@@ -1,17 +1,17 @@
+using Microsoft.Extensions.Configuration;
 using OpperSharp.Agents;
 using OpperSharp.Core;
-using OpperSharp.Models.Embeddings;
+using OpperSharp.Exceptions;
 using OpperSharp.Models.Functions;
-using OpperSharp.Models.Knowledge;
-using OpperSharp.Models.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading.Tasks;
 using static System.Console;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Memory;
-using OpperSharp.Exceptions;
 
 namespace OpperSharp.UI.TestConsole
 {
@@ -97,8 +97,8 @@ namespace OpperSharp.UI.TestConsole
 
 						// CONSULTANT MATCHING (End goal)
 						case "10": await TestConsultantMatching(); break;
-					case "11": await TestScaleConsultantMatching(); break;
-					case "12": await TestErrorHandling(); break;
+						case "11": await TestScaleConsultantMatching(); break;
+						case "12": await TestErrorHandling(); break;
 
 						case "94": await TestAdHocFunctionCall(); break;
 						case "95": await DebugGetFunction(); break;
@@ -190,14 +190,14 @@ namespace OpperSharp.UI.TestConsole
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "math-solver",
-			OnProgress = (update) =>
-			{
-				Write($"\r   Working (iteration {update.Iteration})");
-				if (update.ToolCallCount > 0)
+				OnProgress = (update) =>
 				{
-					Write($" - Calling {string.Join(", ", update.ToolNames)}");
-				}
-			},
+					Write($"\r   Working (iteration {update.Iteration})");
+					if (update.ToolCallCount > 0)
+					{
+						Write($" - Calling {string.Join(", ", update.ToolNames)}");
+					}
+				},
 				Instructions = "You are a helpful math solver. You have access to calculation tools (Add, Multiply, Percentage, Divide, Subtract). Use them to solve mathematical problems step by step. Always use the tools instead of calculating manually.",
 				MaxIterations = 10,
 				EnableTracing = true,
@@ -249,14 +249,14 @@ namespace OpperSharp.UI.TestConsole
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "research-agent",
-			OnProgress = (update) =>
-			{
-				WriteLine($"\n[Iteration {update.Iteration}]");
-				if (update.ToolCallCount > 0)
+				OnProgress = (update) =>
 				{
-					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
-				}
-			},
+					WriteLine($"\n[Iteration {update.Iteration}]");
+					if (update.ToolCallCount > 0)
+					{
+						WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+					}
+				},
 				Instructions = @"You are a research assistant with access to EXACTLY TWO tools:
 
 1. query_database - Returns ALL users in the database with their roles and skills. Pass any search query (e.g., 'developers', 'Python skills', or just 'all users'). Returns JSON array of user objects.
@@ -329,14 +329,14 @@ IMPORTANT: These are the ONLY tools available. Do NOT try to call any other tool
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "problem-solver",
-			OnProgress = (update) =>
-			{
-				WriteLine($"\n[Iteration {update.Iteration}]");
-				if (update.ToolCallCount > 0)
+				OnProgress = (update) =>
 				{
-					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
-				}
-			},
+					WriteLine($"\n[Iteration {update.Iteration}]");
+					if (update.ToolCallCount > 0)
+					{
+						WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+					}
+				},
 				Instructions = "You are a problem solver that can break down complex problems into steps and use mathematical tools to solve them. Always use the available calculation tools.",
 				MaxIterations = 15,
 				EnableTracing = true,
@@ -775,21 +775,21 @@ Plats: Hybrid (Stockholm)
 			var agent = new Agent(_client!, new AgentOptions
 			{
 				Name = "consultant-matcher",
-			OnProgress = (update) =>
-			{
-				WriteLine($"\n[Iteration {update.Iteration}]");
-				if (update.ToolCallCount > 0)
+				OnProgress = (update) =>
 				{
-					WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
-				}
-				if (!string.IsNullOrWhiteSpace(update.Message))
-				{
-					var preview = update.Message.Length > 150
-						? update.Message.Substring(0, 150) + "..."
-						: update.Message;
-					WriteLine($"  🤔 Agent: {preview}\n");
-				}
-			},
+					WriteLine($"\n[Iteration {update.Iteration}]");
+					if (update.ToolCallCount > 0)
+					{
+						WriteLine($"  💡 Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+					}
+					if (!string.IsNullOrWhiteSpace(update.Message))
+					{
+						var preview = update.Message.Length > 150
+							? update.Message.Substring(0, 150) + "..."
+							: update.Message;
+						WriteLine($"  🤔 Agent: {preview}\n");
+					}
+				},
 				Instructions = @"You are an AI consultant matching system. You MUST use the provided tools to get data.
 
 CRITICAL RULES:
@@ -892,19 +892,19 @@ Provide a ranked recommendation with reasoning.";
 			WriteLine();
 			WriteLine($"Analysis completed in {response.Iterations} iterations using {response.ToolCalls.Count} tool calls.");
 		}
-	static async Task TestScaleConsultantMatching()
-	{
-		WriteLine("═══════════════════════════════════════");
-		WriteLine("SCALE TEST: 25 Consultants with Rich CV Data");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
-		WriteLine("This tests the agent's ability to handle a realistic number of consultants");
-		WriteLine("with complex CV data including skills, projects, certifications, etc.");
-		WriteLine();
-
-		// Generate 25 realistic consultant profiles
-		var consultants = new[]
+		static async Task TestScaleConsultantMatching()
 		{
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("SCALE TEST: 25 Consultants with Rich CV Data");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+			WriteLine("This tests the agent's ability to handle a realistic number of consultants");
+			WriteLine("with complex CV data including skills, projects, certifications, etc.");
+			WriteLine();
+
+			// Generate 25 realistic consultant profiles
+			var consultants = new[]
+			{
 			new {
 				Id = "C001", Name = "Anna Andersson", Title = "Senior .NET Developer",
 				Skills = new[] { "C#", ".NET 8", "Azure", "Microservices", "REST API", "SQL Server", "Docker" },
@@ -1207,7 +1207,7 @@ Provide a ranked recommendation with reasoning.";
 			}
 		};
 
-		var assignment = @"
+			var assignment = @"
 Vi söker en senior utvecklare för ett 6 månaders uppdrag.
 
 Projekt: Modernisering av befintligt .NET Framework system till .NET 8
@@ -1228,35 +1228,35 @@ Längd: 6 månader
 Plats: Hybrid (Stockholm)
 ";
 
-		WriteLine("ASSIGNMENT:");
-		WriteLine(assignment);
-		WriteLine();
-		WriteLine($"Searching through {consultants.Length} consultants...");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
+			WriteLine("ASSIGNMENT:");
+			WriteLine(assignment);
+			WriteLine();
+			WriteLine($"Searching through {consultants.Length} consultants...");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
 
-		var agent = new Agent(_client!, new AgentOptions
-		{
-			Name = "consultant-matcher-scale",
-			OnProgress = (update) =>
+			var agent = new Agent(_client!, new AgentOptions
 			{
-				WriteLine();
-				WriteLine($"[Iteration {update.Iteration}]");
-				if (update.ToolCallCount > 0)
+				Name = "consultant-matcher-scale",
+				OnProgress = (update) =>
 				{
-					WriteLine($"  ? Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
-				}
-				if (!string.IsNullOrWhiteSpace(update.Message))
-				{
-					// Show first 200 chars of the agent's message/thoughts
-					var preview = update.Message.Length > 200
-						? update.Message.Substring(0, 200) + "..."
-						: update.Message;
-					WriteLine($"  ? Agent: {preview}");
-				}
-				WriteLine();
-			},
-			Instructions = @"You are an AI consultant matching system. You MUST use the provided tools to get data.
+					WriteLine();
+					WriteLine($"[Iteration {update.Iteration}]");
+					if (update.ToolCallCount > 0)
+					{
+						WriteLine($"  ? Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+					}
+					if (!string.IsNullOrWhiteSpace(update.Message))
+					{
+						// Show first 200 chars of the agent's message/thoughts
+						var preview = update.Message.Length > 200
+							? update.Message.Substring(0, 200) + "..."
+							: update.Message;
+						WriteLine($"  ? Agent: {preview}");
+					}
+					WriteLine();
+				},
+				Instructions = @"You are an AI consultant matching system. You MUST use the provided tools to get data.
 
 CRITICAL RULES:
 - You have EXACTLY TWO tools: get_consultants and calculate_match_score
@@ -1285,44 +1285,44 @@ calculate_match_score:
 - Example: <function_calls><invoke name=""calculate_match_score""><parameter name=""input"">{""consultantId"": ""C001"", ""requirements"": ""C# .NET Azure Microservices""}</parameter></invoke></function_calls>
 
 Remember: ALWAYS use the actual tools. NEVER generate fake data.",
-			MaxIterations = 15,
-			Model = "anthropic/claude-opus-4.5"
-		})
-		.WithTool(AgentTool.Create(
-			name: "get_consultants",
-			description: "Retrieves the complete list of available consultants with their full profiles including skills, experience, availability, rate, and languages. Returns JSON array.",
-			handler: (string _) =>
-			{
-				return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions { WriteIndented = true }));
-			},
-			inputDescription: "Any query string (e.g., 'all', 'list', 'available'). The tool always returns all consultants."
-		))
-		.WithTool(AgentTool.Create(
-			name: "calculate_match_score",
-			description: "Calculates how well a specific consultant matches the job requirements. Returns a score from 0-100. Input must be valid JSON string with 'consultantId' and 'requirements' fields.",
-			handler: (string input) =>
-			{
-				// Parse input JSON
-				var inputObj = JsonSerializer.Deserialize<Dictionary<string, string>>(input);
-				var consultantId = inputObj?.GetValueOrDefault("consultantId") ?? "";
+				MaxIterations = 15,
+				Model = "anthropic/claude-opus-4.5"
+			})
+			.WithTool(AgentTool.Create(
+				name: "get_consultants",
+				description: "Retrieves the complete list of available consultants with their full profiles including skills, experience, availability, rate, and languages. Returns JSON array.",
+				handler: (string _) =>
+				{
+					return Task.FromResult(JsonSerializer.Serialize(consultants, new JsonSerializerOptions { WriteIndented = true }));
+				},
+				inputDescription: "Any query string (e.g., 'all', 'list', 'available'). The tool always returns all consultants."
+			))
+			.WithTool(AgentTool.Create(
+				name: "calculate_match_score",
+				description: "Calculates how well a specific consultant matches the job requirements. Returns a score from 0-100. Input must be valid JSON string with 'consultantId' and 'requirements' fields.",
+				handler: (string input) =>
+				{
+					// Parse input JSON
+					var inputObj = JsonSerializer.Deserialize<Dictionary<string, string>>(input);
+					var consultantId = inputObj?.GetValueOrDefault("consultantId") ?? "";
 
-				var consultant = consultants.FirstOrDefault(c => c.Id == consultantId);
-				if (consultant == null) return Task.FromResult("0");
+					var consultant = consultants.FirstOrDefault(c => c.Id == consultantId);
+					if (consultant == null) return Task.FromResult("0");
 
-				int score = 50;
-				if (consultant.Skills.Contains("C#")) score += 10;
-				if (consultant.Skills.Any(s => s.Contains(".NET"))) score += 10;
-				if (consultant.Skills.Contains("Azure")) score += 10;
-				if (consultant.Skills.Contains("Microservices")) score += 10;
-				if (int.TryParse(consultant.Experience.Split(' ')[0], out int years) && years >= 8) score += 5;
-				if (int.TryParse(consultant.Rate.Split(' ')[0], out int rate) && rate <= 1300) score += 5;
+					int score = 50;
+					if (consultant.Skills.Contains("C#")) score += 10;
+					if (consultant.Skills.Any(s => s.Contains(".NET"))) score += 10;
+					if (consultant.Skills.Contains("Azure")) score += 10;
+					if (consultant.Skills.Contains("Microservices")) score += 10;
+					if (int.TryParse(consultant.Experience.Split(' ')[0], out int years) && years >= 8) score += 5;
+					if (int.TryParse(consultant.Rate.Split(' ')[0], out int rate) && rate <= 1300) score += 5;
 
-				return Task.FromResult(score.ToString());
-			},
-			inputDescription: "JSON string with format: {\"consultantId\": \"C001\", \"requirements\": \"description of requirements\"}"
-		));
+					return Task.FromResult(score.ToString());
+				},
+				inputDescription: "JSON string with format: {\"consultantId\": \"C001\", \"requirements\": \"description of requirements\"}"
+			));
 
-		var response = await agent.RunAsync($@"
+			var response = await agent.RunAsync($@"
 Analyze this assignment and find the best matching consultant:
 
 {assignment}
@@ -1334,45 +1334,45 @@ For each promising consultant:
 
 Provide a ranked recommendation with reasoning.");
 
-		WriteLine("═══════════════════════════════════════");
-		WriteLine("AGENT RECOMMENDATION:");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine(response.Output);
-		WriteLine();
-		WriteLine($"Performance: {response.Iterations} iterations, {response.ToolCalls.Count} tool calls for {consultants.Length} consultants");
-	}
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("AGENT RECOMMENDATION:");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine(response.Output);
+			WriteLine();
+			WriteLine($"Performance: {response.Iterations} iterations, {response.ToolCalls.Count} tool calls for {consultants.Length} consultants");
+		}
 
-	static async Task TestErrorHandling()
-	{
-		WriteLine("═══════════════════════════════════════");
-		WriteLine("ERROR HANDLING TEST: Tools with Failures");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine();
-		WriteLine("Tests agent resilience when tools fail, throw exceptions, or return errors.");
-		WriteLine();
-
-		var callCount = 0;
-		var random = new Random();
-
-		var agent = new Agent(_client!, new AgentOptions
+		static async Task TestErrorHandling()
 		{
-			Name = "error-handler",
-			OnProgress = (update) =>
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("ERROR HANDLING TEST: Tools with Failures");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine();
+			WriteLine("Tests agent resilience when tools fail, throw exceptions, or return errors.");
+			WriteLine();
+
+			var callCount = 0;
+			var random = new Random();
+
+			var agent = new Agent(_client!, new AgentOptions
 			{
-				WriteLine($"\n[Iteration {update.Iteration}]");
-				if (update.ToolCallCount > 0)
+				Name = "error-handler",
+				OnProgress = (update) =>
 				{
-					WriteLine($"  ? Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
-				}
-				if (!string.IsNullOrWhiteSpace(update.Message))
-				{
-					var preview = update.Message.Length > 150
-						? update.Message.Substring(0, 150) + "..."
-						: update.Message;
-					WriteLine($"  ? Agent: {preview}\n");
-				}
-			},
-			Instructions = @"You are testing error handling. You MUST use the provided tools to execute the task.
+					WriteLine($"\n[Iteration {update.Iteration}]");
+					if (update.ToolCallCount > 0)
+					{
+						WriteLine($"  ? Calling {update.ToolCallCount} tool(s): {string.Join(", ", update.ToolNames)}");
+					}
+					if (!string.IsNullOrWhiteSpace(update.Message))
+					{
+						var preview = update.Message.Length > 150
+							? update.Message.Substring(0, 150) + "..."
+							: update.Message;
+						WriteLine($"  ? Agent: {preview}\n");
+					}
+				},
+				Instructions = @"You are testing error handling. You MUST use the provided tools to execute the task.
 
 CRITICAL RULES:
 - You have EXACTLY THREE tools: unreliable_data_fetch, flaky_calculation, slow_service
@@ -1399,75 +1399,76 @@ slow_service:
 - Example: <function_calls><invoke name=""slow_service""><parameter name=""input"">transaction history for customer_12345</parameter></invoke></function_calls>
 
 Remember: Call all 3 tools NOW. Handle any errors gracefully.",
-			MaxIterations = 10,
-			Model = "anthropic/claude-opus-4.5",
-			Temperature = 0.0
-		})
-		.WithTool(AgentTool.Create(
-			name: "unreliable_data_fetch",
-			description: "Fetches data but may fail (30% failure rate)",
-			handler: (string query) =>
-			{
-				callCount++;
-				if (random.Next(100) < 30)
-					throw new Exception($"Network timeout (attempt #{callCount})");
-				if (random.Next(100) < 20)
-					return Task.FromResult($"{{\"status\":\"partial\",\"data\":\"Incomplete: {query}\"}}");
-				return Task.FromResult($"{{\"status\":\"success\",\"data\":\"Results for {query}\"}}");
-			},
-			inputDescription: "Search query for data retrieval (e.g., 'customer_12345', 'user data')"
-		))
-		.WithTool(AgentTool.Create(
-			name: "flaky_calculation",
-			description: "Performs calculations but may fail (25% failure rate)",
-			handler: (string expression) =>
-			{
-				callCount++;
-				if (random.Next(100) < 25)
-					throw new InvalidOperationException($"Service unavailable (attempt #{callCount})");
-				return Task.FromResult($"Result: {random.Next(100, 1000)}");
-			},
-			inputDescription: "Mathematical expression or calculation request (e.g., 'account balance', '100 + 200')"
-		))
-		.WithTool(AgentTool.Create(
-			name: "slow_service",
-			description: "Slow service with 20% timeout rate",
-			handler: async (string request) =>
-			{
-				callCount++;
-				await Task.Delay(50);
-				if (random.Next(100) < 20)
-					throw new TimeoutException($"Timeout after 30s (attempt #{callCount})");
-				return $"{{\"status\":\"ok\",\"data\":\"Info for {request}\"}}";
-			},
-			inputDescription: "Information request for slow service (e.g., 'transaction history', 'account details')"
-		));
+				MaxIterations = 10,
+				Model = "anthropic/claude-opus-4.5",
+				Temperature = 0.0
+			})
+			.WithTool(AgentTool.Create(
+				name: "unreliable_data_fetch",
+				description: "Fetches data but may fail (30% failure rate)",
+				handler: (string query) =>
+				{
+					callCount++;
+					if (random.Next(100) < 30)
+						throw new Exception($"Network timeout (attempt #{callCount})");
+					if (random.Next(100) < 20)
+						return Task.FromResult($"{{\"status\":\"partial\",\"data\":\"Incomplete: {query}\"}}");
+					return Task.FromResult($"{{\"status\":\"success\",\"data\":\"Results for {query}\"}}");
+				},
+				inputDescription: "Search query for data retrieval (e.g., 'customer_12345', 'user data')"
+			))
+			.WithTool(AgentTool.Create(
+				name: "flaky_calculation",
+				description: "Performs calculations but may fail (25% failure rate)",
+				handler: (string expression) =>
+				{
+					callCount++;
+					if (random.Next(100) < 25)
+						throw new InvalidOperationException($"Service unavailable (attempt #{callCount})");
+					return Task.FromResult($"Result: {random.Next(100, 1000)}");
+				},
+				inputDescription: "Mathematical expression or calculation request (e.g., 'account balance', '100 + 200')"
+			))
+			.WithTool(AgentTool.Create(
+				name: "slow_service",
+				description: "Slow service with 20% timeout rate",
+				handler: async (string request) =>
+				{
+					callCount++;
+					await Task.Delay(50);
+					if (random.Next(100) < 20)
+						throw new TimeoutException($"Timeout after 30s (attempt #{callCount})");
+					return $"{{\"status\":\"ok\",\"data\":\"Info for {request}\"}}";
+				},
+				inputDescription: "Information request for slow service (e.g., 'transaction history', 'account details')"
+			));
 
-		var question = @"I need you to:
+			var question = @"I need you to:
 1. Fetch user data for 'customer_12345'
 2. Calculate their account balance
 3. Get transaction history
 
 Handle any failures gracefully.";
 
-		WriteLine($"Question: {question}");
-		WriteLine();
+			WriteLine($"Question: {question}");
+			WriteLine();
 
-		var response = await agent.RunAsync(question);
+			var response = await agent.RunAsync(question);
 
-		WriteLine("═══════════════════════════════════════");
-		WriteLine("AGENT RESPONSE:");
-		WriteLine("═══════════════════════════════════════");
-		WriteLine(response.Output);
-		WriteLine();
-		WriteLine($"Stats: {response.Iterations} iterations, {response.ToolCalls.Count} tool calls, {callCount} total attempts");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine("AGENT RESPONSE:");
+			WriteLine("═══════════════════════════════════════");
+			WriteLine(response.Output);
+			WriteLine();
+			WriteLine($"Stats: {response.Iterations} iterations, {response.ToolCalls.Count} tool calls, {callCount} total attempts");
 
-		var failures = response.ToolCalls.Count(c => {
-			var r = c.Result?.ToString() ?? "";
-			return r.Contains("ERROR") || r.Contains("timeout") || r.Contains("Failed");
-		});
-		WriteLine($"Success rate: {response.ToolCalls.Count - failures}/{response.ToolCalls.Count}");
-	}
+			var failures = response.ToolCalls.Count(c =>
+			{
+				var r = c.Result?.ToString() ?? "";
+				return r.Contains("ERROR") || r.Contains("timeout") || r.Contains("Failed");
+			});
+			WriteLine($"Success rate: {response.ToolCalls.Count - failures}/{response.ToolCalls.Count}");
+		}
 		// ═══════════════════════════════════════════════════════════════
 
 		// ═══════════════════════════════════════════════════════════════
